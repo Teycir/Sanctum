@@ -10,11 +10,11 @@ const MAX_CONTENT_SIZE = 10 * 1024 * 1024; // 10 MB
 
 const sanitizeInput = (input: string): string => {
   const entities = {
+    "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
-    "'": "&#x27;",
-    "&": "&amp;",
+    "'": "&#x27;"
   };
   return Object.entries(entities).reduce(
     (str, [char, entity]) => str.replaceAll(char, entity),
@@ -149,6 +149,7 @@ export default function CreateVault() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create vault");
     } finally {
+      clearInterval(progressInterval);
       setLoading(false);
       setLoadingStep("");
       setProgress(0);
@@ -478,7 +479,13 @@ export default function CreateVault() {
                   {result.vaultURL}
                 </code>
                 <button
-                  onClick={() => navigator.clipboard.writeText(result.vaultURL)}
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(result.vaultURL);
+                    } catch {
+                      setError('Failed to copy to clipboard');
+                    }
+                  }}
                   style={{
                     padding: "8px 16px",
                     background: "rgba(168, 85, 247, 0.2)",

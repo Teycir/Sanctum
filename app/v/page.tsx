@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { VaultService } from '@/lib/services/vault';
 
+const INACTIVITY_TIMEOUT_MS = 60000;
+
 export default function ViewVault() {
   const router = useRouter();
   const [passphrase, setPassphrase] = useState('');
@@ -19,7 +21,7 @@ export default function ViewVault() {
     const resetTimer = () => {
       clearTimeout(timeout);
       setIsBlurred(false);
-      timeout = setTimeout(() => setIsBlurred(true), 60000);
+      timeout = setTimeout(() => setIsBlurred(true), INACTIVITY_TIMEOUT_MS);
     };
     resetTimer();
     const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
@@ -42,20 +44,20 @@ export default function ViewVault() {
     setError('');
     setLoading(true);
 
+    const vaultService = new VaultService();
     try {
-      const vaultService = new VaultService();
       const vaultURL = `${window.location.origin}/v#${hash}`;
       const result = await vaultService.unlockVault({
         vaultURL,
         passphrase: passphrase.trim()
       });
 
-      await vaultService.stop();
       setContent(new TextDecoder().decode(result.content));
       setIsDecoy(result.isDecoy);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to unlock vault');
     } finally {
+      await vaultService.stop();
       setLoading(false);
     }
   };
@@ -162,7 +164,13 @@ export default function ViewVault() {
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
               <button
-                onClick={() => navigator.clipboard.writeText(content)}
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(content);
+                  } catch {
+                    setError('Failed to copy to clipboard');
+                  }
+                }}
                 style={{
                   padding: '12px 24px',
                   background: 'rgba(168, 85, 247, 0.3)',

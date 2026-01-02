@@ -48,7 +48,9 @@ export function deriveLayerPassphrase(
   const input = encodeText(masterPassphrase);
   const context = encodeText(`${HKDF_CONTEXTS.layerDerivation}-${layerIndex}`);
   const derived = hkdf(sha256, input, salt, context, 32);
+  // WARNING: Returned string cannot be securely wiped from memory due to JS string immutability
   const passphrase = Array.from(derived).map(b => b.toString(16).padStart(2, '0')).join('');
+  wipeMemory(input);
   wipeMemory(derived);
   return passphrase;
 }
@@ -108,12 +110,14 @@ export function unlockHiddenVault(
   result: HiddenVaultResult,
   passphrase: string
 ): Uint8Array {
-  // Try decoy first (empty passphrase or duress passphrase)
   try {
     return decrypt({ blob: result.decoyBlob, passphrase });
-  } catch {
-    // If decoy fails, try hidden layer
-    const hiddenPassphrase = deriveLayerPassphrase(passphrase, 1, result.salt);
-    return decrypt({ blob: result.hiddenBlob, passphrase: hiddenPassphrase });
+  } catch (err) {
+    // Only proceed to hidden layer if decoy decryption failed due to authentication
+    if (err instanceof Error && err.message.includes('Authentication')) {
+      const hiddenPassphrase = deriveLayerPassphrase(passphrase, 1, result.salt);
+      return decrypt({ blob: result.hiddenBlob, passphrase: hiddenPassphrase });
+    }
+    throw err;
   }
 }

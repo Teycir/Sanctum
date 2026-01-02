@@ -112,7 +112,10 @@ export class VaultService {
    * Stop IPFS node and terminate workers
    */
   async stop(): Promise<void> {
-    await this.ipfs.stop();
-    this.crypto.terminate();
+    try {
+      await this.ipfs.stop();
+    } finally {
+      this.crypto.terminate();
+    }
   }
 }
