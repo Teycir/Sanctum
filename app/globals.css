@@ -237,3 +237,16 @@
       0 0 30px rgba(200, 150, 255, 0.3);
   }
 }
+
+@keyframes subtle-shimmer {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-subtle-shimmer {
+  animation: subtle-shimmer 3s ease-in-out infinite;
+}

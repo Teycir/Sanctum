@@ -6,8 +6,8 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 
 export const metadata: Metadata = {
-  title: 'Sanctum - Cryptographic Plausible Deniability',
-  description: 'Zero-trust, client-side encrypted vault system with plausible deniability',
+  title: 'Sanctum - Client-Side Encrypted Vault',
+  description: 'Zero-trust, client-side encrypted vault system with XChaCha20-Poly1305',
 };
 
 export default function RootLayout({

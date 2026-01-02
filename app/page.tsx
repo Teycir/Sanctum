@@ -36,7 +36,7 @@ export default function Home() {
             encryptedClassName="opacity-30"
           />
         </h1>
-        <AnimatedTagline text="Cryptographically sound plausible deniability" />
+        <AnimatedTagline text="Client-side encrypted vault with zero-trust architecture" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', marginBottom: 32 }}>
           <button onClick={() => router.push('/create')} className="start-btn">
             Create Vault

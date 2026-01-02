@@ -22,7 +22,7 @@ export function AnimatedTagline({ text }: { text: string }) {
 
   return (
     <motion.p
-      className="text-xl md:text-2xl opacity-90 mb-6 font-medium text-center cursor-default"
+      className="text-xl md:text-2xl opacity-90 mb-6 font-medium text-center cursor-default animate-subtle-shimmer"
       initial="hidden"
       animate="visible"
       whileHover={{

@@ -4,21 +4,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
 const FEATURES = [
-  'Plausible Deniability - Hidden layers',
-  'Decentralized Storage - IPFS pinning',
+  'XChaCha20-Poly1305 - Authenticated encryption',
+  'Synthetic Nonces - Nonce-misuse resistance',
+  'SHA-256 Hashing - Cryptographic integrity',
+  'Commitment Scheme - Tamper detection',
+  'Memory Wiping - Sensitive data cleanup',
   'Client-Side Crypto - Browser encryption',
   'Zero Server Trust - No backend access',
-  '100% Free - Stack free tiers',
-  'Progressive Disclosure - Reveal layers',
-  'XChaCha20-Poly1305 - Authenticated encryption',
   'Constant-Time Ops - Timing attack prevention',
-  'Memory-Only - Auto-clear on idle',
-  'Argon2id KDF - Strong key derivation',
-  'Stego Mode - Hide in images',
-  'Chain Mode - Up to 4 layers',
-  'IPFS Storage - Content-addressed',
-  'No Accounts - No email required',
-  'Multi-Provider - Filebase + Pinata',
+  'Secure Random - Cryptographic RNG',
+  'Salt Generation - Rainbow table protection',
+  'Key Derivation - Argon2id KDF',
+  'Helia IPFS - Decentralized storage',
+  'Content Addressing - Immutable CIDs',
+  'Browser-Based - No installation',
+  'Web Crypto API - Native encryption',
+  '100% Free - No paid features',
+  'Open Source - Auditable code',
+  'No Accounts - Anonymous usage',
+  'No Tracking - Privacy first',
 ];
 
 export function CyclingFeatures() {
@@ -35,8 +39,8 @@ export function CyclingFeatures() {
 
   if (!mounted) {
     return (
-      <div className="min-h-[42px] mb-6 flex items-center justify-center relative px-4">
-        <div className="text-[10px] md:text-xs opacity-90 font-medium text-center w-full max-w-[95%] leading-relaxed">
+      <div style={{ minHeight: '20px', marginTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '0 16px' }}>
+        <div style={{ fontSize: '11px', opacity: 0.9, fontWeight: 500, textAlign: 'center', width: '100%', maxWidth: '95%', lineHeight: 1.5 }}>
           {FEATURES[0]}
         </div>
       </div>
@@ -44,11 +48,11 @@ export function CyclingFeatures() {
   }
 
   return (
-    <div className="min-h-[42px] mb-6 flex items-center justify-center relative px-4">
+    <div style={{ minHeight: '20px', marginTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '0 16px' }}>
       <AnimatePresence mode="wait">
         <motion.div
           key={index}
-          className="text-[10px] md:text-xs opacity-90 font-medium text-center absolute w-full max-w-[95%] leading-relaxed"
+          style={{ fontSize: '11px', opacity: 0.9, fontWeight: 500, textAlign: 'center', position: 'absolute', width: '100%', maxWidth: '95%', lineHeight: 1.5 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
