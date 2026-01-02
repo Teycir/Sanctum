@@ -1,0 +1,44 @@
+{
+  "name": "sanctum",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write .",
+    "copy-timeseal": "node scripts/copy-timeseal.js"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "next": "^15.1.0",
+    "@noble/hashes": "^1.5.0",
+    "@noble/ciphers": "^1.0.0",
+    "helia": "^5.1.0",
+    "@helia/unixfs": "^4.0.0",
+    "qrcode": "^1.5.4",
+    "tailwindcss": "^3.4.17",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@types/node": "^22.10.2",
+    "@types/qrcode": "^1.5.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "@vitest/ui": "^2.1.8",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "^15.1.0",
+    "prettier": "^3.4.2",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49"
+  }
+}
