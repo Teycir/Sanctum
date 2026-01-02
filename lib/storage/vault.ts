@@ -6,6 +6,7 @@ import type { HiddenVaultResult } from '../duress/layers';
 import type { HeliaIPFS } from '../helia/client';
 import { concat, encodeU32LE, decodeU32LE } from '../crypto/utils';
 import { StoredVaultSchema } from '../validation/schemas';
+import { retrieveVault, isP2PTAvailable } from '../p2pt';
 
 export interface StoredVault {
   readonly decoyCID: string;
@@ -38,7 +39,7 @@ export async function uploadVault(
 }
 
 /**
- * Download hidden vault from IPFS
+ * Download hidden vault from IPFS with P2PT fallback
  * @param stored Stored vault metadata
  * @param ipfs IPFS client
  * @returns Hidden vault result
@@ -47,8 +48,29 @@ export async function downloadVault(
   stored: StoredVault,
   ipfs: HeliaIPFS
 ): Promise<HiddenVaultResult> {
-  const decoyBlob = await ipfs.download(stored.decoyCID);
-  const hiddenBlob = await ipfs.download(stored.hiddenCID);
+  let decoyBlob: Uint8Array;
+  let hiddenBlob: Uint8Array;
+  
+  // Try P2PT first if available (faster peer retrieval)
+  if (isP2PTAvailable()) {
+    try {
+      const decoyResult = await retrieveVault(stored.decoyCID, { timeoutMs: 10000 });
+      decoyBlob = decoyResult.data;
+    } catch {
+      decoyBlob = await ipfs.download(stored.decoyCID);
+    }
+    
+    try {
+      const hiddenResult = await retrieveVault(stored.hiddenCID, { timeoutMs: 10000 });
+      hiddenBlob = hiddenResult.data;
+    } catch {
+      hiddenBlob = await ipfs.download(stored.hiddenCID);
+    }
+  } else {
+    // Fallback to Helia only
+    decoyBlob = await ipfs.download(stored.decoyCID);
+    hiddenBlob = await ipfs.download(stored.hiddenCID);
+  }
   
   return {
     decoyBlob,

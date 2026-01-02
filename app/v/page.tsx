@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { VaultService } from "@/lib/services/vault";
+import { warmUpHelia } from "@/lib/helia/singleton";
+import { useConnectionStatus } from "@/lib/helia/connection-monitor";
 
 const INACTIVITY_TIMEOUT_MS = 60000;
 
@@ -15,6 +16,23 @@ export default function ViewVault() {
   const [isDecoy, setIsDecoy] = useState(false);
   const [error, setError] = useState("");
   const [isBlurred, setIsBlurred] = useState(false);
+  const { connectionState, peerCount } = useConnectionStatus();
+
+  const getConnectionBackground = () => {
+    if (connectionState === 'connected') return 'rgba(0, 255, 0, 0.1)';
+    if (connectionState === 'degraded') return 'rgba(255, 165, 0, 0.1)';
+    return 'rgba(255, 255, 255, 0.05)';
+  };
+
+  const getConnectionBorder = () => {
+    if (connectionState === 'connected') return 'rgba(0, 255, 0, 0.3)';
+    if (connectionState === 'degraded') return 'rgba(255, 165, 0, 0.3)';
+    return 'rgba(255, 255, 255, 0.2)';
+  };
+
+  useEffect(() => {
+    warmUpHelia();
+  }, []);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -25,17 +43,17 @@ export default function ViewVault() {
     };
     resetTimer();
     const events = ["mousedown", "keydown", "scroll", "touchstart"];
-    events.forEach((e) => window.addEventListener(e, resetTimer));
+    events.forEach((e) => globalThis.window.addEventListener(e, resetTimer));
     return () => {
       clearTimeout(timeout);
-      events.forEach((e) => window.removeEventListener(e, resetTimer));
+      events.forEach((e) => globalThis.window.removeEventListener(e, resetTimer));
     };
   }, []);
 
   const handleUnlock = async () => {
-    if (typeof window === "undefined") return;
+    if (globalThis.window === undefined) return;
 
-    const hash = window.location.hash.slice(1);
+    const hash = globalThis.window.location.hash.slice(1);
     if (!hash) {
       setError("Invalid vault URL");
       return;
@@ -45,16 +63,22 @@ export default function ViewVault() {
     setLoading(true);
 
     const vaultService = new VaultService();
+    const warningTimeout = setTimeout(() => {
+      setError("Connecting to IPFS network. This may take up to 60 seconds...");
+    }, 10000);
+
     try {
-      const vaultURL = `${window.location.origin}/v#${hash}`;
+      const vaultURL = `${globalThis.window.location.origin}/v#${hash}`;
       const result = await vaultService.unlockVault({
         vaultURL,
         passphrase: passphrase.trim(),
       });
 
+      clearTimeout(warningTimeout);
       setContent(new TextDecoder().decode(result.content));
       setIsDecoy(result.isDecoy);
     } catch (err) {
+      clearTimeout(warningTimeout);
       setError(err instanceof Error ? err.message : "Failed to unlock vault");
     } finally {
       await vaultService.stop();
@@ -106,84 +130,7 @@ export default function ViewVault() {
           Unlock Vault
         </h1>
 
-        {!content ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: 8,
-                  fontSize: 14,
-                  fontWeight: 600,
-                }}
-              >
-                Passphrase
-              </label>
-              <input
-                type="password"
-                value={passphrase}
-                onChange={(e) => setPassphrase(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-                placeholder="Enter passphrase (leave empty for decoy)..."
-                style={{
-                  width: "100%",
-                  padding: 12,
-                  background: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  borderRadius: 8,
-                  color: "#fff",
-                  fontSize: 14,
-                  boxSizing: "border-box",
-                }}
-              />
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 0.7, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                style={{
-                  marginTop: 8,
-                  fontSize: 12,
-                  lineHeight: 1.5,
-                  textAlign: "center",
-                }}
-              >
-                Enter your passphrase to unlock the vault
-              </motion.div>
-            </div>
-
-            {error && (
-              <div
-                style={{
-                  padding: 12,
-                  background: "rgba(255, 0, 0, 0.1)",
-                  border: "1px solid rgba(255, 0, 0, 0.3)",
-                  borderRadius: 8,
-                  color: "#ff6b6b",
-                  fontSize: 14,
-                }}
-              >
-                {error}
-              </div>
-            )}
-
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <button
-                onClick={handleUnlock}
-                disabled={loading}
-                className="start-btn"
-                style={{
-                  width: "50%",
-                  padding: "14px 12px",
-                  opacity: loading ? 0.5 : 1,
-                  cursor: loading ? "not-allowed" : "pointer",
-                  boxSizing: "border-box",
-                }}
-              >
-                {loading ? "Unlocking..." : "Unlock"}
-              </button>
-            </div>
-          </div>
-        ) : (
+        {content ? (
           <div>
             <div
               style={{
@@ -259,6 +206,80 @@ export default function ViewVault() {
                 }}
               >
                 Lock Vault
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {connectionState !== "offline" && (
+              <div
+                style={{
+                  padding: 12,
+                  background: getConnectionBackground(),
+                  border: `1px solid ${getConnectionBorder()}`,
+                  borderRadius: 8,
+                  fontSize: 13,
+                  textAlign: "center",
+                  opacity: 0.8,
+                }}
+              >
+                {connectionState === "connecting" &&
+                  `Connecting to IPFS network... (${peerCount} peers)`}
+                {connectionState === "degraded" &&
+                  `⚠️ Limited connectivity (${peerCount} peers) - unlock may be slow`}
+                {connectionState === "connected" &&
+                  `✓ Connected to IPFS (${peerCount} peers)`}
+              </div>
+            )}
+            <div>
+              <input
+                type="password"
+                value={passphrase}
+                onChange={(e) => setPassphrase(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+                placeholder="Enter password to unlock..."
+                style={{
+                  width: "100%",
+                  padding: 12,
+                  background: "rgba(255, 255, 255, 0.05)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  borderRadius: 8,
+                  color: "#fff",
+                  fontSize: 14,
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            {error && (
+              <div
+                style={{
+                  padding: 12,
+                  background: "rgba(255, 0, 0, 0.1)",
+                  border: "1px solid rgba(255, 0, 0, 0.3)",
+                  borderRadius: 8,
+                  color: "#ff6b6b",
+                  fontSize: 14,
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <button
+                onClick={handleUnlock}
+                disabled={loading}
+                className="start-btn"
+                style={{
+                  width: "50%",
+                  padding: "14px 12px",
+                  opacity: loading ? 0.5 : 1,
+                  cursor: loading ? "not-allowed" : "pointer",
+                  boxSizing: "border-box",
+                }}
+              >
+                {loading ? "Unlocking..." : "Unlock"}
               </button>
             </div>
           </div>

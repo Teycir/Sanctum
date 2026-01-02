@@ -42,6 +42,9 @@ export default function CreateVault() {
   const [result, setResult] = useState<VaultResult>();
   const [error, setError] = useState("");
   const [isBlurred, setIsBlurred] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [copiedDecoy, setCopiedDecoy] = useState(false);
+  const [copiedHidden, setCopiedHidden] = useState(false);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -67,12 +70,12 @@ export default function CreateVault() {
     const sanitizedPassphrase = passphrase.trim();
     const sanitizedDuress = duressPassphrase.trim();
 
-    if (!sanitizedDecoy) {
-      setError("Please enter decoy content");
-      return;
-    }
     if (!sanitizedHidden) {
       setError("Please enter hidden content");
+      return;
+    }
+    if (sanitizedDecoy && !sanitizedDuress) {
+      setError("Please enter duress password or remove decoy content");
       return;
     }
     const decoySize = new TextEncoder().encode(sanitizedDecoy).length;
@@ -319,12 +322,12 @@ export default function CreateVault() {
                     fontWeight: 600,
                   }}
                 >
-                  Decoy Content
+                  Decoy Content (Optional)
                 </label>
                 <textarea
                   value={decoyContent}
                   onChange={(e) => setDecoyContent(e.target.value)}
-                  placeholder="Enter innocent content (shown under duress)..."
+                  placeholder="Innocent content shown under duress..."
                   style={{
                     width: "100%",
                     minHeight: 80,
@@ -385,7 +388,7 @@ export default function CreateVault() {
                   type="password"
                   value={duressPassphrase}
                   onChange={(e) => setDuressPassphrase(e.target.value)}
-                  placeholder="Leave empty if you don't need duress protection..."
+                  placeholder="Required if using decoy content..."
                   style={{
                     width: "100%",
                     padding: 10,
@@ -510,6 +513,8 @@ export default function CreateVault() {
                   onClick={async () => {
                     try {
                       await navigator.clipboard.writeText(result.vaultURL);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 1000);
                     } catch {
                       setError("Failed to copy to clipboard");
                     }
@@ -528,7 +533,7 @@ export default function CreateVault() {
                     transition: "background 0.2s",
                   }}
                 >
-                  Copy URL
+                  {copied ? "✓ Copied!" : "Copy URL"}
                 </button>
                 <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 12 }}>
                   <button
@@ -536,6 +541,8 @@ export default function CreateVault() {
                     onClick={async () => {
                       try {
                         await navigator.clipboard.writeText(result.decoyCID);
+                        setCopiedDecoy(true);
+                        setTimeout(() => setCopiedDecoy(false), 1000);
                       } catch {
                         setError("Failed to copy CID");
                       }
@@ -553,13 +560,15 @@ export default function CreateVault() {
                       transition: "background 0.2s",
                     }}
                   >
-                    Copy Decoy CID
+                    {copiedDecoy ? "✓ Copied!" : "Copy Decoy CID"}
                   </button>
                   <button
                     type="button"
                     onClick={async () => {
                       try {
                         await navigator.clipboard.writeText(result.hiddenCID);
+                        setCopiedHidden(true);
+                        setTimeout(() => setCopiedHidden(false), 1000);
                       } catch {
                         setError("Failed to copy CID");
                       }
@@ -577,7 +586,7 @@ export default function CreateVault() {
                       transition: "background 0.2s",
                     }}
                   >
-                    Copy Hidden CID
+                    {copiedHidden ? "✓ Copied!" : "Copy Hidden CID"}
                   </button>
                 </div>
                 <p style={{ fontSize: 12, opacity: 0.6, marginTop: 12, wordBreak: "break-all" }}>

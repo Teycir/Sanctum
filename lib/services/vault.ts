@@ -8,7 +8,7 @@ import {
   serializeVaultMetadata,
   deserializeVaultMetadata,
 } from "../storage/vault";
-import { HeliaIPFS } from "../helia/client";
+import { createHeliaClient, type IHeliaClient } from "../helia";
 import { CryptoWorker } from "../workers/crypto";
 import { base64UrlEncode, base64UrlDecode } from "../crypto/utils";
 import { ARGON2_PROFILES, type Argon2Profile } from "../crypto/constants";
@@ -47,11 +47,11 @@ export interface UnlockVaultResult {
 // ============================================================================
 
 export class VaultService {
-  private ipfs: HeliaIPFS;
+  private ipfs: IHeliaClient;
   private crypto: CryptoWorker;
 
   constructor() {
-    this.ipfs = new HeliaIPFS();
+    this.ipfs = createHeliaClient();
     this.crypto = new CryptoWorker();
   }
 

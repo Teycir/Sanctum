@@ -15,6 +15,12 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:coverage:ui": "vitest --ui --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:integration:watch": "vitest --config vitest.integration.config.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:real": "NEXT_PUBLIC_USE_MOCK_IPFS=false playwright test --project=chromium",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",
     "copy-timeseal": "node scripts/copy-timeseal.js"
@@ -31,8 +37,10 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
     "helia": "^5.1.0",
+    "idb": "^8.0.3",
     "lucide-react": "^0.562.0",
     "next": "^15.1.0",
+    "p2pt": "^1.6.2",
     "qrcode": "^1.5.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -43,6 +51,7 @@
     "zod": "^4.3.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@types/node": "^22.10.2",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.18",
