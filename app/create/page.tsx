@@ -518,7 +518,7 @@ export default function CreateVault() {
                 </button>
                 <button
                   onClick={() => {
-                    setResult(null);
+                    setResult(undefined);
                     setDecoyContent("");
                     setHiddenContent("");
                     setPassphrase("");
