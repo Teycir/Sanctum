@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { VaultService } from "@/lib/services/vault";
-import { ARGON2_PROFILES } from "@/lib/crypto/constants";
 
 const MAX_CONTENT_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -92,31 +90,31 @@ export default function CreateVault() {
       return;
     }
     if (!sanitizedPassphrase) {
-      setError("Please enter a passphrase for hidden layer");
+      setError("Please enter a password for hidden layer");
       return;
     }
     if (sanitizedPassphrase.length < 12) {
-      setError("Passphrase must be at least 12 characters");
+      setError("Password must be at least 12 characters");
       return;
     }
     if (!/[A-Z]/.test(sanitizedPassphrase)) {
-      setError("Passphrase must contain at least one uppercase letter");
+      setError("Password must contain at least one uppercase letter");
       return;
     }
     if (!/[a-z]/.test(sanitizedPassphrase)) {
-      setError("Passphrase must contain at least one lowercase letter");
+      setError("Password must contain at least one lowercase letter");
       return;
     }
-    if (!/[0-9]/.test(sanitizedPassphrase)) {
-      setError("Passphrase must contain at least one number");
+    if (!/\d/.test(sanitizedPassphrase)) {
+      setError("Password must contain at least one number");
       return;
     }
     if (!/[^A-Za-z0-9]/.test(sanitizedPassphrase)) {
-      setError("Passphrase must contain at least one special character");
+      setError("Password must contain at least one special character");
       return;
     }
     if (sanitizedDuress && sanitizedPassphrase === sanitizedDuress) {
-      setError("Hidden passphrase must be different from duress passphrase");
+      setError("Hidden password must be different from duress password");
       return;
     }
 
@@ -148,6 +146,11 @@ export default function CreateVault() {
     const startTime = Date.now();
 
     try {
+      const [{ VaultService }, { ARGON2_PROFILES }] = await Promise.all([
+        import("@/lib/services/vault"),
+        import("@/lib/crypto/constants")
+      ]);
+      
       const vaultService = new VaultService();
 
       const vaultResult = await vaultService.createVault({
@@ -376,13 +379,13 @@ export default function CreateVault() {
                     fontWeight: 600,
                   }}
                 >
-                  Duress Passphrase (Optional)
+                  Duress Password (Optional)
                 </label>
                 <input
                   type="password"
                   value={duressPassphrase}
                   onChange={(e) => setDuressPassphrase(e.target.value)}
-                  placeholder="Leave empty to show decoy without passphrase..."
+                  placeholder="Leave empty if you don't need duress protection..."
                   style={{
                     width: "100%",
                     padding: 10,
@@ -405,13 +408,13 @@ export default function CreateVault() {
                     fontWeight: 600,
                   }}
                 >
-                  Hidden Layer Passphrase
+                  Hidden Layer Password
                 </label>
                 <input
                   type="password"
                   value={passphrase}
                   onChange={(e) => setPassphrase(e.target.value)}
-                  placeholder="Enter a strong passphrase..."
+                  placeholder="Enter a strong password..."
                   style={{
                     width: "100%",
                     padding: 10,
