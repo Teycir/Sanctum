@@ -67,8 +67,8 @@ export default function CreateVault() {
   const handleCreate = async () => {
     const sanitizedDecoy = sanitizeInput(decoyContent.trim());
     const sanitizedHidden = sanitizeInput(hiddenContent.trim());
-    const sanitizedPassphrase = passphrase.trim();
-    const sanitizedDuress = duressPassphrase.trim();
+    const sanitizedPassphrase = sanitizeInput(passphrase.trim());
+    const sanitizedDuress = sanitizeInput(duressPassphrase.trim());
 
     if (!sanitizedHidden) {
       setError("Please enter hidden content");
@@ -116,9 +116,15 @@ export default function CreateVault() {
       setError("Password must contain at least one special character");
       return;
     }
-    if (sanitizedDuress && sanitizedPassphrase === sanitizedDuress) {
-      setError("Hidden password must be different from duress password");
-      return;
+    if (sanitizedDuress) {
+      if (sanitizedDuress.length < 8) {
+        setError("Duress password must be at least 8 characters");
+        return;
+      }
+      if (sanitizedPassphrase === sanitizedDuress) {
+        setError("Hidden password must be different from duress password");
+        return;
+      }
     }
 
     setError("");

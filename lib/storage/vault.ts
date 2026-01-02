@@ -3,7 +3,7 @@
 // ============================================================================
 
 import type { HiddenVaultResult } from '../duress/layers';
-import type { HeliaIPFS } from '../helia/client';
+import type { IHeliaClient } from '../helia';
 import { concat, encodeU32LE, decodeU32LE } from '../crypto/utils';
 import { StoredVaultSchema } from '../validation/schemas';
 import { retrieveVault, isP2PTAvailable } from '../p2pt';
@@ -26,7 +26,7 @@ export interface StoredVault {
  */
 export async function uploadVault(
   vault: HiddenVaultResult,
-  ipfs: HeliaIPFS
+  ipfs: IHeliaClient
 ): Promise<StoredVault> {
   const decoyCID = await ipfs.upload(vault.decoyBlob);
   const hiddenCID = await ipfs.upload(vault.hiddenBlob);
@@ -46,7 +46,7 @@ export async function uploadVault(
  */
 export async function downloadVault(
   stored: StoredVault,
-  ipfs: HeliaIPFS
+  ipfs: IHeliaClient
 ): Promise<HiddenVaultResult> {
   let decoyBlob: Uint8Array;
   let hiddenBlob: Uint8Array;
