@@ -8,7 +8,7 @@ export function VaultIcon() {
 
   return (
     <motion.div
-      style={{ width: 85, height: 85, margin: '0 auto 18px', cursor: 'pointer' }}
+      style={{ width: 72, height: 72, margin: '0 auto 18px', cursor: 'pointer' }}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
@@ -27,7 +27,7 @@ export function VaultIcon() {
         }}
         style={{ transformStyle: 'preserve-3d' }}
       >
-        <svg width="85" height="85" viewBox="0 0 120 120" fill="none">
+        <svg width="72" height="72" viewBox="0 0 120 120" fill="none">
           <defs>
             <linearGradient id="vaultGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <motion.stop

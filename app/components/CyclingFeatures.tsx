@@ -10,7 +10,7 @@ const FEATURES = [
   'Commitment Scheme - Tamper detection',
   'Memory Wiping - Sensitive data cleanup',
   'Client-Side Crypto - Browser encryption',
-  'Zero Server Trust - No backend access',
+  'Zero-Trust - No backend access',
   'Constant-Time Ops - Timing attack prevention',
   'Secure Random - Cryptographic RNG',
   'Salt Generation - Rainbow table protection',
@@ -40,7 +40,7 @@ export function CyclingFeatures() {
   if (!mounted) {
     return (
       <div style={{ minHeight: '20px', marginTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '0 16px' }}>
-        <div style={{ fontSize: '11px', opacity: 0.9, fontWeight: 500, textAlign: 'center', width: '100%', maxWidth: '95%', lineHeight: 1.5 }}>
+        <div style={{ fontSize: '11px', opacity: 0.9, fontWeight: 500, textAlign: 'center', width: '100%', maxWidth: '95%', lineHeight: 1.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {FEATURES[0]}
         </div>
       </div>
@@ -52,7 +52,7 @@ export function CyclingFeatures() {
       <AnimatePresence mode="wait">
         <motion.div
           key={index}
-          style={{ fontSize: '11px', opacity: 0.9, fontWeight: 500, textAlign: 'center', position: 'absolute', width: '100%', maxWidth: '95%', lineHeight: 1.5 }}
+          style={{ fontSize: '11px', opacity: 0.9, fontWeight: 500, textAlign: 'center', position: 'absolute', width: '100%', maxWidth: '95%', lineHeight: 1.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

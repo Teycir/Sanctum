@@ -12,7 +12,7 @@ export function AnimatedTagline({ text }: { text: string }) {
 
   if (!mounted) {
     return (
-      <p className="text-xl md:text-2xl opacity-90 mb-6 font-medium text-center">
+      <p className="text-base md:text-xl opacity-90 mb-6 font-medium text-center" style={{ lineHeight: 1.2, padding: '0 16px' }}>
         {text}
       </p>
     );
@@ -22,7 +22,8 @@ export function AnimatedTagline({ text }: { text: string }) {
 
   return (
     <motion.p
-      className="text-xl md:text-2xl opacity-90 mb-6 font-medium text-center cursor-default animate-subtle-shimmer"
+      className="text-base md:text-xl opacity-90 mb-6 font-medium text-center cursor-default animate-subtle-shimmer"
+      style={{ lineHeight: 1.2, padding: '0 16px' }}
       initial="hidden"
       animate="visible"
       whileHover={{
