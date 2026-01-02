@@ -1,6 +1,6 @@
 <div align="center">
 
-![License](https://img.shields.io/badge/license-MIT-neon_green?style=for-the-badge)
+![License](https://img.shields.io/badge/license-BSL-neon_green?style=for-the-badge)
 ![Encryption](https://img.shields.io/badge/Encryption-AES--GCM--256-neon_green?style=for-the-badge)
 ![Storage](https://img.shields.io/badge/Storage-IPFS-neon_green?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-In%20Development-orange?style=for-the-badge)
@@ -508,7 +508,9 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for gu
 
 ## 📜 License
 
-MIT License - see [LICENSE](./LICENSE) for details.
+Business Source License 1.1 - see [LICENSE](./LICENSE) for details.
+
+**Summary**: Free for non-production use. Production use requires a commercial license after 4 years from release date.
 
 ## 🙏 Acknowledgments
 
