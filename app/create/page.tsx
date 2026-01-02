@@ -28,6 +28,7 @@ export default function CreateVault() {
   const [passphrase, setPassphrase] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState('');
+  const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<{ cid: string } | null>(null);
   const [error, setError] = useState('');
 
@@ -69,12 +70,18 @@ export default function CreateVault() {
       return;
     }
 
-    setLoading(true);
     setError('');
+    setLoading(true);
+    setProgress(50);
+    setLoadingStep('Encrypting with XChaCha20...');
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const progressInterval = setInterval(() => {
+      setProgress(prev => Math.min(prev + 1, 70));
+    }, 50);
 
     try {
-      // Encrypt the content
-      setLoadingStep('Encrypting with XChaCha20-Poly1305...');
       const plaintext = new TextEncoder().encode(sanitizedContent);
       const encrypted = encrypt({
         plaintext,
@@ -82,25 +89,123 @@ export default function CreateVault() {
         argonProfile: ARGON2_PROFILES.desktop
       });
 
-      // Upload to IPFS
-      setLoadingStep('Uploading to IPFS via Helia...');
+      clearInterval(progressInterval);
+      setProgress(75);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      setLoadingStep('Uploading to IPFS........');
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const uploadInterval = setInterval(() => {
+        setProgress(prev => Math.min(prev + 1, 95));
+      }, 80);
+
       const ipfs = new HeliaIPFS();
       await ipfs.init();
       const cid = await ipfs.upload(encrypted.ciphertext);
       await ipfs.stop();
 
+      clearInterval(uploadInterval);
+      setProgress(98);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       setLoadingStep('Finalizing...');
+      await new Promise(resolve => setTimeout(resolve, 100));
+      setProgress(100);
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setResult({ cid });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create vault');
     } finally {
       setLoading(false);
       setLoadingStep('');
+      setProgress(0);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <>
+      {loading && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999
+          }}
+        >
+          <div
+            style={{
+              padding: 32,
+              background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(168, 85, 247, 0.1))',
+              border: '1px solid rgba(168, 85, 247, 0.4)',
+              borderRadius: 16,
+              textAlign: 'center',
+              width: 380,
+              boxSizing: 'border-box',
+              boxShadow: '0 0 40px rgba(168, 85, 247, 0.3)'
+            }}
+          >
+            <div
+              style={{
+                fontSize: 16,
+                fontWeight: 600,
+                color: '#e9d5ff',
+                height: 24,
+                marginBottom: 20,
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
+            >
+              <motion.div
+                key={loadingStep}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                style={{
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  width: '100%'
+                }}
+              >
+                {loadingStep || 'Processing...'}
+              </motion.div>
+            </div>
+            
+            <div style={{
+              width: '100%',
+              height: 6,
+              background: 'rgba(168, 85, 247, 0.2)',
+              borderRadius: 3,
+              overflow: 'hidden'
+            }}>
+              <motion.div
+                initial={{ width: '50%' }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                style={{
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #a855f7, #c084fc)',
+                  boxShadow: '0 0 20px rgba(168, 85, 247, 0.8), 0 0 40px rgba(168, 85, 247, 0.4)'
+                }}
+              />
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ width: '100%', maxWidth: 600 }}>
         <button 
           onClick={() => router.push('/')} 
@@ -179,31 +284,6 @@ export default function CreateVault() {
               </div>
             )}
 
-            {loading && loadingStep && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                style={{
-                  padding: 16,
-                  background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.1), rgba(168, 85, 247, 0.05))',
-                  border: '1px solid rgba(168, 85, 247, 0.3)',
-                  borderRadius: 8,
-                  textAlign: 'center',
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: '#e9d5ff',
-                  boxShadow: '0 0 20px rgba(168, 85, 247, 0.2)'
-                }}
-              >
-                <motion.div
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                  {loadingStep}
-                </motion.div>
-              </motion.div>
-            )}
-
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <button
                 onClick={handleCreate}
@@ -247,6 +327,7 @@ export default function CreateVault() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
