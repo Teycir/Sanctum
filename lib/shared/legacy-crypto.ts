@@ -1,24 +1,24 @@
 // Reusable Cryptography Utilities
-import { BASE64_CHUNK_SIZE } from './constants';
+import { BASE64_CHUNK_SIZE } from './timeseal-constants';
 
 export function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   const chunkSize = BASE64_CHUNK_SIZE;
   let binary = '';
-  
+
   // Process in chunks to prevent stack overflow
   for (let i = 0; i < bytes.byteLength; i += chunkSize) {
     const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.byteLength));
     binary += String.fromCharCode(...chunk);
   }
-  
+
   return btoa(binary);
 }
 
 export function base64ToArrayBuffer(base64: string): ArrayBuffer {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
-  
+
   // Process in chunks to prevent stack overflow
   const chunkSize = BASE64_CHUNK_SIZE;
   for (let i = 0; i < binary.length; i += chunkSize) {
@@ -27,7 +27,7 @@ export function base64ToArrayBuffer(base64: string): ArrayBuffer {
       bytes[j] = binary.charCodeAt(j);
     }
   }
-  
+
   return bytes.buffer;
 }
 

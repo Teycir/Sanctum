@@ -66,13 +66,13 @@ export class VaultService {
       content,
       passphrase: validated.passphrase,
       duressPassphrase: validated.duressPassphrase,
-      argonProfile: validated.argonProfile || ARGON2_PROFILES.desktop
+      argonProfile: (typeof validated.argonProfile === 'string' ? ARGON2_PROFILES[validated.argonProfile] : validated.argonProfile) || ARGON2_PROFILES.desktop
     });
 
     const stored = await uploadVault(vault, this.ipfs);
     const metadata = serializeVaultMetadata(stored);
     const encodedMetadata = base64UrlEncode(metadata);
-    
+
     const baseURL = typeof window !== 'undefined' ? window.location.origin : '';
     const vaultURL = `${baseURL}/v#${encodedMetadata}`;
 
@@ -100,7 +100,7 @@ export class VaultService {
     const metadata = base64UrlDecode(hash);
     const stored = deserializeVaultMetadata(metadata);
     const vault = await downloadVault(stored, this.ipfs);
-    
+
     // Use worker for non-blocking Argon2
     const content = await this.crypto.unlockHiddenVault(vault, validated.passphrase);
     const isDecoy = validated.passphrase === '';

@@ -1,0 +1,239 @@
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 50% 100%;
+  }
+  75% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes haze {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1) translate(0, 0) rotate(0deg);
+  }
+  25% {
+    opacity: 0.5;
+    transform: scale(1.2) translate(10%, -10%) rotate(5deg);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.9) translate(-10%, 10%) rotate(-5deg);
+  }
+  75% {
+    opacity: 0.5;
+    transform: scale(1.1) translate(5%, -5%) rotate(3deg);
+  }
+}
+
+@keyframes floatBtn {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pulseBtn {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Colors - Dark cyberpunk theme */
+    --background: 0 0% 3%;
+    --foreground: 0 0% 98%;
+
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 142 76% 20%;
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 142 76% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 142 76% 36%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Spacing */
+    --radius: 0.5rem;
+
+    /* Typography */
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, sans-serif;
+    background: linear-gradient(
+      135deg,
+      #0a0a0a 0%,
+      #1a1520 20%,
+      #0f0f1a 40%,
+      #1a1a2e 60%,
+      #0d0d15 80%,
+      #000 100%
+    );
+    background-size: 400% 400%;
+    animation: gradientShift 25s ease-in-out infinite;
+    color: #fff;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(
+        ellipse at 15% 20%,
+        rgba(138, 43, 226, 0.15) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        ellipse at 85% 80%,
+        rgba(75, 0, 130, 0.12) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 50% 50%,
+        rgba(72, 61, 139, 0.08) 0%,
+        transparent 60%
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background:
+      radial-gradient(
+        circle at 30% 40%,
+        rgba(147, 112, 219, 0.15) 0%,
+        transparent 30%
+      ),
+      radial-gradient(
+        circle at 70% 60%,
+        rgba(123, 104, 238, 0.12) 0%,
+        transparent 35%
+      ),
+      radial-gradient(
+        circle at 50% 80%,
+        rgba(138, 43, 226, 0.1) 0%,
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 20% 70%,
+        rgba(75, 0, 130, 0.08) 0%,
+        transparent 35%
+      ),
+      radial-gradient(
+        circle at 80% 30%,
+        rgba(106, 90, 205, 0.1) 0%,
+        transparent 40%
+      );
+    filter: blur(100px);
+    animation: haze 35s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.ghost-icon {
+  animation: floatBtn 3s ease-in-out infinite;
+}
+
+.start-btn {
+  padding: 16px 48px;
+  background: linear-gradient(135deg, #fff 0%, #f0f0f0 50%, #e0e0e0 100%);
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  font-size: clamp(16px, 3vw, 18px);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: pulseBtn 2s ease-in-out infinite;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+.start-btn:hover {
+  background: linear-gradient(135deg, #fff 0%, #fafafa 50%, #f0f0f0 100%);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.start-btn:active {
+  filter: brightness(0.95);
+  transform: translateY(0);
+}
+
+.glow-text {
+  text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.5),
+    0 0 20px rgba(200, 150, 255, 0.3);
+}
+
+.pulse-glow {
+  animation: pulse-glow 8s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    text-shadow:
+      0 0 5px rgba(255, 255, 255, 0.5),
+      0 0 10px rgba(200, 150, 255, 0.3);
+  }
+  50% {
+    text-shadow:
+      0 0 10px rgba(255, 255, 255, 0.8),
+      0 0 20px rgba(200, 150, 255, 0.5),
+      0 0 30px rgba(200, 150, 255, 0.3);
+  }
+}

@@ -25,14 +25,14 @@ export interface BrowserCapabilities {
 export function detectCapabilities(): BrowserCapabilities {
   const warnings: string[] = [];
   const errors: string[] = [];
-  
+
   const sharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
-  const crossOriginIsolated = typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated;
+  const crossOriginIsolated = typeof globalThis.crossOriginIsolated !== 'undefined' && globalThis.crossOriginIsolated;
   const webWorkers = typeof Worker !== 'undefined';
   const webCrypto = typeof crypto?.subtle !== 'undefined';
   const bigInt = typeof BigInt !== 'undefined';
   const wasm = typeof WebAssembly !== 'undefined';
-  
+
   if (!webWorkers) {
     errors.push('Web Workers not supported - Sanctum cannot run');
   }
@@ -42,23 +42,23 @@ export function detectCapabilities(): BrowserCapabilities {
   if (!wasm) {
     errors.push('WebAssembly not supported - Argon2 cannot run');
   }
-  
+
   if (!sharedArrayBuffer) {
     warnings.push('SharedArrayBuffer not available - using reduced Argon2 parameters');
   }
   if (!crossOriginIsolated) {
     warnings.push('Cross-origin isolation not enabled - some features limited');
   }
-  
+
   const memory = (navigator as any).deviceMemory;
   let recommendedProfile: 'mobile' | 'desktop' | 'paranoid' = 'mobile';
-  
+
   if (memory && memory >= 8 && crossOriginIsolated) {
     recommendedProfile = 'paranoid';
   } else if (memory && memory >= 4) {
     recommendedProfile = 'desktop';
   }
-  
+
   return {
     sharedArrayBuffer,
     crossOriginIsolated,
