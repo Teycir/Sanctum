@@ -4,16 +4,32 @@ import path from 'path';
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
+    environment: 'happy-dom',
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', '__tests__/', '*.config.*']
-    }
+      reporter: ['text', 'json', 'html', 'lcov'],
+      exclude: [
+        'node_modules/**',
+        '__tests__/**',
+        '*.config.{js,ts}',
+        'scripts/**',
+        '.next/**',
+        'app/**', // Exclude Next.js app dir (UI components tested separately)
+      ],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
+      },
+    },
+    include: ['__tests__/**/*.test.ts'],
+    setupFiles: ['__tests__/setup.ts'],
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './')
-    }
-  }
+      '@': path.resolve(__dirname, './'),
+      '@/lib': path.resolve(__dirname, './lib'),
+    },
+  },
 });
