@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { AnimatedTagline } from './components/AnimatedTagline';
 import { CyclingFeatures } from './components/CyclingFeatures';
 import { VaultIcon } from './components/VaultIcon';
@@ -38,9 +39,11 @@ export default function Home() {
         </h1>
         <AnimatedTagline text="Client‑side encrypted zero‑trust vault" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', marginBottom: 32 }}>
-          <button onClick={() => router.push('/create')} className="start-btn">
-            Create Vault
-          </button>
+          <Link href="/create" prefetch={true} style={{ textDecoration: 'none' }}>
+            <button className="start-btn">
+              Create Vault
+            </button>
+          </Link>
         </div>
         <CyclingFeatures />
       </div>

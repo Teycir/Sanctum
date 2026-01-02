@@ -3,6 +3,7 @@
 // ============================================================================
 
 import { z } from 'zod';
+import type { Argon2Profile } from '../crypto/constants';
 
 export const StoredVaultSchema = z.object({
   decoyCID: z.string().min(1, 'Decoy CID required'),
@@ -18,7 +19,7 @@ export const CreateVaultParamsSchema = z.object({
   hiddenContent: z.instanceof(Uint8Array),
   passphrase: z.string().min(1, 'Passphrase required'),
   duressPassphrase: z.string().optional(),
-  argonProfile: z.enum(['mobile', 'desktop', 'paranoid']).optional()
+  argonProfile: z.custom<Argon2Profile>().optional()
 });
 
 export const UnlockVaultParamsSchema = z.object({

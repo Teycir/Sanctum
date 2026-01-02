@@ -17,11 +17,30 @@ export class HeliaIPFS {
   /**
    * Initialize Helia node
    */
-  async init(): Promise<void> {
+  async init() {
     if (this.helia) return;
 
-    const { createHelia } = await import('helia');
-    this.helia = await createHelia();
+    // Suppress all IPFS connection errors globally
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    console.error = (...args) => {
+      const msg = String(args[0] || '');
+      if (msg.includes('WebSocket') || msg.includes('libp2p') || msg.includes('connection')) return;
+      originalError.apply(console, args);
+    };
+    console.warn = (...args) => {
+      const msg = String(args[0] || '');
+      if (msg.includes('WebSocket') || msg.includes('libp2p') || msg.includes('connection')) return;
+      originalWarn.apply(console, args);
+    };
+
+    try {
+      const { createHelia } = await import("helia");
+      this.helia = await createHelia();
+    } finally {
+      console.error = originalError;
+      console.warn = originalWarn;
+    }
   }
 
   /**
@@ -32,10 +51,10 @@ export class HeliaIPFS {
   async upload(data: Uint8Array): Promise<string> {
     if (!this.helia) await this.init();
 
-    const { unixfs } = await import('@helia/unixfs');
+    const { unixfs } = await import("@helia/unixfs");
     const fs = unixfs(this.helia);
     const cid = await fs.addBytes(data);
-    
+
     return cid.toString();
   }
 
@@ -44,20 +63,20 @@ export class HeliaIPFS {
    * @param cid Content identifier
    * @returns Downloaded data
    */
-  async download(cid: string): Promise<Uint8Array> {
+  async download(cid: string) {
     if (!this.helia) await this.init();
 
-    const { unixfs } = await import('@helia/unixfs');
-    const { CID } = await import('multiformats/cid');
-    
+    const { unixfs } = await import("@helia/unixfs");
+    const { CID } = await import("multiformats/cid");
+
     const fs = unixfs(this.helia);
     const cidObj = CID.parse(cid);
-    
-    const chunks: Uint8Array[] = [];
+
+    const chunks = [];
     for await (const chunk of fs.cat(cidObj)) {
       chunks.push(chunk);
     }
-    
+
     const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
     const result = new Uint8Array(totalLength);
     let offset = 0;
@@ -65,7 +84,7 @@ export class HeliaIPFS {
       result.set(chunk, offset);
       offset += chunk.length;
     }
-    
+
     return result;
   }
 

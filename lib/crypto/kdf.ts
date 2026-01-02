@@ -4,7 +4,7 @@
 
 import { argon2id } from '@noble/hashes/argon2';
 import { hkdf } from '@noble/hashes/hkdf';
-import { sha256 } from '@noble/hashes/sha256';
+import { sha256 } from '@noble/hashes/sha2';
 import { HKDF_CONTEXTS, type Argon2Profile } from './constants';
 import { wipeMemory, encodeText } from './utils';
 

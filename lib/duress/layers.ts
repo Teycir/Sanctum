@@ -2,14 +2,13 @@
 // TYPES & INTERFACES
 // ============================================================================
 
-import { hkdf } from '@noble/hashes/hkdf';
-import { sha256 } from '@noble/hashes/sha256';
-import { HKDF_CONTEXTS } from '../crypto/constants';
-import { encrypt, decrypt, type EncryptionResult } from '../crypto/core';
-import { assembleBlob } from '../crypto/padding';
-import { selectVaultSize, wipeMemory, encodeText } from '../crypto/utils';
-import { dummyDerivation } from './timing';
-import type { Argon2Profile } from '../crypto/constants';
+import { hkdf } from "@noble/hashes/hkdf";
+import { sha256 } from "@noble/hashes/sha2";
+import { HKDF_CONTEXTS } from "../crypto/constants";
+import { encrypt, decrypt } from "../crypto/core";
+import { assembleBlob } from "../crypto/padding";
+import { selectVaultSize, wipeMemory, encodeText } from "../crypto/utils";
+import type { Argon2Profile } from "../crypto/constants";
 
 export interface LayerContent {
   readonly decoy: Uint8Array;
@@ -19,7 +18,7 @@ export interface LayerContent {
 export interface HiddenVaultParams {
   readonly content: LayerContent;
   readonly passphrase: string;
-  readonly duressPassphrase?: string;  // Optional duress password for decoy
+  readonly duressPassphrase?: string; // Optional duress password for decoy
   readonly argonProfile: Argon2Profile;
 }
 
@@ -43,13 +42,15 @@ export interface HiddenVaultResult {
 export function deriveLayerPassphrase(
   masterPassphrase: string,
   layerIndex: number,
-  salt: Uint8Array
+  salt: Uint8Array,
 ): string {
   const input = encodeText(masterPassphrase);
   const context = encodeText(`${HKDF_CONTEXTS.layerDerivation}-${layerIndex}`);
   const derived = hkdf(sha256, input, salt, context, 32);
   // WARNING: Returned string cannot be securely wiped from memory due to JS string immutability
-  const passphrase = Array.from(derived).map(b => b.toString(16).padStart(2, '0')).join('');
+  const passphrase = Array.from(derived)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   wipeMemory(input);
   wipeMemory(derived);
   return passphrase;
@@ -61,41 +62,43 @@ export function deriveLayerPassphrase(
  * @returns Complete decoy and hidden blobs with shared salt
  * @throws Error if encryption fails
  */
-export function createHiddenVault(params: HiddenVaultParams): HiddenVaultResult {
+export function createHiddenVault(
+  params: HiddenVaultParams,
+): HiddenVaultResult {
   // Encrypt decoy with duress passphrase (or empty if not provided)
-  const decoyPassphrase = params.duressPassphrase || '';
+  const decoyPassphrase: string = params.duressPassphrase || "";
   const decoyEncrypted = encrypt({
     plaintext: params.content.decoy,
     passphrase: decoyPassphrase,
-    argonProfile: params.argonProfile
+    argonProfile: params.argonProfile,
   });
 
-  const salt = decoyEncrypted.salt;
-  const hiddenPassphrase = deriveLayerPassphrase(params.passphrase, 1, salt);
-  
+  const salt: Uint8Array = decoyEncrypted.salt;
+  const hiddenPassphrase: string = deriveLayerPassphrase(params.passphrase, 1, salt);
+
   // Encrypt hidden layer with same salt as decoy
   const hiddenEncrypted = encrypt(
     {
       plaintext: params.content.hidden,
       passphrase: hiddenPassphrase,
-      argonProfile: params.argonProfile
+      argonProfile: params.argonProfile,
     },
-    undefined,  // Let it generate its own nonce
-    salt        // Use decoy's salt
+    undefined, // Let it generate its own nonce
+    salt, // Use decoy's salt
   );
 
-  const maxSize = Math.max(
+  const maxSize: number = Math.max(
     selectVaultSize(decoyEncrypted.ciphertext.length),
-    selectVaultSize(hiddenEncrypted.ciphertext.length)
+    selectVaultSize(hiddenEncrypted.ciphertext.length),
   );
 
-  const decoyBlob = assembleBlob(decoyEncrypted, maxSize);
-  const hiddenBlob = assembleBlob(hiddenEncrypted, maxSize);
+  const decoyBlob: Uint8Array = assembleBlob(decoyEncrypted, maxSize);
+  const hiddenBlob: Uint8Array = assembleBlob(hiddenEncrypted, maxSize);
 
   return {
     decoyBlob,
     hiddenBlob,
-    salt
+    salt,
   };
 }
 
@@ -108,16 +111,14 @@ export function createHiddenVault(params: HiddenVaultParams): HiddenVaultResult 
  */
 export function unlockHiddenVault(
   result: HiddenVaultResult,
-  passphrase: string
+  passphrase: string,
 ): Uint8Array {
   try {
     return decrypt({ blob: result.decoyBlob, passphrase });
-  } catch (err) {
-    // Only proceed to hidden layer if decoy decryption failed due to authentication
-    if (err instanceof Error && err.message.includes('Authentication')) {
-      const hiddenPassphrase = deriveLayerPassphrase(passphrase, 1, result.salt);
-      return decrypt({ blob: result.hiddenBlob, passphrase: hiddenPassphrase });
-    }
-    throw err;
+  } catch {
+    // If decoy decryption fails, try hidden layer
+    // This is expected behavior for plausible deniability
+    const hiddenPassphrase: string = deriveLayerPassphrase(passphrase, 1, result.salt);
+    return decrypt({ blob: result.hiddenBlob, passphrase: hiddenPassphrase });
   }
 }

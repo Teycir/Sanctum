@@ -14,12 +14,16 @@ const sanitizeInput = (input: string): string => {
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
-    "'": "&#x27;"
+    "'": "&#x27;",
   };
-  return Object.entries(entities).reduce(
-    (str, [char, entity]) => str.replaceAll(char, entity),
-    input,
-  );
+  try {
+    return Object.entries(entities).reduce(
+      (str, [char, entity]) => str.replaceAll(char, entity),
+      input,
+    );
+  } catch {
+    return input;
+  }
 };
 
 interface VaultResult {
@@ -49,11 +53,13 @@ export default function CreateVault() {
       timeout = setTimeout(() => setIsBlurred(true), 60000);
     };
     resetTimer();
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
-    events.forEach(e => window.addEventListener(e, resetTimer));
+    const events = ["mousedown", "keydown", "scroll", "touchstart"];
+    events.forEach((e) => globalThis.window.addEventListener(e, resetTimer));
     return () => {
       clearTimeout(timeout);
-      events.forEach(e => window.removeEventListener(e, resetTimer));
+      events.forEach((e) =>
+        globalThis.window.removeEventListener(e, resetTimer),
+      );
     };
   }, []);
 
@@ -109,20 +115,41 @@ export default function CreateVault() {
       setError("Passphrase must contain at least one special character");
       return;
     }
+    if (sanitizedDuress && sanitizedPassphrase === sanitizedDuress) {
+      setError("Hidden passphrase must be different from duress passphrase");
+      return;
+    }
 
     setError("");
     setLoading(true);
-    setProgress(50);
-    setLoadingStep("Encrypting layers...");
+    setProgress(10);
+    setLoadingStep("Deriving keys...");
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    let intervalCleared = false;
+    const progressSteps = [
+      { progress: 10, step: "Deriving keys...", delay: 0 },
+      { progress: 30, step: "Encrypting decoy layer...", delay: 800 },
+      { progress: 50, step: "Encrypting hidden layer...", delay: 1600 },
+      { progress: 70, step: "Initializing IPFS node...", delay: 2400 },
+      { progress: 85, step: "Storing on IPFS...", delay: 3200 },
+    ];
 
     const progressInterval = setInterval(() => {
-      setProgress((prev) => Math.min(prev + 1, 70));
+      setProgress((prev) => {
+        const elapsed = Date.now() - startTime;
+        const currentStep = progressSteps.find(s => elapsed >= s.delay && elapsed < s.delay + 800);
+        if (currentStep && loadingStep !== currentStep.step) {
+          setLoadingStep(currentStep.step);
+        }
+        return Math.min(prev + 1, 90);
+      });
     }, 50);
+
+    const startTime = Date.now();
 
     try {
       const vaultService = new VaultService();
+
       const vaultResult = await vaultService.createVault({
         decoyContent: new TextEncoder().encode(sanitizedDecoy),
         hiddenContent: new TextEncoder().encode(sanitizedHidden),
@@ -132,24 +159,17 @@ export default function CreateVault() {
       });
 
       clearInterval(progressInterval);
-      setProgress(75);
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      setLoadingStep("Uploading to IPFS........");
-      setProgress(98);
+      intervalCleared = true;
+      setProgress(100);
+      setLoadingStep("Complete!");
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      setLoadingStep("Finalizing...");
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      setProgress(100);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      await vaultService.stop();
       setResult(vaultResult);
+      vaultService.stop().catch(() => {}); // Stop in background
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create vault");
     } finally {
-      clearInterval(progressInterval);
+      if (!intervalCleared) clearInterval(progressInterval);
       setLoading(false);
       setLoadingStep("");
       setProgress(0);
@@ -227,9 +247,9 @@ export default function CreateVault() {
               }}
             >
               <motion.div
-                initial={{ width: "50%" }}
+                initial={{ width: "10%" }}
                 animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
                 style={{
                   height: "100%",
                   background: "linear-gradient(90deg, #a855f7, #c084fc)",
@@ -248,33 +268,17 @@ export default function CreateVault() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          padding: 20,
+          justifyContent: "flex-start",
+          padding: "20px 20px 20px",
           filter: isBlurred ? "blur(8px)" : "none",
-          transition: "filter 0.3s ease"
+          transition: "filter 0.3s ease",
         }}
       >
         <div style={{ width: "100%", maxWidth: 600 }}>
-          <button
-            onClick={() => router.push("/")}
-            style={{
-              marginBottom: 24,
-              padding: "8px 16px",
-              background: "rgba(255, 255, 255, 0.1)",
-              color: "#fff",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              borderRadius: 8,
-              fontSize: 14,
-              cursor: "pointer",
-            }}
-          >
-            ← Back
-          </button>
-
           <h1
             style={{
-              fontSize: 32,
-              marginBottom: 32,
+              fontSize: 28,
+              marginBottom: 12,
               fontWeight: 700,
               textAlign: "center",
             }}
@@ -282,14 +286,33 @@ export default function CreateVault() {
             Create Vault
           </h1>
 
+          <button
+            onClick={() => router.push("/")}
+            style={{
+              marginBottom: 20,
+              padding: 0,
+              background: "transparent",
+              color: "#fff",
+              border: "none",
+              fontSize: 24,
+              cursor: "pointer",
+              opacity: 0.7,
+              transition: "opacity 0.2s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.7")}
+          >
+            ←
+          </button>
+
           {!result ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
                 <label
                   style={{
                     display: "block",
-                    marginBottom: 8,
-                    fontSize: 14,
+                    marginBottom: 6,
+                    fontSize: 13,
                     fontWeight: 600,
                   }}
                 >
@@ -301,13 +324,13 @@ export default function CreateVault() {
                   placeholder="Enter innocent content (shown under duress)..."
                   style={{
                     width: "100%",
-                    minHeight: 100,
-                    padding: 12,
+                    minHeight: 80,
+                    padding: 10,
                     background: "rgba(255, 255, 255, 0.05)",
                     border: "1px solid rgba(255, 255, 255, 0.2)",
                     borderRadius: 8,
                     color: "#fff",
-                    fontSize: 14,
+                    fontSize: 13,
                     resize: "vertical",
                     boxSizing: "border-box",
                   }}
@@ -318,8 +341,8 @@ export default function CreateVault() {
                 <label
                   style={{
                     display: "block",
-                    marginBottom: 8,
-                    fontSize: 14,
+                    marginBottom: 6,
+                    fontSize: 13,
                     fontWeight: 600,
                   }}
                 >
@@ -331,13 +354,13 @@ export default function CreateVault() {
                   placeholder="Enter your real secret content..."
                   style={{
                     width: "100%",
-                    minHeight: 100,
-                    padding: 12,
+                    minHeight: 80,
+                    padding: 10,
                     background: "rgba(255, 255, 255, 0.05)",
                     border: "1px solid rgba(255, 255, 255, 0.2)",
                     borderRadius: 8,
                     color: "#fff",
-                    fontSize: 14,
+                    fontSize: 13,
                     resize: "vertical",
                     boxSizing: "border-box",
                   }}
@@ -348,8 +371,8 @@ export default function CreateVault() {
                 <label
                   style={{
                     display: "block",
-                    marginBottom: 8,
-                    fontSize: 14,
+                    marginBottom: 6,
+                    fontSize: 13,
                     fontWeight: 600,
                   }}
                 >
@@ -362,12 +385,12 @@ export default function CreateVault() {
                   placeholder="Leave empty to show decoy without passphrase..."
                   style={{
                     width: "100%",
-                    padding: 12,
+                    padding: 10,
                     background: "rgba(255, 255, 255, 0.05)",
                     border: "1px solid rgba(255, 255, 255, 0.2)",
                     borderRadius: 8,
                     color: "#fff",
-                    fontSize: 14,
+                    fontSize: 13,
                     boxSizing: "border-box",
                   }}
                 />
@@ -377,8 +400,8 @@ export default function CreateVault() {
                 <label
                   style={{
                     display: "block",
-                    marginBottom: 8,
-                    fontSize: 14,
+                    marginBottom: 6,
+                    fontSize: 13,
                     fontWeight: 600,
                   }}
                 >
@@ -391,12 +414,12 @@ export default function CreateVault() {
                   placeholder="Enter a strong passphrase..."
                   style={{
                     width: "100%",
-                    padding: 12,
+                    padding: 10,
                     background: "rgba(255, 255, 255, 0.05)",
                     border: "1px solid rgba(255, 255, 255, 0.2)",
                     borderRadius: 8,
                     color: "#fff",
-                    fontSize: 14,
+                    fontSize: 13,
                     boxSizing: "border-box",
                   }}
                 />
@@ -405,9 +428,9 @@ export default function CreateVault() {
                   animate={{ opacity: 0.7, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
                   style={{
-                    marginTop: 8,
-                    fontSize: 12,
-                    lineHeight: 1.5,
+                    marginTop: 6,
+                    fontSize: 11,
+                    lineHeight: 1.4,
                     textAlign: "center",
                   }}
                 >
@@ -433,6 +456,7 @@ export default function CreateVault() {
 
               <div style={{ display: "flex", justifyContent: "center" }}>
                 <button
+                  type="button"
                   onClick={handleCreate}
                   disabled={loading}
                   className="start-btn"
@@ -479,13 +503,16 @@ export default function CreateVault() {
                   {result.vaultURL}
                 </code>
                 <button
+                  type="button"
                   onClick={async () => {
                     try {
                       await navigator.clipboard.writeText(result.vaultURL);
                     } catch {
-                      setError('Failed to copy to clipboard');
+                      setError("Failed to copy to clipboard");
                     }
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.3)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.2)"}
                   style={{
                     padding: "8px 16px",
                     background: "rgba(168, 85, 247, 0.2)",
@@ -495,22 +522,76 @@ export default function CreateVault() {
                     fontSize: 13,
                     cursor: "pointer",
                     marginBottom: 16,
+                    transition: "background 0.2s",
                   }}
                 >
                   Copy URL
                 </button>
-                <p style={{ fontSize: 12, opacity: 0.6, marginTop: 12 }}>
-                  Decoy CID: {result.decoyCID.slice(0, 20)}...
+                <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 12 }}>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(result.decoyCID);
+                      } catch {
+                        setError("Failed to copy CID");
+                      }
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.2)"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.1)"}
+                    style={{
+                      padding: "4px 8px",
+                      background: "rgba(168, 85, 247, 0.1)",
+                      color: "#fff",
+                      border: "1px solid rgba(168, 85, 247, 0.3)",
+                      borderRadius: 4,
+                      fontSize: 11,
+                      cursor: "pointer",
+                      transition: "background 0.2s",
+                    }}
+                  >
+                    Copy Decoy CID
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(result.hiddenCID);
+                      } catch {
+                        setError("Failed to copy CID");
+                      }
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.2)"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.1)"}
+                    style={{
+                      padding: "4px 8px",
+                      background: "rgba(168, 85, 247, 0.1)",
+                      color: "#fff",
+                      border: "1px solid rgba(168, 85, 247, 0.3)",
+                      borderRadius: 4,
+                      fontSize: 11,
+                      cursor: "pointer",
+                      transition: "background 0.2s",
+                    }}
+                  >
+                    Copy Hidden CID
+                  </button>
+                </div>
+                <p style={{ fontSize: 12, opacity: 0.6, marginTop: 12, wordBreak: "break-all" }}>
+                  Decoy CID: {result.decoyCID}
                 </p>
-                <p style={{ fontSize: 12, opacity: 0.6 }}>
-                  Hidden CID: {result.hiddenCID.slice(0, 20)}...
+                <p style={{ fontSize: 12, opacity: 0.6, wordBreak: "break-all" }}>
+                  Hidden CID: {result.hiddenCID}
                 </p>
               </div>
               <div
                 style={{ display: "flex", gap: 12, justifyContent: "center" }}
               >
                 <button
+                  type="button"
                   onClick={() => router.push(result.vaultURL)}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.4)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.3)"}
                   style={{
                     padding: "12px 24px",
                     background: "rgba(168, 85, 247, 0.3)",
@@ -519,11 +600,13 @@ export default function CreateVault() {
                     borderRadius: 8,
                     fontSize: 14,
                     cursor: "pointer",
+                    transition: "background 0.2s",
                   }}
                 >
                   Open Vault
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setResult(undefined);
                     setDecoyContent("");
@@ -531,6 +614,8 @@ export default function CreateVault() {
                     setPassphrase("");
                     setDuressPassphrase("");
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.15)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)"}
                   style={{
                     padding: "12px 24px",
                     background: "rgba(255, 255, 255, 0.1)",
@@ -539,6 +624,7 @@ export default function CreateVault() {
                     borderRadius: 8,
                     fontSize: 14,
                     cursor: "pointer",
+                    transition: "background 0.2s",
                   }}
                 >
                   Create Another

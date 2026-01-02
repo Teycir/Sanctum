@@ -9,9 +9,9 @@ export interface BrowserCapabilities {
   readonly webCrypto: boolean;
   readonly bigInt: boolean;
   readonly wasm: boolean;
-  readonly recommendedProfile: 'mobile' | 'desktop' | 'paranoid';
-  readonly warnings: string[];
-  readonly errors: string[];
+  readonly recommendedProfile: "mobile" | "desktop" | "paranoid";
+  readonly warnings: readonly string[];
+  readonly errors: readonly string[];
 }
 
 // ============================================================================
@@ -26,37 +26,41 @@ export function detectCapabilities(): BrowserCapabilities {
   const warnings: string[] = [];
   const errors: string[] = [];
 
-  const sharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
-  const crossOriginIsolated = typeof globalThis.crossOriginIsolated !== 'undefined' && globalThis.crossOriginIsolated;
-  const webWorkers = typeof Worker !== 'undefined';
-  const webCrypto = typeof crypto?.subtle !== 'undefined';
-  const bigInt = typeof BigInt !== 'undefined';
-  const wasm = typeof WebAssembly !== 'undefined';
+  const sharedArrayBuffer = typeof SharedArrayBuffer !== "undefined";
+  const crossOriginIsolated =
+    typeof globalThis.crossOriginIsolated !== "undefined" &&
+    globalThis.crossOriginIsolated;
+  const webWorkers = typeof Worker !== "undefined";
+  const webCrypto = typeof crypto?.subtle !== "undefined";
+  const bigInt = typeof BigInt !== "undefined";
+  const wasm = typeof WebAssembly !== "undefined";
 
   if (!webWorkers) {
-    errors.push('Web Workers not supported - Sanctum cannot run');
+    errors.push("Web Workers not supported - Sanctum cannot run");
   }
   if (!webCrypto) {
-    errors.push('Web Crypto API not supported - Sanctum cannot run');
+    errors.push("Web Crypto API not supported - Sanctum cannot run");
   }
   if (!wasm) {
-    errors.push('WebAssembly not supported - Argon2 cannot run');
+    errors.push("WebAssembly not supported - Argon2 cannot run");
   }
 
   if (!sharedArrayBuffer) {
-    warnings.push('SharedArrayBuffer not available - using reduced Argon2 parameters');
+    warnings.push(
+      "SharedArrayBuffer not available - using reduced Argon2 parameters",
+    );
   }
   if (!crossOriginIsolated) {
-    warnings.push('Cross-origin isolation not enabled - some features limited');
+    warnings.push("Cross-origin isolation not enabled - some features limited");
   }
 
   const memory = (navigator as any).deviceMemory;
-  let recommendedProfile: 'mobile' | 'desktop' | 'paranoid' = 'mobile';
+  let recommendedProfile: "mobile" | "desktop" | "paranoid" = "mobile";
 
   if (memory && memory >= 8 && crossOriginIsolated) {
-    recommendedProfile = 'paranoid';
+    recommendedProfile = "paranoid";
   } else if (memory && memory >= 4) {
-    recommendedProfile = 'desktop';
+    recommendedProfile = "desktop";
   }
 
   return {
@@ -68,6 +72,6 @@ export function detectCapabilities(): BrowserCapabilities {
     wasm,
     recommendedProfile,
     warnings,
-    errors
+    errors,
   };
 }
