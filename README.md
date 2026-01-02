@@ -69,9 +69,8 @@ cd Sanctum
 # Install dependencies
 npm install
 
-# Set up database
-wrangler d1 create duress-vault-db
-wrangler d1 execute duress-vault-db --file=migrations/001_vaults.sql
+# Login to Cloudflare (for deployment)
+npx wrangler login
 
 # Run development server
 npm run dev
@@ -158,30 +157,40 @@ Hide encrypted data inside innocent-looking images using LSB steganography.
 ### Technology Stack
 
 - **Frontend**: Next.js 14 + React + Web Crypto API
-- **Backend**: Cloudflare Workers (free tier)
-- **Database**: Cloudflare D1 (SQLite, metadata only)
-- **Storage**: User-provided IPFS (Filebase + Pinata)
-- **Encryption**: AES-GCM-256 with PBKDF2 + HKDF
+- **Hosting**: Cloudflare Pages (static site, free tier)
+- **Cryptography**: @noble/ciphers + @noble/hashes (XChaCha20-Poly1305, Argon2id)
+- **Storage**: IPFS via Helia (client-side) + user-provided pinning (Filebase/Pinata)
+- **State**: RAM-only (Web Workers, no persistence)
+- **Backend**: None (fully client-side)
 
 ### Zero-Trust Design
 
 ```
-┌─────────────┐
-│   Browser   │ ← All crypto operations
-│  (Client)   │ ← Encryption/decryption
-└──────┬──────┘ ← Key derivation
-       │
-       ├────────────────────┐
-       │                    │
-       ▼                    ▼
-┌─────────────┐      ┌──────────────┐
-│  Cloudflare │      │ IPFS Pinning │
-│   Worker    │      │  (Filebase,  │
-│  (Metadata) │      │   Pinata)    │
-└─────────────┘      └──────────────┘
+┌─────────────────────────────────────┐
+│           Browser (Client)          │
+│  ┌─────────────────────────────┐   │
+│  │   Web Worker (RAM-only)     │   │
+│  │   • Argon2id key derivation │   │
+│  │   • XChaCha20 encryption    │   │
+│  │   • Auto-clear on idle      │   │
+│  └─────────────────────────────┘   │
+│  ┌─────────────────────────────┐   │
+│  │   Helia (IPFS Client)       │   │
+│  │   • Content addressing      │   │
+│  │   • P2P retrieval           │   │
+│  └─────────────────────────────┘   │
+└──────────────┬──────────────────────┘
+               │
+               ▼
+    ┌──────────────────────┐
+    │   IPFS Pinning APIs  │
+    │   (Filebase, Pinata) │
+    │   • User-provided    │
+    │   • Free tier        │
+    └──────────────────────┘
 ```
 
-**Critical**: Server never sees plaintext, passphrases, or complete encryption keys.
+**Critical**: Fully client-side. No backend, no database, no server trust required.
 
 ## 🛡️ Security: Attack Scenarios
 
@@ -408,8 +417,8 @@ Combined free tier limits:
 ### Prerequisites
 
 - Node.js 18+
-- Cloudflare account (free tier)
-- Wrangler CLI (`npm install -g wrangler`)
+- Cloudflare account (for Pages deployment)
+- Modern browser with Web Crypto API support
 
 ### Project Structure
 
@@ -430,13 +439,12 @@ Sanctum/
 
 ### Code Reuse from TimeSeal
 
-**80% of Sanctum is built on TimeSeal's battle-tested infrastructure**:
+**Sanctum builds on TimeSeal's proven patterns**:
 
-- ✅ Split-key encryption (10,000+ seals, zero breaches)
-- ✅ D1 database abstraction
-- ✅ Rate limiting & security middleware
-- ✅ API infrastructure
+- ✅ Client-side cryptography architecture
 - ✅ UI components & animations
+- ✅ Security best practices
+- ✅ Zero-trust design philosophy
 
 See [TimeSeal](https://github.com/Teycir/TimeSeal) for the parent project.
 
@@ -446,11 +454,11 @@ See [TimeSeal](https://github.com/Teycir/TimeSeal) for the parent project.
 # Development
 npm run dev
 
-# Build
+# Build for production
 npm run build
 
-# Deploy
-wrangler deploy
+# Deploy to Cloudflare Pages
+npm run deploy
 
 # Test
 npm test
@@ -514,8 +522,8 @@ Business Source License 1.1 - see [LICENSE](./LICENSE) for details.
 
 ## 🙏 Acknowledgments
 
-- **TimeSeal** - Parent project providing 80% of infrastructure
-- **Cloudflare** - Free Workers and D1 database
+- **TimeSeal** - Parent project providing cryptographic patterns
+- **Cloudflare Pages** - Free static site hosting
 - **Filebase & Pinata** - Free IPFS pinning services
 - **VeraCrypt** - Inspiration for plausible deniability
 
