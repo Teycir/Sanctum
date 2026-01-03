@@ -56,43 +56,58 @@ export class PinataClient {
   }
 
   async getStorageUsage(): Promise<{ used: number; limit: number; percentage: number }> {
-    const listResponse = await fetch('https://api.pinata.cloud/data/pinList?status=pinned&pageLimit=1000', {
+    const response = await fetch('https://api.pinata.cloud/data/userPinnedDataTotal', {
       headers: { Authorization: `Bearer ${this.apiKey}` }
-    })
+    });
 
-    if (!listResponse.ok) {
-      throw new Error(`Failed to list pins: ${listResponse.statusText}`)
+    if (!response.ok) {
+      throw new Error(`Failed to get storage usage: ${response.statusText}`)
     }
 
-    const listData = await listResponse.json();
-    const rows = listData.rows;
-    const used = rows && Array.isArray(rows) 
-      ? rows.reduce((sum: number, row: { size?: number }) => sum + (row.size || 0), 0)
-      : 0;
+    const data = await response.json();
+    const used = data.pin_size_total || 0;
     const limit = 1073741824; // 1GB free tier
 
     return { used, limit, percentage: (used / limit) * 100 }
   }
 
+  private async fetchFromGateway(gateway: string, cid: string, attempt: number): Promise<Uint8Array | null> {
+    try {
+      const response = await fetch(`${gateway}/${cid}`, { 
+        signal: AbortSignal.timeout(30000)
+      });
+      
+      if (response.ok) {
+        const buffer = await response.arrayBuffer();
+        return new Uint8Array(buffer);
+      }
+      
+      if (response.status === 429) {
+        await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1)));
+      }
+      return null;
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+      return null;
+    }
+  }
+
   async getBytes(cid: string): Promise<Uint8Array> {
     if (!cid?.trim()) throw new Error('CID cannot be empty')
 
-    // Try Cloudflare gateway first (faster), fallback to Pinata
     const gateways = [
-      'https://cloudflare-ipfs.com/ipfs',
       'https://ipfs.io/ipfs',
-      `${this.gateway}/ipfs`
-    ]
+      `${this.gateway}/ipfs`,
+      'https://dweb.link/ipfs'
+    ];
 
     for (const gateway of gateways) {
-      try {
-        const response = await fetch(`${gateway}/${cid}`, { signal: AbortSignal.timeout(10000) })
-        if (response.ok) {
-          const buffer = await response.arrayBuffer()
-          return new Uint8Array(buffer)
-        }
-      } catch {
-        continue
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const result = await this.fetchFromGateway(gateway, cid, attempt);
+        if (result) return result;
       }
     }
 

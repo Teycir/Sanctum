@@ -63,16 +63,16 @@ describe('crypto/constants', () => {
   });
 
   describe('SIZE_CLASSES', () => {
-    it('should have 8 size classes', () => {
-      expect(SIZE_CLASSES.length).toBe(8);
+    it('should have 10 size classes', () => {
+      expect(SIZE_CLASSES.length).toBe(10);
     });
 
     it('should start at 1 KB', () => {
       expect(SIZE_CLASSES[0]).toBe(1024);
     });
 
-    it('should end at 16 MB', () => {
-      expect(SIZE_CLASSES[7]).toBe(16 * 1024 * 1024);
+    it('should end at 256 MB', () => {
+      expect(SIZE_CLASSES[9]).toBe(256 * 1024 * 1024);
     });
 
     it('should be powers of 4', () => {
@@ -83,8 +83,8 @@ describe('crypto/constants', () => {
   });
 
   describe('MAX_VAULT_SIZE', () => {
-    it('should be 16 MB', () => {
-      expect(MAX_VAULT_SIZE).toBe(16 * 1024 * 1024);
+    it('should be 256 MB', () => {
+      expect(MAX_VAULT_SIZE).toBe(256 * 1024 * 1024);
     });
   });
 

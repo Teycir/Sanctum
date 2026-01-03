@@ -32,13 +32,14 @@ describe('hidden/vault', () => {
 
       const result = createHiddenVault({
         content: { decoy, hidden },
-        passphrase: 'master-pass',
-        decoyPassphrase: 'decoy-pass',
+        passphrase: 'master-pass-12345',
+        decoyPassphrase: 'decoy-pass-12345',
         argonProfile: ARGON2_PROFILES.mobile
       });
 
-      const unlocked = unlockHiddenVault(result, 'decoy-pass');
-      expect(unlocked).toEqual(decoy);
+      const unlocked = unlockHiddenVault(result, 'decoy-pass-12345');
+      expect(unlocked.content).toEqual(decoy);
+      expect(unlocked.isDecoy).toBe(true);
     });
 
     it('should create and unlock hidden layer', () => {
@@ -47,13 +48,14 @@ describe('hidden/vault', () => {
 
       const result = createHiddenVault({
         content: { decoy, hidden },
-        passphrase: 'master-pass',
-        decoyPassphrase: 'decoy-pass',
+        passphrase: 'master-pass-12345',
+        decoyPassphrase: 'decoy-pass-12345',
         argonProfile: ARGON2_PROFILES.mobile
       });
 
-      const unlocked = unlockHiddenVault(result, 'master-pass');
-      expect(unlocked).toEqual(hidden);
+      const unlocked = unlockHiddenVault(result, 'master-pass-12345');
+      expect(unlocked.content).toEqual(hidden);
+      expect(unlocked.isDecoy).toBe(false);
     });
 
     it('should fail with wrong passphrase', () => {
@@ -62,28 +64,31 @@ describe('hidden/vault', () => {
 
       const result = createHiddenVault({
         content: { decoy, hidden },
-        passphrase: 'correct-pass',
-        decoyPassphrase: 'decoy-pass',
+        passphrase: 'correct-pass-12345',
+        decoyPassphrase: 'decoy-pass-12345',
         argonProfile: ARGON2_PROFILES.mobile
       });
 
       expect(() => {
-        unlockHiddenVault(result, 'wrong-pass');
+        unlockHiddenVault(result, 'wrong-pass-12345');
       }).toThrow();
     });
 
     it('should handle empty decoy content', () => {
       const decoy = new Uint8Array(0);
       const hidden = new TextEncoder().encode('secret content');
+      const decoyPassphrase = 'decoy-pass-12345';
 
       const result = createHiddenVault({
         content: { decoy, hidden },
-        passphrase: 'master-pass',
+        passphrase: 'master-pass-12345',
+        decoyPassphrase,
         argonProfile: ARGON2_PROFILES.mobile
       });
 
-      const unlocked = unlockHiddenVault(result, '');
-      expect(unlocked.length).toBe(0);
+      const unlocked = unlockHiddenVault(result, decoyPassphrase);
+      expect(unlocked.content.length).toBe(0);
+      expect(unlocked.isDecoy).toBe(true);
     });
 
     it('should unlock decoy with duress passphrase', () => {
@@ -92,13 +97,14 @@ describe('hidden/vault', () => {
 
       const result = createHiddenVault({
         content: { decoy, hidden },
-        passphrase: 'real-pass',
-        decoyPassphrase: 'duress-pass',
+        passphrase: 'real-pass-12345',
+        decoyPassphrase: 'duress-pass-12345',
         argonProfile: ARGON2_PROFILES.mobile
       });
 
-      const unlocked = unlockHiddenVault(result, 'duress-pass');
-      expect(unlocked).toEqual(decoy);
+      const unlocked = unlockHiddenVault(result, 'duress-pass-12345');
+      expect(unlocked.content).toEqual(decoy);
+      expect(unlocked.isDecoy).toBe(true);
     });
 
     it('should unlock hidden with real passphrase when duress set', () => {
@@ -107,13 +113,14 @@ describe('hidden/vault', () => {
 
       const result = createHiddenVault({
         content: { decoy, hidden },
-        passphrase: 'real-pass',
-        decoyPassphrase: 'duress-pass',
+        passphrase: 'real-pass-12345',
+        decoyPassphrase: 'duress-pass-12345',
         argonProfile: ARGON2_PROFILES.mobile
       });
 
-      const unlocked = unlockHiddenVault(result, 'real-pass');
-      expect(unlocked).toEqual(hidden);
+      const unlocked = unlockHiddenVault(result, 'real-pass-12345');
+      expect(unlocked.content).toEqual(hidden);
+      expect(unlocked.isDecoy).toBe(false);
     });
   });
 });

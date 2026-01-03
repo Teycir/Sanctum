@@ -61,106 +61,86 @@ export class VaultService {
    * Create hidden vault and upload to IPFS
    * @param params Vault creation parameters
    * @returns Vault URL with embedded metadata
+   * @throws Error if validation fails, encryption fails, or upload fails
    */
   async createVault(params: CreateVaultParams): Promise<CreateVaultResult> {
-    try {
-      const validated = CreateVaultParamsSchema.parse(params);
+    const validated = CreateVaultParamsSchema.parse(params);
 
-      const content: LayerContent = {
-        decoy: validated.decoyContent,
-        hidden: validated.hiddenContent,
-      };
+    const content: LayerContent = {
+      decoy: validated.decoyContent,
+      hidden: validated.hiddenContent,
+    };
 
-      // Use worker for non-blocking Argon2
-      const vault = await this.crypto.createHiddenVault({
-        content,
-        passphrase: validated.passphrase,
-        decoyPassphrase: validated.decoyPassphrase,
-        argonProfile:
-          (typeof validated.argonProfile === "string"
-            ? ARGON2_PROFILES[validated.argonProfile]
-            : validated.argonProfile) || ARGON2_PROFILES.desktop,
-      });
+    // Use worker for non-blocking Argon2
+    const vault = await this.crypto.createHiddenVault({
+      content,
+      passphrase: validated.passphrase,
+      decoyPassphrase: validated.decoyPassphrase,
+      argonProfile:
+        (typeof validated.argonProfile === "string"
+          ? ARGON2_PROFILES[validated.argonProfile]
+          : validated.argonProfile) || ARGON2_PROFILES.desktop,
+    });
 
-      const stored = await uploadVault(vault, params.ipfsCredentials);
-      
-      // Add filenames to metadata
-      const storedWithFilenames = {
-        ...stored,
-        decoyFilename: params.decoyFilename,
-        hiddenFilename: params.hiddenFilename
-      };
-      
-      const metadata = serializeVaultMetadata(storedWithFilenames);
-      const encodedMetadata = base64UrlEncode(metadata);
+    const stored = await uploadVault(vault, params.ipfsCredentials);
+    
+    // Add filenames to metadata
+    const storedWithFilenames = {
+      ...stored,
+      decoyFilename: params.decoyFilename,
+      hiddenFilename: params.hiddenFilename
+    };
+    
+    const metadata = serializeVaultMetadata(storedWithFilenames);
+    const encodedMetadata = base64UrlEncode(metadata);
 
-      const baseURL =
-        globalThis.window === undefined
-          ? ""
-          : globalThis.window.location.origin;
-      const vaultURL = `${baseURL}/vault#${encodedMetadata}`;
+    const baseURL =
+      globalThis.window === undefined
+        ? ""
+        : globalThis.window.location.origin;
+    const vaultURL = `${baseURL}/vault#${encodedMetadata}`;
 
-      return {
-        vaultURL,
-        decoyCID: stored.decoyCID,
-        hiddenCID: stored.hiddenCID,
-      };
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to create vault: ${error.message}`);
-      }
-      throw new Error("Failed to create vault");
-    }
+    return {
+      vaultURL,
+      decoyCID: stored.decoyCID,
+      hiddenCID: stored.hiddenCID,
+    };
   }
 
   /**
    * Unlock vault from URL
    * @param params Unlock parameters
    * @returns Decrypted content
+   * @throws Error if URL invalid, download fails, or decryption fails
    */
   async unlockVault(params: UnlockVaultParams): Promise<UnlockVaultResult> {
-    try {
-      const validated = UnlockVaultParamsSchema.parse(params);
+    const validated = UnlockVaultParamsSchema.parse(params);
 
-      const hash = validated.vaultURL.split("#")[1];
-      if (!hash) {
-        throw new Error("Invalid vault URL: missing metadata");
-      }
-
-      const metadata = base64UrlDecode(hash);
-      const stored = deserializeVaultMetadata(metadata);
-
-      // Download directly from Pinata gateway (no JWT needed for public reads)
-      const vault = await downloadVault(stored);
-
-      // Use worker for non-blocking Argon2
-      const { content, isDecoy } = await this.crypto.unlockHiddenVault(
-        vault,
-        validated.passphrase,
-      );
-      const filename = isDecoy ? stored.decoyFilename : stored.hiddenFilename;
-
-      return { content, isDecoy, filename };
-    } catch (error) {
-      if (error instanceof Error) {
-        // Check if it's a decryption error (wrong password)
-        if (error.message.includes('decrypt') || error.message.includes('authentication')) {
-          throw new Error('Incorrect password');
-        }
-        throw new Error(`Failed to unlock vault: ${error.message}`);
-      }
-      throw new Error("Failed to unlock vault");
+    const hash = validated.vaultURL.split("#")[1];
+    if (!hash) {
+      throw new Error("Invalid vault URL: missing metadata");
     }
+
+    const metadata = base64UrlDecode(hash);
+    const stored = deserializeVaultMetadata(metadata);
+
+    // Download directly from Pinata gateway (no JWT needed for public reads)
+    const vault = await downloadVault(stored);
+
+    // Use worker for non-blocking Argon2
+    const { content, isDecoy } = await this.crypto.unlockHiddenVault(
+      vault,
+      validated.passphrase,
+    );
+    const filename = isDecoy ? stored.decoyFilename : stored.hiddenFilename;
+
+    return { content, isDecoy, filename };
   }
 
   /**
    * Stop workers
    */
   async stop(): Promise<void> {
-    try {
-      this.crypto.terminate();
-    } catch (workerError) {
-      console.error("Worker termination failed:", workerError);
-    }
+    this.crypto.terminate();
   }
 }

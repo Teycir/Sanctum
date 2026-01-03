@@ -6,6 +6,7 @@ import { LoadingOverlay } from "../components/LoadingOverlay";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { sanitizeInput, validateVaultForm } from "@/lib/validation/vault-form";
 import { generateVaultQR } from "@/lib/shared/qrcode";
+import styles from "./page.module.css";
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
@@ -48,6 +49,15 @@ export default function CreateVault() {
     limit: number;
     available: number;
   } | null>(null);
+  const [vaultServiceRef, setVaultServiceRef] = useState<{ stop: () => Promise<void> } | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (vaultServiceRef) {
+        vaultServiceRef.stop().catch(console.error);
+      }
+    };
+  }, [vaultServiceRef]);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -311,7 +321,9 @@ export default function CreateVault() {
         if (err instanceof TypeError || err instanceof RangeError) {
           console.warn("Unable to check storage quota:", err);
         } else {
-          throw err;
+          console.error("Unexpected error checking storage quota:", err);
+          setError("Failed to check storage quota. Please try again.");
+          return;
         }
       }
     } else {
@@ -384,6 +396,7 @@ export default function CreateVault() {
       ]);
 
       const vaultService = new VaultService();
+      setVaultServiceRef(vaultService);
 
       // Convert files to Uint8Array if present
       let decoyData: Uint8Array;
@@ -445,6 +458,7 @@ export default function CreateVault() {
       vaultService.stop().catch((stopError) => {
         console.error("Failed to stop vault service:", stopError);
       });
+      setVaultServiceRef(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create vault");
     } finally {
@@ -459,70 +473,25 @@ export default function CreateVault() {
     <>
       {loading && <LoadingOverlay step={loadingStep} progress={progress} />}
 
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          padding: "20px 20px 20px",
-          filter: isBlurred ? "blur(8px)" : "none",
-          transition: "filter 0.3s ease",
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: 600 }}>
-          <h1
-            style={{
-              fontSize: 28,
-              marginBottom: 12,
-              fontWeight: 700,
-              textAlign: "center",
-            }}
-          >
-            Create Vault
-          </h1>
+      <div className={`${styles.container} ${isBlurred ? styles.blurred : ''}`}>
+        <div className={styles.content}>
+          <h1 className={styles.title}>Create Vault</h1>
 
           <button
             type="button"
             onClick={() => router.push("/")}
-            style={{
-              marginBottom: 20,
-              padding: 0,
-              background: "transparent",
-              color: "#fff",
-              border: "none",
-              fontSize: 24,
-              cursor: "pointer",
-              opacity: 0.7,
-              transition: "opacity 0.2s",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.7")}
+            className={styles.backButton}
           >
             ←
           </button>
 
           {result === undefined ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div className={styles.form}>
               {(() => {
                 const warning = getStorageWarning();
                 return (
                   warning && (
-                    <div
-                      style={{
-                        padding: 12,
-                        background:
-                          warning.level === "critical"
-                            ? "rgba(255, 0, 0, 0.1)"
-                            : "rgba(255, 193, 7, 0.1)",
-                        border: `1px solid ${warning.level === "critical" ? "rgba(255, 0, 0, 0.3)" : "rgba(255, 193, 7, 0.3)"}`,
-                        borderRadius: 8,
-                        color:
-                          warning.level === "critical" ? "#ff6b6b" : "#fbbf24",
-                        fontSize: 13,
-                      }}
-                    >
+                    <div className={warning.level === "critical" ? styles.warningCritical : styles.warningNormal}>
                       {warning.level === "critical" ? "🚨" : "⚠️"}{" "}
                       {warning.message}
                     </div>
@@ -544,19 +513,8 @@ export default function CreateVault() {
                   }}
                   placeholder="Innocent content shown under duress..."
                   disabled={!!decoyFile}
-                  style={{
-                    width: "100%",
-                    minHeight: 80,
-                    padding: 10,
-                    background: "rgba(255, 255, 255, 0.05)",
-                    border: "1px solid rgba(255, 255, 255, 0.2)",
-                    borderRadius: 8,
-                    color: "#fff",
-                    fontSize: 13,
-                    resize: "vertical",
-                    boxSizing: "border-box",
-                    opacity: decoyFile ? 0.5 : 1,
-                  }}
+                  className={styles.textarea}
+                  style={{ opacity: decoyFile ? 0.5 : 1 }}
                 />
                 <input
                   type="file"

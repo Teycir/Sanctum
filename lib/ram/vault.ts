@@ -15,11 +15,11 @@ export interface RAMVaultOptions {
 // ============================================================================
 
 export class RAMVault {
-  private worker: Worker;
-  private activityInterval: number | null = null;
-  private onCleared?: () => void;
+  private readonly worker: Worker;
+  private activityInterval: ReturnType<typeof setInterval> | null = null;
+  private readonly onCleared?: () => void;
   private requestId = 0;
-  private pending = new Map<number, { resolve: (value: any) => void; reject: (error: Error) => void }>();
+  private readonly pending = new Map<number, { resolve: (value: EncryptionResult | Uint8Array | DerivedKeys | null | void) => void; reject: (error: Error) => void }>();
 
   constructor(options?: RAMVaultOptions) {
     this.worker = new Worker(new URL('../../workers/ram.worker.ts', import.meta.url));
@@ -94,10 +94,10 @@ export class RAMVault {
     this.pending.clear();
   }
 
-  private sendRequest<T>(type: string, payload: any): Promise<T> {
+  private sendRequest<T>(type: string, payload: unknown): Promise<T> {
     return new Promise((resolve, reject) => {
       const id = this.requestId++;
-      this.pending.set(id, { resolve, reject });
+      this.pending.set(id, { resolve: resolve as (value: EncryptionResult | Uint8Array | DerivedKeys | null | void) => void, reject });
       this.worker.postMessage({ type, payload, id });
       
       if (type === 'store') {
@@ -129,7 +129,7 @@ export class RAMVault {
   }
 
   private startActivityTracking(): void {
-    this.activityInterval = window.setInterval(() => {
+    this.activityInterval = globalThis.setInterval(() => {
       this.worker.postMessage({ type: 'activity' });
     }, 30_000);
   }

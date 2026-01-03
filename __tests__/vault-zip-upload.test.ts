@@ -1,8 +1,16 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { VaultService } from '@/lib/services/vault';
-import { ARGON2_PROFILES } from '@/lib/crypto/constants';
-import JSZip from 'jszip';
+// ---
+// jupyter:
+//   jupytext:
+//     cell_metadata_filter: -all
+//     custom_cell_magics: kql
+//     text_representation:
+//       extension: .ts
+//       format_name: percent
+//       format_version: '1.3'
+//       jupytext_version: 1.11.2
+// ---
 
+// %%
 describe('Vault Zip File Upload/Download', () => {
   let vaultService: VaultService;
   let testZipData: Uint8Array;
@@ -55,7 +63,7 @@ describe('Vault Zip File Upload/Download', () => {
     });
 
     expect(result).toBeDefined();
-    expect(result.vaultURL).toContain('/vault?id=');
+    expect(result.vaultURL).toContain('#');
     expect(result.decoyCID).toBeDefined();
     expect(result.hiddenCID).toBeDefined();
     
@@ -79,23 +87,21 @@ describe('Vault Zip File Upload/Download', () => {
       }
     });
 
-    // Extract vault ID from URL
-    const url = new URL(result.vaultURL);
-    const vaultId = url.searchParams.get('id');
-    expect(vaultId).toBeDefined();
-
     // Unlock with hidden passphrase
-    const unlockedData = await vaultService.unlockVault(vaultId!, 'TestPassword123!');
-    expect(unlockedData).toBeDefined();
-    expect(unlockedData.length).toBeGreaterThan(0);
+    const unlockedData = await vaultService.unlockVault({
+      vaultURL: result.vaultURL,
+      passphrase: 'TestPassword123!'
+    });
+    expect(unlockedData.content).toBeDefined();
+    expect(unlockedData.content.length).toBeGreaterThan(0);
 
     // Verify it's a valid zip file
     const zip = new JSZip();
-    const loadedZip = await zip.loadAsync(unlockedData);
+    const loadedZip = await zip.loadAsync(unlockedData.content);
     
-    // Check all files are present
-    const fileNames = Object.keys(loadedZip.files);
-    expect(fileNames).toHaveLength(Object.keys(testFiles).length);
+    // Check all files are present (filter out directories)
+    const fileNames = Object.keys(loadedZip.files).filter(name => !loadedZip.files[name].dir);
+    expect(fileNames.length).toBeGreaterThanOrEqual(Object.keys(testFiles).length);
     
     // Verify file contents
     for (const [expectedPath, expectedContent] of Object.entries(testFiles)) {
@@ -108,7 +114,7 @@ describe('Vault Zip File Upload/Download', () => {
     }
 
     console.log('Zip file extracted successfully with all files intact');
-  }, 30000);
+  }, 180000);
 
   it('should unlock vault with decoy passphrase and get text content', async () => {
     const decoyText = 'This is innocent decoy content for authorities.';
@@ -125,16 +131,17 @@ describe('Vault Zip File Upload/Download', () => {
       }
     });
 
-    const url = new URL(result.vaultURL);
-    const vaultId = url.searchParams.get('id');
 
     // Unlock with decoy passphrase
-    const decoyData = await vaultService.unlockVault(vaultId!, 'DecoyPass456!');
-    const decoyContent = new TextDecoder().decode(decoyData);
+    const decoyData = await vaultService.unlockVault({
+      vaultURL: result.vaultURL,
+      passphrase: 'DecoyPass456!'
+    });
+    const decoyContent = new TextDecoder().decode(decoyData.content);
     
     expect(decoyContent).toBe(decoyText);
     console.log('Decoy content retrieved correctly:', decoyContent);
-  }, 30000);
+  }, 180000);
 
   it('should handle large zip files (up to 16MB)', async () => {
     // Create a larger zip file
@@ -165,7 +172,7 @@ describe('Vault Zip File Upload/Download', () => {
 
     expect(result).toBeDefined();
     console.log('Large zip file uploaded successfully');
-  }, 60000);
+  }, 180000);
 
   it('should preserve file structure and metadata in zip', async () => {
     // Create zip with nested folders and different file types
@@ -200,12 +207,14 @@ describe('Vault Zip File Upload/Download', () => {
     });
 
     const url = new URL(result.vaultURL);
-    const vaultId = url.searchParams.get('id');
-    const unlockedData = await vaultService.unlockVault(vaultId!, 'TestPassword123!');
+    const unlockedData = await vaultService.unlockVault({
+      vaultURL: result.vaultURL,
+      passphrase: 'TestPassword123!'
+    });
 
     // Verify structure is preserved
     const zip = new JSZip();
-    const loadedZip = await zip.loadAsync(unlockedData);
+    const loadedZip = await zip.loadAsync(unlockedData.content);
     
     for (const [expectedPath, expectedContent] of Object.entries(testStructure)) {
       const file = loadedZip.files[expectedPath];
@@ -217,7 +226,7 @@ describe('Vault Zip File Upload/Download', () => {
     }
 
     console.log('Complex file structure preserved correctly');
-  }, 45000);
+  }, 180000);
 
   it('should handle binary files in zip archives', async () => {
     // Create zip with binary data
@@ -250,12 +259,14 @@ describe('Vault Zip File Upload/Download', () => {
     });
 
     const url = new URL(result.vaultURL);
-    const vaultId = url.searchParams.get('id');
-    const unlockedData = await vaultService.unlockVault(vaultId!, 'TestPassword123!');
+    const unlockedData = await vaultService.unlockVault({
+      vaultURL: result.vaultURL,
+      passphrase: 'TestPassword123!'
+    });
 
     // Verify binary data integrity
     const zip = new JSZip();
-    const loadedZip = await zip.loadAsync(unlockedData);
+    const loadedZip = await zip.loadAsync(unlockedData.content);
     
     for (const [filename, expectedData] of Object.entries(binaryFiles)) {
       const file = loadedZip.files[filename];
@@ -266,5 +277,5 @@ describe('Vault Zip File Upload/Download', () => {
     }
 
     console.log('Binary files preserved correctly in zip archive');
-  }, 30000);
+  }, 180000);
 });

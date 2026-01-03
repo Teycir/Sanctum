@@ -1,0 +1,37 @@
+// ============================================================================
+// CRYPTO WORKER - Non-blocking Argon2
+// ============================================================================
+
+import { createHiddenVault, unlockHiddenVault } from '../duress/layers';
+import type { HiddenVaultParams, HiddenVaultResult, UnlockResult } from '../duress/layers';
+
+self.onmessage = async (e: MessageEvent) => {
+  const { type, payload, id } = e.data;
+
+  try {
+    switch (type) {
+      case 'create-vault': {
+        const params = payload as HiddenVaultParams;
+        const result = createHiddenVault(params);
+        self.postMessage({ type: 'create-vault-result', payload: result, id });
+        break;
+      }
+
+      case 'unlock-vault': {
+        const { result, passphrase } = payload as { result: HiddenVaultResult; passphrase: string };
+        const unlockResult: UnlockResult = unlockHiddenVault(result, passphrase);
+        self.postMessage({ type: 'unlock-vault-result', payload: unlockResult, id });
+        break;
+      }
+
+      default:
+        self.postMessage({ type: 'error', error: 'Unknown message type', id });
+    }
+  } catch (error) {
+    self.postMessage({
+      type: 'error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      id
+    });
+  }
+};

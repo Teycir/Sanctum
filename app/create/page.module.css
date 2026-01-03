@@ -1,0 +1,122 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 20px;
+  transition: filter 0.3s ease;
+}
+
+.container.blurred {
+  filter: blur(8px);
+}
+
+.content {
+  width: 100%;
+  max-width: 600px;
+}
+
+.title {
+  font-size: 28px;
+  margin-bottom: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.backButton {
+  margin-bottom: 20px;
+  padding: 0;
+  background: transparent;
+  color: #fff;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.backButton:hover {
+  opacity: 1;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.warning {
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.warningCritical {
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  color: #ff6b6b;
+}
+
+.warningNormal {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: #fbbf24;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.textarea:disabled {
+  opacity: 0.5;
+}
+
+.error {
+  padding: 12px;
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  border-radius: 8px;
+  color: #ff6b6b;
+  font-size: 14px;
+}
+
+.buttonPrimary {
+  padding: 14px 12px;
+  box-sizing: border-box;
+}
+
+.successContainer {
+  padding: 20px;
+  background: rgba(0, 255, 0, 0.1);
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.qrCode {
+  width: min(200px, 90vw);
+  height: min(200px, 90vw);
+  border: 2px solid rgba(0, 255, 0, 0.3);
+  border-radius: 8px;
+}
+
+.codeBlock {
+  display: block;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  font-size: 11px;
+  word-break: break-all;
+  margin-bottom: 16px;
+}

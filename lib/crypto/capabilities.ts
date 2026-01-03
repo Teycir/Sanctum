@@ -54,7 +54,7 @@ export function detectCapabilities(): BrowserCapabilities {
     warnings.push("Cross-origin isolation not enabled - some features limited");
   }
 
-  const memory = (navigator as any).deviceMemory;
+  const memory = (navigator as { deviceMemory?: number }).deviceMemory;
   let recommendedProfile: "mobile" | "desktop" | "paranoid" = "mobile";
 
   if (memory && memory >= 8 && crossOriginIsolated) {

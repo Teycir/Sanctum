@@ -19,14 +19,24 @@ export const StoredVaultSchema = z.object({
 export const CreateVaultParamsSchema = z.object({
   decoyContent: z.instanceof(Uint8Array),
   hiddenContent: z.instanceof(Uint8Array),
-  passphrase: z.string().min(1, 'Passphrase required'),
-  decoyPassphrase: z.string().optional(),
+  passphrase: z.string().min(8, 'Passphrase must be at least 8 characters'),
+  decoyPassphrase: z.string().min(8, 'Decoy passphrase must be at least 8 characters').optional(),
   argonProfile: z.custom<Argon2Profile>().optional(),
   decoyFilename: z.string().optional(),
   hiddenFilename: z.string().optional()
 });
 
 export const UnlockVaultParamsSchema = z.object({
-  vaultURL: z.string().url('Invalid vault URL'),
-  passphrase: z.string()
+  vaultURL: z.string().min(1, 'Vault URL required').refine(
+    (url) => {
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    { message: 'Invalid vault URL' }
+  ),
+  passphrase: z.string().min(8, 'Passphrase must be at least 8 characters')
 });

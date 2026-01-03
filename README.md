@@ -257,6 +257,23 @@ See [OPSEC.md](./docs/OPSEC.md) for comprehensive guidelines.
 
 ## ❓ FAQ
 
+### Why do I see 2 files on IPFS even with empty decoy?
+
+**This is a security feature, not a bug.** Duress vaults always upload 2 encrypted blobs:
+
+1. **Decoy blob** - Even if empty, creates cryptographic chaff
+2. **Hidden blob** - Your actual secret content
+
+**Security advantages:**
+- **Metadata resistance** - Adversary cannot determine which blob is decoy vs hidden
+- **Plausible deniability** - You can claim "I forgot the other passphrase" or "It's a backup"
+- **Consistent behavior** - All vaults look identical (2 blobs, same size), preventing pattern analysis
+- **Future-proofing** - Can add decoy content later without changing structure
+
+Even "empty" encrypted blobs have minimum size (salt + nonce + auth tag + padding), making them indistinguishable from real data. This is exactly how VeraCrypt's hidden volumes work.
+
+**The small IPFS storage cost (~few KB) is worth the security benefit.**
+
 ### How do I unlock a vault?
 
 1. Open the vault link (contains Key B in URL hash)

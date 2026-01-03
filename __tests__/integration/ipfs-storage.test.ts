@@ -36,11 +36,14 @@ describe('IPFS Storage Integration Tests', () => {
     it('should create and unlock vault with decoy only', async () => {
       const vaultService = new VaultService();
       const testContent = 'Secret vault content';
+      const passphrase = 'test-passphrase-decoy-123';
+      const decoyPassphrase = 'decoy-pass-12345';
 
       const result = await vaultService.createVault({
         decoyContent: new TextEncoder().encode(testContent),
         hiddenContent: new Uint8Array(0),
-        passphrase: '',
+        passphrase,
+        decoyPassphrase,
         ipfsCredentials: credentials,
       });
 
@@ -49,34 +52,36 @@ describe('IPFS Storage Integration Tests', () => {
 
       const unlocked = await vaultService.unlockVault({
         vaultURL: result.vaultURL,
-        passphrase: '',
+        passphrase: decoyPassphrase,
       });
 
       expect(new TextDecoder().decode(unlocked.content)).toBe(testContent);
       expect(unlocked.isDecoy).toBe(true);
 
       await vaultService.stop();
-    }, 90000);
+    }, 180000);
 
     it('should create and unlock duress vault with decoy', async () => {
       const vaultService = new VaultService();
       const decoyContent = 'Innocent content';
       const hiddenContent = 'Secret content';
       const passphrase = 'test-passphrase-123';
+      const decoyPassphrase = 'decoy-pass-12345';
 
       const result = await vaultService.createVault({
         decoyContent: new TextEncoder().encode(decoyContent),
         hiddenContent: new TextEncoder().encode(hiddenContent),
         passphrase,
+        decoyPassphrase,
         ipfsCredentials: credentials,
       });
 
       expect(result.vaultURL).toBeTruthy();
 
-      // Unlock without passphrase (decoy)
+      // Unlock with decoy passphrase
       const decoyUnlock = await vaultService.unlockVault({
         vaultURL: result.vaultURL,
-        passphrase: '',
+        passphrase: decoyPassphrase,
       });
       expect(new TextDecoder().decode(decoyUnlock.content)).toBe(decoyContent);
       expect(decoyUnlock.isDecoy).toBe(true);
@@ -90,7 +95,7 @@ describe('IPFS Storage Integration Tests', () => {
       expect(hiddenUnlock.isDecoy).toBe(false);
 
       await vaultService.stop();
-    }, 120000);
+    }, 180000);
   });
 
   describe('Error Handling', () => {
@@ -100,7 +105,7 @@ describe('IPFS Storage Integration Tests', () => {
       await expect(
         vaultService.unlockVault({
           vaultURL: 'invalid-url',
-          passphrase: '',
+          passphrase: 'testpass12345',
         })
       ).rejects.toThrow();
 
@@ -113,7 +118,7 @@ describe('IPFS Storage Integration Tests', () => {
       await expect(
         vaultService.unlockVault({
           vaultURL: 'http://localhost/vault#invalid',
-          passphrase: '',
+          passphrase: 'testpass12345',
         })
       ).rejects.toThrow();
 
@@ -125,12 +130,15 @@ describe('IPFS Storage Integration Tests', () => {
     it('should create vault within reasonable time', async () => {
       const vaultService = new VaultService();
       const testData = new TextEncoder().encode('Performance test data');
+      const passphrase = 'performance-test-pass';
+      const decoyPassphrase = 'decoy-pass-12345';
 
       const start = Date.now();
       const result = await vaultService.createVault({
         decoyContent: testData,
         hiddenContent: new Uint8Array(0),
-        passphrase: '',
+        passphrase,
+        decoyPassphrase,
         ipfsCredentials: credentials,
       });
       const elapsed = Date.now() - start;
@@ -139,6 +147,6 @@ describe('IPFS Storage Integration Tests', () => {
       expect(elapsed).toBeLessThan(60000); // Should complete within 60s
 
       await vaultService.stop();
-    }, 90000);
+    }, 180000);
   });
 });

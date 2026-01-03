@@ -91,7 +91,7 @@ export function selectVaultSize(contentLength: number): number {
  * @returns Profile name
  */
 export function detectArgonProfile(): Argon2ProfileName {
-  const memory = (navigator as any).deviceMemory;
+  const memory = (navigator as { deviceMemory?: number }).deviceMemory;
   
   if (memory && memory < 4) return 'mobile';
   if (typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated) return 'desktop';

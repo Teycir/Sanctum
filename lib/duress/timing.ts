@@ -2,7 +2,7 @@
 // TYPES & INTERFACES
 // ============================================================================
 
-import { deriveKeys } from '../crypto/core';
+import { deriveKeys } from '../crypto/kdf';
 import type { Argon2Profile } from '../crypto/constants';
 
 // ============================================================================

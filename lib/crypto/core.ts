@@ -8,9 +8,9 @@ import { VAULT_VERSION, BLOB_SIZES, type Argon2Profile } from './constants';
 import { randomBytes, encodeArgonParams, decodeArgonParams, wipeMemory } from './utils';
 import { generateCommitment, verifyCommitment } from './commitment';
 import { type EncryptionResult } from './padding';
+import { deriveKeys } from './kdf';
 
 export type { EncryptionResult } from './padding';
-export { deriveKeys } from './kdf';
 export { assembleBlob } from './padding';
 
 export interface EncryptionParams {
@@ -63,7 +63,6 @@ export function encrypt(
   providedSalt?: Uint8Array
 ): EncryptionResult {
   const salt = providedSalt || randomBytes(BLOB_SIZES.salt);
-  const { deriveKeys } = require('./kdf');
   const { encKey, comKey } = deriveKeys(params.passphrase, salt, params.argonProfile);
 
   const header = new Uint8Array(BLOB_SIZES.header);
@@ -117,7 +116,6 @@ export function decrypt(params: DecryptionParams): Uint8Array {
 
   const ciphertext = params.blob.slice(offset, offset + ciphertextLength);
 
-  const { deriveKeys } = require('./kdf');
   const { encKey, comKey } = deriveKeys(params.passphrase, salt, argonParams);
 
   const computedCommitment = generateCommitment(comKey, header, ciphertext);

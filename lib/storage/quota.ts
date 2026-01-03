@@ -22,7 +22,7 @@ export async function checkPinataQuota(jwt: string): Promise<StorageQuota> {
   }
 
   const data = await response.json();
-  const used = data.rows?.reduce((sum: number, file: any) => sum + (file.size || 0), 0) || 0;
+  const used = data.rows?.reduce((sum: number, file: { size?: number }) => sum + (file.size || 0), 0) || 0;
   const limit = 1024 * 1024 * 1024; // 1 GB free tier
 
   return {

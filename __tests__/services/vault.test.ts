@@ -3,25 +3,25 @@ import { VaultService } from "../../lib/services/vault";
 
 const mockStorage = new Map<string, Uint8Array>();
 
-vi.mock("../../lib/helia/client", () => ({
-  HeliaIPFS: class MockHeliaIPFS {
-    init() {
-      // Mock implementation - no initialization needed
+vi.mock("../../lib/storage/uploader", () => ({
+  uploadToIPFS: async (data: Uint8Array) => {
+    const cid = `mock-cid-${Math.random().toString(36).slice(2)}`;
+    mockStorage.set(cid, data);
+    return { cid };
+  }
+}));
+
+vi.mock("../../lib/storage/vault", async () => {
+  const actual = await vi.importActual("../../lib/storage/vault");
+  return {
+    ...actual,
+    downloadVault: async (stored: any) => {
+      const decoyBlob = mockStorage.get(stored.decoyCID);
+      const hiddenBlob = mockStorage.get(stored.hiddenCID);
+      if (!decoyBlob || !hiddenBlob) throw new Error("CID not found");
+      return { decoyBlob, hiddenBlob, salt: stored.salt };
     }
-    async upload(data: Uint8Array) {
-      const cid = `mock-cid-${Math.random().toString(36).slice(2)}`;
-      mockStorage.set(cid, data);
-      return cid;
-    }
-    async download(cid: string) {
-      const data = mockStorage.get(cid);
-      if (!data) throw new Error(`CID not found: ${cid}`);
-      return data;
-    }
-    async stop() {
-      // Mock implementation - no cleanup needed
-    }
-  },
+  };
 }));
 
 vi.mock("../../lib/workers/crypto", () => ({
@@ -55,8 +55,12 @@ describe("services/vault", () => {
       const result = await service.createVault({
         decoyContent: decoy,
         hiddenContent: hidden,
-        passphrase: "test-pass",
-        decoyPassphrase: "decoy-pass",
+        passphrase: "test-pass-12345",
+        decoyPassphrase: "decoy-pass-12345",
+        ipfsCredentials: {
+          provider: "pinata",
+          pinataJWT: "mock-jwt"
+        }
       });
 
       expect(result.vaultURL).toContain("/vault#");
@@ -73,13 +77,17 @@ describe("services/vault", () => {
       const created = await service.createVault({
         decoyContent: decoy,
         hiddenContent: hidden,
-        passphrase: "test-pass",
-        decoyPassphrase: "decoy-pass",
+        passphrase: "test-pass-12345",
+        decoyPassphrase: "decoy-pass-12345",
+        ipfsCredentials: {
+          provider: "pinata",
+          pinataJWT: "mock-jwt"
+        }
       });
 
       const unlocked = await service.unlockVault({
         vaultURL: created.vaultURL,
-        passphrase: "decoy-pass",
+        passphrase: "decoy-pass-12345",
       });
 
       expect(unlocked.isDecoy).toBe(false);
@@ -93,13 +101,17 @@ describe("services/vault", () => {
       const created = await service.createVault({
         decoyContent: decoy,
         hiddenContent: hidden,
-        passphrase: "test-pass",
-        decoyPassphrase: "decoy-pass",
+        passphrase: "test-pass-12345",
+        decoyPassphrase: "decoy-pass-12345",
+        ipfsCredentials: {
+          provider: "pinata",
+          pinataJWT: "mock-jwt"
+        }
       });
 
       const unlocked = await service.unlockVault({
         vaultURL: created.vaultURL,
-        passphrase: "test-pass",
+        passphrase: "test-pass-12345",
       });
 
       expect(unlocked.isDecoy).toBe(false);

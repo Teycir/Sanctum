@@ -2,10 +2,10 @@
 // TYPES & INTERFACES
 // ============================================================================
 
-import type { HiddenVaultResult } from '../duress/layers';
-import { concat, encodeU32LE, decodeU32LE } from '../crypto/utils';
-import { StoredVaultSchema } from '../validation/schemas';
-import { uploadToIPFS, type UploadCredentials } from './uploader';
+import type { HiddenVaultResult } from "../duress/layers";
+import { concat, encodeU32LE, decodeU32LE } from "../crypto/utils";
+import { StoredVaultSchema } from "../validation/schemas";
+import { uploadToIPFS, type UploadCredentials } from "./uploader";
 
 export interface StoredVault {
   readonly decoyCID: string;
@@ -27,19 +27,19 @@ export interface StoredVault {
  */
 export async function uploadVault(
   vault: HiddenVaultResult,
-  credentials?: UploadCredentials
+  credentials?: UploadCredentials,
 ): Promise<StoredVault> {
   if (!credentials) {
-    throw new Error('IPFS credentials required');
+    throw new Error('IPFS credentials are required for vault upload');
   }
   
   const decoyResult = await uploadToIPFS(vault.decoyBlob, credentials);
   const hiddenResult = await uploadToIPFS(vault.hiddenBlob, credentials);
-  
+
   return {
     decoyCID: decoyResult.cid,
     hiddenCID: hiddenResult.cid,
-    salt: vault.salt
+    salt: vault.salt,
   };
 }
 
@@ -49,24 +49,29 @@ export async function uploadVault(
  * @returns Hidden vault result
  */
 export async function downloadVault(
-  stored: StoredVault
+  stored: StoredVault,
 ): Promise<HiddenVaultResult> {
-  const { PinataClient } = await import('./pinata');
-  const { FilebaseClient } = await import('./filebase');
-  
+  const { PinataClient } = await import("./pinata");
+  const { FilebaseClient } = await import("./filebase");
+
   // Try Pinata first (public gateway, no auth needed)
   try {
-    const pinata = new PinataClient('', 'https://gateway.pinata.cloud');
+    const pinata = new PinataClient("", "https://gateway.pinata.cloud");
     const decoyBlob = await pinata.download(stored.decoyCID);
     const hiddenBlob = await pinata.download(stored.hiddenCID);
     return { decoyBlob, hiddenBlob, salt: stored.salt };
   } catch (error) {
-    // Fallback to Filebase on network/gateway errors
-    console.warn('Pinata download failed, trying Filebase fallback:', error);
-    const filebase = new FilebaseClient('');
-    const decoyBlob = await filebase.download(stored.decoyCID);
-    const hiddenBlob = await filebase.download(stored.hiddenCID);
-    return { decoyBlob, hiddenBlob, salt: stored.salt };
+    if (
+      error instanceof TypeError ||
+      (error instanceof Error && error.message.includes("network"))
+    ) {
+      console.warn("Pinata download failed, trying Filebase fallback:", error);
+      const filebase = new FilebaseClient("");
+      const decoyBlob = await filebase.download(stored.decoyCID);
+      const hiddenBlob = await filebase.download(stored.hiddenCID);
+      return { decoyBlob, hiddenBlob, salt: stored.salt };
+    }
+    throw error;
   }
 }
 
@@ -76,11 +81,26 @@ export async function downloadVault(
  * @returns Serialized bytes
  */
 export function serializeVaultMetadata(stored: StoredVault): Uint8Array {
+  if (stored.salt.length !== 32) {
+    throw new Error("Invalid salt length: must be 32 bytes");
+  }
+
   const decoyCIDBytes = new TextEncoder().encode(stored.decoyCID);
   const hiddenCIDBytes = new TextEncoder().encode(stored.hiddenCID);
-  const decoyFilenameBytes = new TextEncoder().encode(stored.decoyFilename || '');
-  const hiddenFilenameBytes = new TextEncoder().encode(stored.hiddenFilename || '');
-  
+  const decoyFilenameBytes = new TextEncoder().encode(
+    stored.decoyFilename || "",
+  );
+  const hiddenFilenameBytes = new TextEncoder().encode(
+    stored.hiddenFilename || "",
+  );
+
+  if (decoyCIDBytes.length > 1000 || hiddenCIDBytes.length > 1000) {
+    throw new Error("CID length exceeds maximum allowed size");
+  }
+  if (decoyFilenameBytes.length > 255 || hiddenFilenameBytes.length > 255) {
+    throw new Error("Filename length exceeds maximum allowed size");
+  }
+
   return concat(
     encodeU32LE(decoyCIDBytes.length),
     decoyCIDBytes,
@@ -90,8 +110,40 @@ export function serializeVaultMetadata(stored: StoredVault): Uint8Array {
     encodeU32LE(decoyFilenameBytes.length),
     decoyFilenameBytes,
     encodeU32LE(hiddenFilenameBytes.length),
-    hiddenFilenameBytes
+    hiddenFilenameBytes,
   );
+}
+
+// ============================================================================
+// INTERNAL HELPERS - Not exported
+// ============================================================================
+
+function readCID(data: Uint8Array, offset: number): { cid: string; newOffset: number } {
+  if (offset + 4 > data.length) throw new Error("Invalid vault metadata: buffer too short");
+  const length = decodeU32LE(data, offset);
+  if (length > 1000) throw new Error("Invalid vault metadata: CID length too large");
+  offset += 4;
+  
+  if (offset + length > data.length) throw new Error("Invalid vault metadata: buffer too short");
+  const bytes = data.slice(offset, offset + length);
+  const cid = new TextDecoder().decode(bytes);
+  return { cid, newOffset: offset + length };
+}
+
+function readFilename(data: Uint8Array, offset: number): { filename: string | undefined; newOffset: number } {
+  if (offset >= data.length) return { filename: undefined, newOffset: offset };
+  if (offset + 4 > data.length) throw new Error("Invalid vault metadata: buffer too short");
+  
+  const length = decodeU32LE(data, offset);
+  if (length > 255) throw new Error("Invalid vault metadata: filename length too large");
+  offset += 4;
+  
+  if (length === 0) return { filename: undefined, newOffset: offset };
+  if (offset + length > data.length) throw new Error("Invalid vault metadata: buffer too short");
+  
+  const bytes = data.slice(offset, offset + length);
+  const filename = new TextDecoder().decode(bytes);
+  return { filename, newOffset: offset + length };
 }
 
 /**
@@ -101,47 +153,28 @@ export function serializeVaultMetadata(stored: StoredVault): Uint8Array {
  */
 export function deserializeVaultMetadata(data: Uint8Array): StoredVault {
   let offset = 0;
-  
-  const decoyCIDLength = decodeU32LE(data, offset);
-  offset += 4;
-  
-  const decoyCIDBytes = data.slice(offset, offset + decoyCIDLength);
-  const decoyCID = new TextDecoder().decode(decoyCIDBytes);
-  offset += decoyCIDLength;
-  
-  const hiddenCIDLength = decodeU32LE(data, offset);
-  offset += 4;
-  
-  const hiddenCIDBytes = data.slice(offset, offset + hiddenCIDLength);
-  const hiddenCID = new TextDecoder().decode(hiddenCIDBytes);
-  offset += hiddenCIDLength;
-  
+
+  const decoy = readCID(data, offset);
+  offset = decoy.newOffset;
+
+  const hidden = readCID(data, offset);
+  offset = hidden.newOffset;
+
+  if (offset + 32 > data.length) throw new Error("Invalid vault metadata: insufficient data for salt");
   const salt = data.slice(offset, offset + 32);
   offset += 32;
-  
-  // Optional filenames (backward compatible)
-  let decoyFilename: string | undefined;
-  let hiddenFilename: string | undefined;
-  
-  if (offset < data.length) {
-    const decoyFilenameLength = decodeU32LE(data, offset);
-    offset += 4;
-    if (decoyFilenameLength > 0) {
-      const decoyFilenameBytes = data.slice(offset, offset + decoyFilenameLength);
-      decoyFilename = new TextDecoder().decode(decoyFilenameBytes);
-      offset += decoyFilenameLength;
-    }
-    
-    if (offset < data.length) {
-      const hiddenFilenameLength = decodeU32LE(data, offset);
-      offset += 4;
-      if (hiddenFilenameLength > 0) {
-        const hiddenFilenameBytes = data.slice(offset, offset + hiddenFilenameLength);
-        hiddenFilename = new TextDecoder().decode(hiddenFilenameBytes);
-      }
-    }
-  }
-  
-  const result = { decoyCID, hiddenCID, salt, decoyFilename, hiddenFilename };
+
+  const decoyFile = readFilename(data, offset);
+  offset = decoyFile.newOffset;
+
+  const hiddenFile = readFilename(data, offset);
+
+  const result = { 
+    decoyCID: decoy.cid, 
+    hiddenCID: hidden.cid, 
+    salt, 
+    decoyFilename: decoyFile.filename, 
+    hiddenFilename: hiddenFile.filename 
+  };
   return StoredVaultSchema.parse(result);
 }

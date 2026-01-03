@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
 const FEATURES = [
-  'XChaCha20-Poly1305 - Authenticated encryption',
+  'XChaCha20-Poly1305 Encryption',
   'Plausible Deniability - Hidden layers',
   'Duress Mode - Decoy content protection',
   'SHA-256 Hashing - Cryptographic integrity',
@@ -23,7 +23,7 @@ const FEATURES = [
   'Open Source - Auditable code',
   'No Accounts - Anonymous usage',
   'No Tracking - Privacy first',
-  'XOR Encryption - Layer obfuscation',
+  'Split-Key Architecture - URL + Server',
 ];
 
 export function CyclingFeatures() {
