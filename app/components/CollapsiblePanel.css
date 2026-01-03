@@ -7,7 +7,7 @@
 .collapsible-header {
   width: 100%;
   padding: 12px;
-  background: rgba(30, 144, 255, 0.1);
+  background: rgba(13, 71, 161, 0.1);
   border: none;
   color: #fff;
   font-size: 14px;
@@ -20,7 +20,7 @@
 }
 
 .collapsible-header:hover {
-  background: rgba(30, 144, 255, 0.15);
+  background: rgba(13, 71, 161, 0.15);
 }
 
 .collapsible-arrow {

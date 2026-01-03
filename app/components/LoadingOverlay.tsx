@@ -30,20 +30,20 @@ export function LoadingOverlay({ step, progress }: LoadingOverlayProps) {
       <div
         style={{
           padding: 32,
-          background: "linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(168, 85, 247, 0.1))",
-          border: "1px solid rgba(168, 85, 247, 0.4)",
+          background: "linear-gradient(135deg, rgba(25, 55, 109, 0.3), rgba(13, 71, 161, 0.2))",
+          border: "1px solid rgba(13, 71, 161, 0.5)",
           borderRadius: 16,
           textAlign: "center",
           width: 380,
           boxSizing: "border-box",
-          boxShadow: "0 0 40px rgba(168, 85, 247, 0.3)",
+          boxShadow: "0 0 40px rgba(13, 71, 161, 0.4)",
         }}
       >
         <div
           style={{
             fontSize: 16,
             fontWeight: 600,
-            color: "#e9d5ff",
+            color: "#b3d9ff",
             height: 24,
             marginBottom: 20,
             width: "100%",
@@ -70,7 +70,7 @@ export function LoadingOverlay({ step, progress }: LoadingOverlayProps) {
           style={{
             width: "100%",
             height: 6,
-            background: "rgba(168, 85, 247, 0.2)",
+            background: "rgba(13, 71, 161, 0.3)",
             borderRadius: 3,
             overflow: "hidden",
           }}
@@ -81,8 +81,8 @@ export function LoadingOverlay({ step, progress }: LoadingOverlayProps) {
             transition={{ duration: 0.3, ease: "easeOut" }}
             style={{
               height: "100%",
-              background: "linear-gradient(90deg, #a855f7, #c084fc)",
-              boxShadow: "0 0 20px rgba(168, 85, 247, 0.8), 0 0 40px rgba(168, 85, 247, 0.4)",
+              background: "linear-gradient(90deg, #0d47a1, #1565c0)",
+              boxShadow: "0 0 20px rgba(13, 71, 161, 0.8), 0 0 40px rgba(13, 71, 161, 0.5)",
             }}
           />
         </div>

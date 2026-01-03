@@ -730,7 +730,7 @@ export default function CreateVault() {
                 style={{
                   marginTop: 8,
                   padding: 12,
-                  background: "rgba(30, 144, 255, 0.1)",
+                  background: "rgba(13, 71, 161, 0.1)",
                   borderRadius: 8,
                 }}
               >
@@ -740,7 +740,7 @@ export default function CreateVault() {
                     marginBottom: 8,
                     fontSize: 12,
                     fontWeight: 600,
-                    color: "#1e90ff",
+                    color: "#0d47a1",
                   }}
                 >
                   IPFS Provider
@@ -754,9 +754,9 @@ export default function CreateVault() {
                       padding: 8,
                       background:
                         provider === "pinata"
-                          ? "rgba(30, 144, 255, 0.3)"
+                          ? "rgba(13, 71, 161, 0.3)"
                           : "rgba(255, 255, 255, 0.05)",
-                      border: `1px solid ${provider === "pinata" ? "rgba(30, 144, 255, 0.5)" : "rgba(255, 255, 255, 0.2)"}`,
+                      border: `1px solid ${provider === "pinata" ? "rgba(13, 71, 161, 0.5)" : "rgba(255, 255, 255, 0.2)"}`,
                       borderRadius: 6,
                       color: "#fff",
                       fontSize: 12,
@@ -774,9 +774,9 @@ export default function CreateVault() {
                       padding: 8,
                       background:
                         provider === "filebase"
-                          ? "rgba(30, 144, 255, 0.3)"
+                          ? "rgba(13, 71, 161, 0.3)"
                           : "rgba(255, 255, 255, 0.05)",
-                      border: `1px solid ${provider === "filebase" ? "rgba(30, 144, 255, 0.5)" : "rgba(255, 255, 255, 0.2)"}`,
+                      border: `1px solid ${provider === "filebase" ? "rgba(13, 71, 161, 0.5)" : "rgba(255, 255, 255, 0.2)"}`,
                       borderRadius: 6,
                       color: "#fff",
                       fontSize: 12,
@@ -827,7 +827,7 @@ export default function CreateVault() {
                           color: (() => {
                             if (jwtStatus === "valid") return "#4ade80";
                             if (jwtStatus === "invalid") return "#ff6b6b";
-                            return "#1e90ff";
+                            return "#0d47a1";
                           })(),
                         }}
                       >
@@ -846,7 +846,7 @@ export default function CreateVault() {
                         style={{
                           marginTop: 8,
                           padding: 8,
-                          background: "rgba(30, 144, 255, 0.15)",
+                          background: "rgba(13, 71, 161, 0.15)",
                           borderRadius: 6,
                         }}
                       >
@@ -904,7 +904,7 @@ export default function CreateVault() {
                         style={{
                           marginTop: 8,
                           padding: 8,
-                          background: "rgba(30, 144, 255, 0.15)",
+                          background: "rgba(13, 71, 161, 0.15)",
                           borderRadius: 6,
                         }}
                       >
@@ -1003,17 +1003,17 @@ export default function CreateVault() {
                   }}
                   onMouseEnter={(e) =>
                     (e.currentTarget.style.background =
-                      "rgba(30, 144, 255, 0.3)")
+                      "rgba(13, 71, 161, 0.3)")
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.background =
-                      "rgba(30, 144, 255, 0.2)")
+                      "rgba(13, 71, 161, 0.2)")
                   }
                   style={{
                     padding: "8px 16px",
-                    background: "rgba(30, 144, 255, 0.2)",
+                    background: "rgba(13, 71, 161, 0.2)",
                     color: "#fff",
-                    border: "1px solid rgba(30, 144, 255, 0.4)",
+                    border: "1px solid rgba(13, 71, 161, 0.4)",
                     borderRadius: 6,
                     fontSize: 13,
                     cursor: "pointer",
@@ -1044,17 +1044,17 @@ export default function CreateVault() {
                     }}
                     onMouseEnter={(e) =>
                       (e.currentTarget.style.background =
-                        "rgba(30, 144, 255, 0.2)")
+                        "rgba(13, 71, 161, 0.2)")
                     }
                     onMouseLeave={(e) =>
                       (e.currentTarget.style.background =
-                        "rgba(30, 144, 255, 0.1)")
+                        "rgba(13, 71, 161, 0.1)")
                     }
                     style={{
                       padding: "4px 8px",
-                      background: "rgba(30, 144, 255, 0.1)",
+                      background: "rgba(13, 71, 161, 0.1)",
                       color: "#fff",
-                      border: "1px solid rgba(30, 144, 255, 0.3)",
+                      border: "1px solid rgba(13, 71, 161, 0.3)",
                       borderRadius: 4,
                       fontSize: 11,
                       cursor: "pointer",
@@ -1076,17 +1076,17 @@ export default function CreateVault() {
                     }}
                     onMouseEnter={(e) =>
                       (e.currentTarget.style.background =
-                        "rgba(30, 144, 255, 0.2)")
+                        "rgba(13, 71, 161, 0.2)")
                     }
                     onMouseLeave={(e) =>
                       (e.currentTarget.style.background =
-                        "rgba(30, 144, 255, 0.1)")
+                        "rgba(13, 71, 161, 0.1)")
                     }
                     style={{
                       padding: "4px 8px",
-                      background: "rgba(30, 144, 255, 0.1)",
+                      background: "rgba(13, 71, 161, 0.1)",
                       color: "#fff",
-                      border: "1px solid rgba(30, 144, 255, 0.3)",
+                      border: "1px solid rgba(13, 71, 161, 0.3)",
                       borderRadius: 4,
                       fontSize: 11,
                       cursor: "pointer",
@@ -1120,17 +1120,17 @@ export default function CreateVault() {
                   onClick={() => router.push(result.vaultURL)}
                   onMouseEnter={(e) =>
                     (e.currentTarget.style.background =
-                      "rgba(30, 144, 255, 0.4)")
+                      "rgba(13, 71, 161, 0.4)")
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.background =
-                      "rgba(30, 144, 255, 0.3)")
+                      "rgba(13, 71, 161, 0.3)")
                   }
                   style={{
                     padding: "12px 24px",
-                    background: "rgba(30, 144, 255, 0.3)",
+                    background: "rgba(13, 71, 161, 0.3)",
                     color: "#fff",
-                    border: "1px solid rgba(30, 144, 255, 0.5)",
+                    border: "1px solid rgba(13, 71, 161, 0.5)",
                     borderRadius: 8,
                     fontSize: 14,
                     cursor: "pointer",

@@ -66,13 +66,13 @@
     --background: 0 0% 3%;
     --foreground: 0 0% 98%;
 
-    --primary: 200 80% 50%;
+    --primary: 210 100% 35%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 80% 35%;
+    --secondary: 210 100% 25%;
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 200 80% 60%;
+    --accent: 210 100% 45%;
     --accent-foreground: 0 0% 100%;
 
     --muted: 0 0% 15%;
@@ -80,7 +80,7 @@
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 200 80% 50%;
+    --ring: 210 100% 35%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -123,7 +123,7 @@
     background:
       radial-gradient(
         ellipse at 15% 20%,
-        rgba(30, 144, 255, 0.15) 0%,
+        rgba(13, 71, 161, 0.15) 0%,
         transparent 50%
       ),
       radial-gradient(
@@ -150,7 +150,7 @@
     background:
       radial-gradient(
         circle at 30% 40%,
-        rgba(30, 144, 255, 0.15) 0%,
+        rgba(13, 71, 161, 0.15) 0%,
         transparent 30%
       ),
       radial-gradient(
@@ -281,7 +281,7 @@
   margin-bottom: 8px;
   font-size: 12px;
   font-weight: 600;
-  color: #1e90ff;
+  color: #0d47a1;
 }
 
 .provider-input {
@@ -320,14 +320,14 @@
 .bucket-label {
   font-size: 12px;
   font-weight: 600;
-  color: #1e90ff;
+  color: #0d47a1;
 }
 
 .custom-file-button {
   display: inline-block;
   padding: 8px 16px;
-  background: rgba(30, 144, 255, 0.6);
-  border: 1px solid rgba(30, 144, 255, 0.6);
+  background: rgba(13, 71, 161, 0.6);
+  border: 1px solid rgba(13, 71, 161, 0.6);
   border-radius: 6px;
   color: #fff;
   font-size: 12px;
@@ -337,8 +337,8 @@
 }
 
 .custom-file-button:hover {
-  background: rgba(30, 144, 255, 0.8);
-  border-color: rgba(30, 144, 255, 1);
+  background: rgba(13, 71, 161, 0.8);
+  border-color: rgba(13, 71, 161, 1);
 }
 
 .custom-file-input {

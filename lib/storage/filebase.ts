@@ -165,18 +165,6 @@ export class FilebaseClient {
   async upload(data: Uint8Array): Promise<string> {
     if (!data || data.length === 0) throw new Error("Data cannot be empty");
 
-    // Check storage space before upload
-    const usage = await this.getStorageUsage();
-    const availableSpace = usage.limit - usage.used;
-    if (data.length > availableSpace) {
-      const mbDivisor = 1024 * 1024;
-      const availableMB = (availableSpace / mbDivisor).toFixed(2);
-      const requiredMB = (data.length / mbDivisor).toFixed(2);
-      throw new Error(
-        `Not enough storage space. Available: ${availableMB} MB, Required: ${requiredMB} MB`,
-      );
-    }
-
     const fileName = `vault-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const path = `/${this.bucketName}/${fileName}`;
 
@@ -189,18 +177,29 @@ export class FilebaseClient {
       data,
     );
 
-    const url = `https://s3.filebase.com${path}`;
-    const response = await fetch(url, {
-      method: "PUT",
-      headers,
+    const filebaseUrl = `https://s3.filebase.com${path}`;
+    const proxyUrl = "/api/filebase-proxy";
+    const proxyHeaders: Record<string, string> = {
+      "X-Filebase-URL": filebaseUrl,
+      "X-Filebase-Method": "PUT",
+      ...headers,
+    };
+
+    const response = await fetch(proxyUrl, {
+      method: "POST",
+      headers: proxyHeaders,
       body: data as BodyInit,
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(
-        `Filebase upload failed: ${response.statusText} - ${error}`,
-      );
+      const errorText = await response.text().catch(() => response.statusText);
+      if (response.status === 404) {
+        throw new Error(`Bucket '${this.bucketName}' not found. Create it at filebase.com first.`);
+      }
+      if (response.status === 403) {
+        throw new Error("Invalid Filebase credentials. Check your access key and secret key.");
+      }
+      throw new Error(`Upload failed (${response.status}): ${errorText}`);
     }
 
     const cid = response.headers.get("x-amz-meta-cid");
@@ -219,9 +218,17 @@ export class FilebaseClient {
     const path = `/${this.bucketName}`;
     const headers = await this.signRequest("GET", path, {});
 
-    const response = await fetch(`https://s3.filebase.com${path}`, {
-      method: "GET",
-      headers,
+    const filebaseUrl = `https://s3.filebase.com${path}`;
+    const proxyUrl = "/api/filebase-proxy";
+    const proxyHeaders: Record<string, string> = {
+      "X-Filebase-URL": filebaseUrl,
+      "X-Filebase-Method": "GET",
+      ...headers,
+    };
+
+    const response = await fetch(proxyUrl, {
+      method: "POST",
+      headers: proxyHeaders,
     });
 
     if (!response.ok) {
