@@ -340,7 +340,9 @@ export default function CreateVault() {
         if (err instanceof TypeError || err instanceof RangeError) {
           console.warn("Unable to check storage quota:", err);
         } else {
-          throw err;
+          console.error("Unexpected error checking storage quota:", err);
+          setError("Failed to check storage quota. Please try again.");
+          return;
         }
       }
     }
@@ -426,7 +428,9 @@ export default function CreateVault() {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setResult(vaultResult);
-      vaultService.stop().catch(() => {}); // Stop in background
+      vaultService.stop().catch((stopError) => {
+        console.error("Failed to stop vault service:", stopError);
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create vault");
     } finally {
@@ -466,6 +470,7 @@ export default function CreateVault() {
           </h1>
 
           <button
+            type="button"
             onClick={() => router.push("/")}
             style={{
               marginBottom: 20,
@@ -801,7 +806,7 @@ export default function CreateVault() {
                         setPinataJWT(e.target.value);
                         setJwtStatus(null);
                       }}
-                      placeholder="Enter your Pinata JWT token"
+                      placeholder="ex: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                       style={{
                         width: "100%",
                         padding: 8,
@@ -872,24 +877,38 @@ export default function CreateVault() {
                       htmlFor="filebase-access-key"
                       className="provider-label"
                     >
-                      Filebase Credentials
+                      Access Key
                     </label>
                     <input
                       id="filebase-access-key"
                       type="password"
                       value={filebaseAccessKey}
                       onChange={(e) => setFilebaseAccessKey(e.target.value)}
-                      placeholder="Access Key"
+                      placeholder="ex: F9CE9EEDA069BB4B3203..."
                       className="provider-input"
                     />
+                    <label
+                      htmlFor="filebase-secret-key"
+                      className="provider-label"
+                    >
+                      Secret Key
+                    </label>
                     <input
+                      id="filebase-secret-key"
                       type="password"
                       value={filebaseSecretKey}
                       onChange={(e) => setFilebaseSecretKey(e.target.value)}
-                      placeholder="Secret Key"
+                      placeholder="ex: iUOYzd0UghnCWvFjntDGqKXn3fsIhUoN0l7GbLX3..."
                       className="provider-input"
                     />
+                    <label
+                      htmlFor="filebase-bucket"
+                      className="provider-label"
+                    >
+                      Bucket Name
+                    </label>
                     <input
+                      id="filebase-bucket"
                       type="text"
                       value={filebaseBucket}
                       onChange={(e) => setFilebaseBucket(e.target.value)}

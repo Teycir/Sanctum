@@ -16,17 +16,28 @@ export class PinataClient {
   async uploadBytes(data: Uint8Array, filename?: string): Promise<string> {
     if (!data || data.length === 0) throw new Error('Data cannot be empty')
 
-    // Check storage space before upload
-    const usage = await this.getStorageUsage()
-    const availableSpace = usage.limit - usage.used
-    if (data.length > availableSpace) {
-      const availableMB = (availableSpace / 1024 / 1024).toFixed(2)
-      const requiredMB = (data.length / 1024 / 1024).toFixed(2)
-      throw new Error(`Not enough storage space. Available: ${availableMB} MB, Required: ${requiredMB} MB`)
+    try {
+      // Check storage space before upload
+      const usage = await this.getStorageUsage()
+      const availableSpace = usage.limit - usage.used
+      if (data.length > availableSpace) {
+        const availableMB = (availableSpace / 1024 / 1024).toFixed(2)
+        const requiredMB = (data.length / 1024 / 1024).toFixed(2)
+        throw new Error(`Not enough storage space. Available: ${availableMB} MB, Required: ${requiredMB} MB`)
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('storage space')) {
+        throw error
+      }
+      console.warn('Unable to check storage quota:', error)
     }
 
-    const formData = new FormData()
-    formData.append('file', new Blob([data as BlobPart]), filename || 'vault.bin')
+    const formData = new FormData();
+    const buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+    if (!(buffer instanceof ArrayBuffer)) {
+      throw new TypeError('SharedArrayBuffer not supported');
+    }
+    formData.append('file', new Blob([buffer]), filename || 'vault.bin');
 
     const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
       method: 'POST',
@@ -53,16 +64,12 @@ export class PinataClient {
       throw new Error(`Failed to list pins: ${listResponse.statusText}`)
     }
 
-    const listData = await listResponse.json()
-    let used = 0
-    const rows = listData.rows
-    if (rows) {
-      const length = rows.length
-      for (let i = 0; i < length; i++) {
-        used += rows[i].size || 0
-      }
-    }
-    const limit = 1073741824 // 1GB free tier
+    const listData = await listResponse.json();
+    const rows = listData.rows;
+    const used = rows && Array.isArray(rows) 
+      ? rows.reduce((sum: number, row: { size?: number }) => sum + (row.size || 0), 0)
+      : 0;
+    const limit = 1073741824; // 1GB free tier
 
     return { used, limit, percentage: (used / limit) * 100 }
   }
@@ -94,11 +101,11 @@ export class PinataClient {
 
   // Legacy method names for compatibility
   async upload(data: Uint8Array): Promise<string> {
-    return this.uploadBytes(data)
+    return this.uploadBytes(data);
   }
 
   async download(cid: string): Promise<Uint8Array> {
-    return this.getBytes(cid)
+    return this.getBytes(cid);
   }
 
   /**
