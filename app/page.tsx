@@ -37,7 +37,7 @@ export default function Home() {
             encryptedClassName="opacity-30"
           />
         </h1>
-        <AnimatedTagline text="Client‑side encrypted zero‑trust vault" />
+        <AnimatedTagline text="Plausible deniability zero trust vault" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', marginBottom: 32 }}>
           <Link href="/create" prefetch={true} style={{ textDecoration: 'none' }}>
             <button className="start-btn">

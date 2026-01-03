@@ -134,14 +134,19 @@ export default function CreateVault() {
       setError("Please enter hidden content");
       return;
     }
-    if (!sanitizedDecoy) {
-      setError("Please enter decoy content");
+    
+    // Decoy is optional, but if provided, duress password is required
+    if (sanitizedDecoy && !sanitizedDuress) {
+      setError("Duress password is required when decoy content is provided");
       return;
     }
-    if (!sanitizedDuress) {
-      setError("Please enter duress password");
+    
+    // If duress password is provided, decoy content is required
+    if (sanitizedDuress && !sanitizedDecoy) {
+      setError("Decoy content is required when duress password is provided");
       return;
     }
+    
     const decoySize = new TextEncoder().encode(sanitizedDecoy).length;
     const hiddenSize = new TextEncoder().encode(sanitizedHidden).length;
     if (decoySize > MAX_CONTENT_SIZE) {
@@ -167,14 +172,17 @@ export default function CreateVault() {
       return;
     }
     
-    const duressError = validatePassword(sanitizedDuress, "Duress password");
-    if (duressError) {
-      setError(duressError);
-      return;
-    }
-    if (sanitizedPassphrase === sanitizedDuress) {
-      setError("Hidden password must be different from duress password");
-      return;
+    // Only validate duress password if it's provided
+    if (sanitizedDuress) {
+      const duressError = validatePassword(sanitizedDuress, "Duress password");
+      if (duressError) {
+        setError(duressError);
+        return;
+      }
+      if (sanitizedPassphrase === sanitizedDuress) {
+        setError("Hidden password must be different from duress password");
+        return;
+      }
     }
 
     // Validate JWT before proceeding
@@ -386,7 +394,7 @@ export default function CreateVault() {
                     fontWeight: 600,
                   }}
                 >
-                  Decoy Content
+                  Decoy Content (Optional)
                 </label>
                 <textarea
                   value={decoyContent}
@@ -446,7 +454,7 @@ export default function CreateVault() {
                     fontWeight: 600,
                   }}
                 >
-                  Duress Password
+                  Duress Password (Optional)
                 </label>
                 <input
                   type="password"
@@ -562,13 +570,13 @@ export default function CreateVault() {
                 <button
                   type="button"
                   onClick={handleCreate}
-                  disabled={loading || jwtStatus !== 'valid' || !hiddenContent.trim() || !decoyContent.trim() || !duressPassphrase.trim() || !passphrase.trim()}
+                  disabled={loading || jwtStatus !== 'valid' || !hiddenContent.trim() || !passphrase.trim()}
                   className="start-btn"
                   style={{
                     width: "50%",
                     padding: "14px 12px",
-                    opacity: (loading || jwtStatus !== 'valid' || !hiddenContent.trim() || !decoyContent.trim() || !duressPassphrase.trim() || !passphrase.trim()) ? 0.5 : 1,
-                    cursor: (loading || jwtStatus !== 'valid' || !hiddenContent.trim() || !decoyContent.trim() || !duressPassphrase.trim() || !passphrase.trim()) ? "not-allowed" : "pointer",
+                    opacity: (loading || jwtStatus !== 'valid' || !hiddenContent.trim() || !passphrase.trim()) ? 0.5 : 1,
+                    cursor: (loading || jwtStatus !== 'valid' || !hiddenContent.trim() || !passphrase.trim()) ? "not-allowed" : "pointer",
                     boxSizing: "border-box",
                   }}
                 >

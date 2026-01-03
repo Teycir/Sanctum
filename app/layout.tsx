@@ -10,8 +10,7 @@ export const metadata: Metadata = {
   description: 'Zero-trust, client-side encrypted vault system with XChaCha20-Poly1305',
   manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: '/favicon.svg',
   },
 };
 

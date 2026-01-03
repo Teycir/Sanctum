@@ -1,24 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
 
-export function AnimatedTagline({ text }: { text: string }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <p className="text-base md:text-xl opacity-90 mb-6 font-medium text-center" style={{ lineHeight: 1.2, padding: '0 16px' }}>
-        {text}
-      </p>
-    );
-  }
-
-  const chars = text.split('');
+export function AnimatedTagline({ text }: { readonly text: string }) {
+  const chars = text.split('').map((char, i) => ({ char, id: `${char}-${i}` }));
 
   return (
     <motion.p
@@ -32,9 +17,9 @@ export function AnimatedTagline({ text }: { text: string }) {
         transition: { duration: 0.3 }
       }}
     >
-      {chars.map((char, i) => (
+      {chars.map((item, i) => (
         <motion.span
-          key={i}
+          key={item.id}
           className="inline-block"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -49,7 +34,7 @@ export function AnimatedTagline({ text }: { text: string }) {
             transition: { duration: 0.2 }
           }}
         >
-          {char === ' ' ? '\u00A0' : char}
+          {item.char === ' ' ? '\u00A0' : item.char}
         </motion.span>
       ))}
     </motion.p>

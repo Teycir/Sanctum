@@ -5,7 +5,8 @@ import { useState, useEffect } from 'react';
 
 const FEATURES = [
   'XChaCha20-Poly1305 - Authenticated encryption',
-  'Synthetic Nonces - Nonce-misuse resistance',
+  'Plausible Deniability - Hidden layers',
+  'Duress Mode - Decoy content protection',
   'SHA-256 Hashing - Cryptographic integrity',
   'Commitment Scheme - Tamper detection',
   'Memory Wiping - Sensitive data cleanup',
@@ -13,9 +14,8 @@ const FEATURES = [
   'Zero-Trust - No backend access',
   'Constant-Time Ops - Timing attack prevention',
   'Secure Random - Cryptographic RNG',
-  'Salt Generation - Rainbow table protection',
-  'Key Derivation - Argon2id KDF',
-  'Helia IPFS - Decentralized storage',
+  'Argon2id KDF - Key derivation',
+  'Pinata IPFS - Decentralized storage',
   'Content Addressing - Immutable CIDs',
   'Browser-Based - No installation',
   'Web Crypto API - Native encryption',
@@ -23,6 +23,7 @@ const FEATURES = [
   'Open Source - Auditable code',
   'No Accounts - Anonymous usage',
   'No Tracking - Privacy first',
+  'XOR Encryption - Layer obfuscation',
 ];
 
 export function CyclingFeatures() {
@@ -52,13 +53,23 @@ export function CyclingFeatures() {
       <AnimatePresence mode="wait">
         <motion.div
           key={index}
-          style={{ fontSize: '11px', opacity: 0.9, fontWeight: 500, textAlign: 'center', position: 'absolute', width: '100%', maxWidth: '95%', lineHeight: 1.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          style={{ fontSize: '11px', opacity: 0.9, fontWeight: 500, textAlign: 'center', width: '100%', maxWidth: '95%', lineHeight: 1.5 }}
         >
-          {FEATURES[index]}
+          {FEATURES[index].split('').map((char, i) => (
+            <motion.span
+              key={i}
+              className="inline-block"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: 0.15,
+                delay: (FEATURES[index].length - 1 - i) * 0.02
+              }}
+            >
+              {char === ' ' ? '\u00A0' : char}
+            </motion.span>
+          ))}
         </motion.div>
       </AnimatePresence>
     </div>
