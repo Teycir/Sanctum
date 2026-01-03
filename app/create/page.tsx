@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { LoadingOverlay } from "../components/LoadingOverlay";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { sanitizeInput, validateVaultForm } from "@/lib/validation/vault-form";
+import { generateVaultQR } from "@/lib/shared/qrcode";
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
@@ -41,6 +42,7 @@ export default function CreateVault() {
   const [copied, setCopied] = useState(false);
   const [copiedDecoy, setCopiedDecoy] = useState(false);
   const [copiedHidden, setCopiedHidden] = useState(false);
+  const [qrCode, setQrCode] = useState<string>();
   const [storageQuota, setStorageQuota] = useState<{
     used: number;
     limit: number;
@@ -428,6 +430,18 @@ export default function CreateVault() {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setResult(vaultResult);
+      
+      // Generate QR code
+      try {
+        const qr = await generateVaultQR(vaultResult.vaultURL, {
+          errorCorrectionLevel: 'H',
+          width: 300,
+        });
+        setQrCode(qr);
+      } catch {
+        // QR generation failed, continue without it
+      }
+      
       vaultService.stop().catch((stopError) => {
         console.error("Failed to stop vault service:", stopError);
       });
@@ -993,6 +1007,23 @@ export default function CreateVault() {
                 <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>
                   ✓ Vault Created!
                 </p>
+                {qrCode && (
+                  <div style={{ marginBottom: 16 }}>
+                    <img
+                      src={qrCode}
+                      alt="Vault QR Code"
+                      style={{
+                        width: 200,
+                        height: 200,
+                        border: "2px solid rgba(0, 255, 0, 0.3)",
+                        borderRadius: 8,
+                      }}
+                    />
+                    <p style={{ fontSize: 11, opacity: 0.7, marginTop: 8 }}>
+                      Scan to access vault
+                    </p>
+                  </div>
+                )}
                 <p style={{ fontSize: 14, opacity: 0.8, marginBottom: 8 }}>
                   Vault URL:
                 </p>
@@ -1130,6 +1161,79 @@ export default function CreateVault() {
                 >
                   Hidden CID: {result.hiddenCID}
                 </p>
+                <div
+                  style={{
+                    marginTop: 16,
+                    display: "flex",
+                    gap: 8,
+                    justifyContent: "center",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const passwords = decoyPassphrase
+                        ? `Decoy Password: ${decoyPassphrase}\nHidden Password: ${passphrase}`
+                        : `Hidden Password: ${passphrase}`;
+                      const blob = new Blob([passwords], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'vault-passwords.txt';
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "rgba(255, 193, 7, 0.2)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "rgba(255, 193, 7, 0.1)")
+                    }
+                    style={{
+                      padding: "6px 12px",
+                      background: "rgba(255, 193, 7, 0.1)",
+                      color: "#fff",
+                      border: "1px solid rgba(255, 193, 7, 0.3)",
+                      borderRadius: 4,
+                      fontSize: 11,
+                      cursor: "pointer",
+                      transition: "background 0.2s",
+                    }}
+                  >
+                    🔑 Download Passwords
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const content = `SANCTUM VAULT DETAILS\n${'='.repeat(50)}\n\nVault URL:\n${result.vaultURL}\n\nDecoy CID:\n${result.decoyCID}\n\nHidden CID:\n${result.hiddenCID}\n\nPASSWORDS:\n${decoyPassphrase ? `Decoy Password: ${decoyPassphrase}\n` : ''}Hidden Password: ${passphrase}\n\n${'='.repeat(50)}\nCreated: ${new Date().toISOString()}\n`;
+                      const blob = new Blob([content], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'vault-complete.txt';
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "rgba(13, 71, 161, 0.3)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "rgba(13, 71, 161, 0.2)")
+                    }
+                    style={{
+                      padding: "6px 12px",
+                      background: "rgba(13, 71, 161, 0.2)",
+                      color: "#fff",
+                      border: "1px solid rgba(13, 71, 161, 0.4)",
+                      borderRadius: 4,
+                      fontSize: 11,
+                      cursor: "pointer",
+                      transition: "background 0.2s",
+                    }}
+                  >
+                    📦 Download All
+                  </button>
+                </div>
               </div>
               <div
                 style={{ display: "flex", gap: 12, justifyContent: "center" }}
@@ -1162,6 +1266,7 @@ export default function CreateVault() {
                   type="button"
                   onClick={() => {
                     setResult(undefined);
+                    setQrCode(undefined);
                     setDecoyContent("");
                     setDecoyFile(null);
                     setHiddenContent("");

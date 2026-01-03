@@ -23,8 +23,8 @@ export async function generateVaultQR(
     width,
     margin,
     color: {
-      dark: '#00FF00', // Neon green (TimeSeal theme)
-      light: '#000000', // Black background
+      dark: '#000000', // Black for maximum contrast
+      light: '#FFFFFF', // White background
     },
   });
 }

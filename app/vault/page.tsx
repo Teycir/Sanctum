@@ -92,8 +92,8 @@ function UnlockedContent({ content, isDecoy, copied, downloading, onCopy, onLock
         transition={{ duration: 0.8, delay: 0.7 }}
         style={{
           padding: 24,
-          background: isDecoy ? "rgba(255, 165, 0, 0.1)" : "rgba(0, 255, 0, 0.1)",
-          border: `1px solid ${isDecoy ? "rgba(255, 165, 0, 0.3)" : "rgba(0, 255, 0, 0.3)"}`,
+          background: "rgba(0, 255, 0, 0.1)",
+          border: "1px solid rgba(0, 255, 0, 0.3)",
           borderRadius: 12,
           marginBottom: 24,
         }}
@@ -106,8 +106,8 @@ function UnlockedContent({ content, isDecoy, copied, downloading, onCopy, onLock
           fontSize: 16,
           fontWeight: 600
         }}>
-          <span style={{ fontSize: 20 }}>{isDecoy ? "⚠️" : "✓"}</span>
-          <span>{isDecoy ? "Decoy Layer" : "Hidden Layer"}</span>
+          <span style={{ fontSize: 20 }}>✓</span>
+          <span>Content Unlocked</span>
         </div>
         
         {isFile ? (
