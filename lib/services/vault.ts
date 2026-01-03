@@ -143,6 +143,10 @@ export class VaultService {
       return { content, isDecoy, filename };
     } catch (error) {
       if (error instanceof Error) {
+        // Check if it's a decryption error (wrong password)
+        if (error.message.includes('decrypt') || error.message.includes('authentication')) {
+          throw new Error('Incorrect password');
+        }
         throw new Error(`Failed to unlock vault: ${error.message}`);
       }
       throw new Error("Failed to unlock vault");
