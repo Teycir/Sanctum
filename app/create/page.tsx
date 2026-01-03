@@ -1013,8 +1013,8 @@ export default function CreateVault() {
                       src={qrCode}
                       alt="Vault QR Code"
                       style={{
-                        width: 200,
-                        height: 200,
+                        width: "min(200px, 90vw)",
+                        height: "min(200px, 90vw)",
                         border: "2px solid rgba(0, 255, 0, 0.3)",
                         borderRadius: 8,
                       }}
@@ -1168,6 +1168,7 @@ export default function CreateVault() {
                     display: "flex",
                     gap: 8,
                     justifyContent: "center",
+                    flexWrap: "wrap",
                   }}
                 >
                   <button
@@ -1237,7 +1238,7 @@ export default function CreateVault() {
                 </div>
               </div>
               <div
-                style={{ display: "flex", gap: 12, justifyContent: "center" }}
+                style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}
               >
                 <button
                   type="button"

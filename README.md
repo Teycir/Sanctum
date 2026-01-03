@@ -1,9 +1,9 @@
 <div align="center">
 
 ![License](https://img.shields.io/badge/license-BSL-neon_green?style=for-the-badge)
-![Encryption](https://img.shields.io/badge/Encryption-AES--GCM--256-neon_green?style=for-the-badge)
+![Encryption](https://img.shields.io/badge/Encryption-XChaCha20--Poly1305-neon_green?style=for-the-badge)
 ![Storage](https://img.shields.io/badge/Storage-IPFS-neon_green?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-In%20Development-orange?style=for-the-badge)
+![Hosting](https://img.shields.io/badge/Hosting-Cloudflare%20Pages-neon_green?style=for-the-badge)
 
 # 🎭 Sanctum
 
@@ -45,7 +45,6 @@
 - 🔑 **Split-Key Encryption** - AES-GCM-256 with keys split between server and URL
 - 🚫 **Zero Server Trust** - All crypto operations happen in your browser
 - 💰 **100% Free** - No credit card, no paid services, stack multiple free tiers
-- ⛓️ **Progressive Disclosure** - Reveal layers under escalating pressure
 
 ---
 
@@ -54,9 +53,9 @@
 ### For Users
 
 1. Visit [duress.vault](https://duress.vault) (coming soon)
-2. Select vault mode (Simple, Hidden, Chain, or Stego)
-3. Configure Pinata (free IPFS provider)
-4. Create your vault with optional passphrase
+2. Configure Pinata or Filebase (free IPFS providers)
+3. Create your vault with optional decoy content
+4. Set passphrase for hidden layer
 5. Share the link - only you know the passphrase
 
 ### For Developers
@@ -94,7 +93,7 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 
 ---
 
-### 2️⃣ Duress Hidden (Primary Mode)
+### 2️⃣ Duress Hidden (Current Implementation)
 
 **Use Case:** $5 wrench attacks, device seizures, coercion scenarios.
 
@@ -102,42 +101,6 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 - **Without passphrase** → Shows decoy (innocent files, small funded wallet)
 - **With correct passphrase** → Shows hidden layer (real secrets)
 - **Single CID** → Impossible to prove hidden layer exists
-
-```
-Base Encrypted Blob
-       │
-       ├─[No Passphrase]──────────► Decoy Layer (innocent content)
-       │
-       └─[Correct Passphrase]─────► Hidden Layer (real secrets)
-```
-
----
-
-### 3️⃣ Escalating Chain
-
-**Use Case:** Sophisticated adversaries, prolonged interrogation.
-
-Up to 4 passphrase levels for progressive disclosure under escalating pressure.
-
-**Layers:**
-1. **Harmless** (family photos)
-2. **Mildly sensitive** (small crypto wallet)
-3. **Critical** (activist contacts, evidence)
-4. **Ultra-sensitive** (main holdings, identities)
-
----
-
-### 4️⃣ Stego-Embedded
-
-**Use Case:** Maximum deniability, border crossings, device inspections.
-
-Hide encrypted data inside innocent-looking images using LSB steganography.
-
-**Process:**
-1. User uploads cover image (PNG/JPEG)
-2. Browser embeds encrypted payload using LSB
-3. Upload stego-image to IPFS
-4. Retrieval extracts and decrypts hidden data
 
 ---
 
@@ -282,43 +245,17 @@ Server only stores encrypted fragments and CIDs.
 
 See [OPSEC.md](./docs/OPSEC.md) for comprehensive guidelines.
 
-## 🌐 Storage Provider
+## 🌐 Storage Providers
 
-### Pinata (Primary)
+### Pinata
 - **Free Tier**: 1 GB storage, 500 files, 10 GB bandwidth/month
-- **API**: REST + dedicated gateways
 - **Signup**: Email only (no credit card)
-- **Features**: Reliable, widely trusted, CID-based retrieval with public gateway fallback
 
-## ❓ FAQ: How It Works
+### Filebase
+- **Free Tier**: 5 GB storage, unlimited bandwidth
+- **Signup**: Email only (no credit card)
 
-### How does Sanctum prevent coercion?
-
-**Plausible Deniability Architecture:**
-
-1. Your browser derives multiple keys from a single passphrase using HKDF
-2. Each key decrypts a different "layer" of content
-3. Without the passphrase, only the decoy layer is visible
-4. With the passphrase, the hidden layer is revealed
-5. **Critical**: No metadata reveals that hidden layers exist
-
-**Under Duress:**
-- Show the decoy layer (funded wallet, innocent files)
-- Adversary cannot prove additional layers exist
-- Cryptographically indistinguishable from single-layer vault
-
-### How do I create a vault?
-
-1. Visit the Sanctum website (coming soon)
-2. Select vault mode (Simple/Hidden/Chain/Stego)
-3. Configure Pinata (free IPFS provider)
-   - Enter free API key (email signup only)
-4. Enter content:
-   - **Decoy content** (what adversaries see)
-   - **Hidden content** (your real secrets)
-5. Set passphrase (memorize, never write down)
-6. Click "Create Vault"
-7. Save vault link securely
+## ❓ FAQ
 
 ### How do I unlock a vault?
 
@@ -327,82 +264,30 @@ See [OPSEC.md](./docs/OPSEC.md) for comprehensive guidelines.
 3. **With passphrase**: See hidden content
 4. Download or copy the decrypted content
 
-**Note:** Decryption happens entirely in your browser. The server never sees your decrypted content or passphrase.
-
 ### What if I lose the vault link?
 
-**Lost forever.** Key B is in the URL hash. Without it:
-
-- Server cannot decrypt (doesn't have Key B)
-- You cannot decrypt (don't have the link)
-- No recovery mechanism exists (by design)
+**Lost forever.** No recovery mechanism exists (by design).
 
 **Best practices:**
-
 - Save vault links in password manager
-- Use TimeSeal for timed release of vault link
 - Print QR code for physical backup
 - Never share vault links over unencrypted channels
 
-### Can someone force me to reveal my passphrase?
-
-**This is the core threat model:**
-
-1. **Reveal decoy layer** (no passphrase needed)
-2. Adversary sees funded wallet + innocent files
-3. **Cannot prove hidden layer exists**
-4. Cryptographically indistinguishable from simple vault
-
-**OpSec Critical:**
-- Fund decoy wallet with realistic amounts ($50-500)
-- Make decoy content believable
-- Never hint that hidden layers exist
-- Test decoy layer before relying on it
-
 ### How secure is the URL hash?
 
-**Very secure by design:**
+URL hash (#KeyB) is never sent to server. Treat vault links like passwords.
 
-- URL hash (#KeyB) is never sent to server
-- Only visible in your browser
-- HTTPS protects it in transit
-- Treat vault links like passwords
+**Risks:** Browser history, bookmarks, extensions can access it.
 
-**Risks to be aware of:**
-
-- Visible in browser history
-- Visible in bookmarks
-- May appear in referrer logs if you click links from vault page
-- Browser extensions can access it
-
-**Mitigation:**
-
-- Use Tor Browser for maximum anonymity
-- Clear browser history after use
-- Check for browser extensions
-- Never paste vault links in public forums
+**Mitigation:** Use Tor Browser, clear history after use.
 
 ### What are the file size limits?
 
-**Maximum file size: 10 MB (configurable)**
-
-Pinata free tier: 1 GB storage
-
-**For larger files:**
-- Use external storage and seal the download link
-- Self-host with custom limits
+**Maximum: 10 MB** (configurable for self-hosted instances)
 
 ### How long do vaults last?
 
-**Indefinitely** (as long as IPFS providers maintain the data)
-
-**Provider retention:**
-- Pinata: Permanent (while account active)
-
-**Best practices:**
-- Use multiple providers for redundancy
-- Periodically verify vault accessibility
-- Re-pin to new providers if needed
+**Indefinitely** (as long as IPFS providers maintain the data and your account remains active)
 
 ---
 
@@ -538,6 +423,5 @@ Sanctum is a tool for legitimate privacy and security needs. Users are responsib
 
 **Built with ❤️ and 🔒 by [Teycir Ben Soltane](https://teycirbensoltane.tn)**
 
-**Powered by [TimeSeal](https://timeseal.online) Infrastructure**
 
 </div>
