@@ -3,7 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LoadingOverlay } from "../components/LoadingOverlay";
+import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { sanitizeInput, validateVaultForm } from "@/lib/validation/vault-form";
+
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
 interface VaultResult {
   vaultURL: string;
@@ -507,29 +510,11 @@ export default function CreateVault() {
                   )
                 );
               })()}
-              <div>
-                <label
-                  htmlFor="decoy-content"
-                  style={{
-                    display: "block",
-                    marginBottom: 6,
-                    fontSize: 13,
-                    fontWeight: 600,
-                  }}
-                >
-                  Decoy Content (Optional)
-                </label>
-                <p
-                  style={{
-                    fontSize: 11,
-                    color: "rgba(168, 85, 247, 0.6)",
-                    marginBottom: 8,
-                  }}
-                >
-                  💡 Choose either text OR file (.zip/.rar only) • Max: 256MB
+              <CollapsiblePanel title="🎭 Decoy Content (Optional)" defaultOpen={false}>
+                <p style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>
+                  💡 Choose either text OR file (.zip/.rar only) • Max: 25MB
                 </p>
                 <textarea
-                  id="decoy-content"
                   value={decoyContent}
                   onChange={(e) => {
                     if (decoyFile) {
@@ -566,20 +551,19 @@ export default function CreateVault() {
                       e.target.value = "";
                       return;
                     }
-                    // Validate file type
-                    if (
-                      !file.name.toLowerCase().endsWith(".zip") &&
-                      !file.name.toLowerCase().endsWith(".rar")
-                    ) {
+                    if (!file.name.toLowerCase().endsWith(".zip") && !file.name.toLowerCase().endsWith(".rar")) {
                       setError("Only .zip and .rar files are allowed");
+                      e.target.value = "";
+                      return;
+                    }
+                    if (file.size > MAX_FILE_SIZE) {
+                      setError(`File too large. Maximum size is 25MB (${(file.size / 1024 / 1024).toFixed(2)}MB provided)`);
                       e.target.value = "";
                       return;
                     }
                     setDecoyFile(file);
                     setError("");
                   }}
-                  aria-label="Upload decoy file (.zip or .rar)"
-                  title="Upload decoy file (.zip or .rar)"
                   className="custom-file-input"
                   id="decoy-file-input"
                 />
@@ -594,18 +578,9 @@ export default function CreateVault() {
                   📁 Choose File (.zip/.rar)
                 </label>
                 {decoyFile && (
-                  <div
-                    style={{
-                      marginTop: 8,
-                      fontSize: 11,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
+                  <div style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ color: "#4ade80" }}>
-                      ✓ {decoyFile.name} (
-                      {(decoyFile.size / 1024 / 1024).toFixed(2)} MB)
+                      ✓ {decoyFile.name} ({(decoyFile.size / 1024 / 1024).toFixed(2)} MB)
                     </span>
                     <button
                       type="button"
@@ -624,31 +599,31 @@ export default function CreateVault() {
                     </button>
                   </div>
                 )}
-              </div>
+                <div>
+                  <label htmlFor="decoy-password" style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
+                    Decoy Password
+                  </label>
+                  <input
+                    id="decoy-password"
+                    type="password"
+                    value={decoyPassphrase}
+                    onChange={(e) => setDecoyPassphrase(e.target.value)}
+                    placeholder="Password to reveal decoy content..."
+                    className="form-input"
+                  />
+                  {(decoyContent.trim() || decoyFile) && (
+                    <p style={{ marginTop: 6, fontSize: 11, lineHeight: 1.4, color: "#fbbf24", opacity: 0.9 }}>
+                      ⚠️ Decoy password is required when decoy content is provided
+                    </p>
+                  )}
+                </div>
+              </CollapsiblePanel>
 
-              <div>
-                <label
-                  htmlFor="hidden-content"
-                  style={{
-                    display: "block",
-                    marginBottom: 6,
-                    fontSize: 13,
-                    fontWeight: 600,
-                  }}
-                >
-                  Hidden Content (Required)
-                </label>
-                <p
-                  style={{
-                    fontSize: 11,
-                    color: "rgba(168, 85, 247, 0.6)",
-                    marginBottom: 8,
-                  }}
-                >
-                  💡 Choose either text OR file (.zip/.rar only) • Max: 256MB
+              <CollapsiblePanel title="🔒 Hidden Content (Required)" defaultOpen={true}>
+                <p style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>
+                  💡 Choose either text OR file (.zip/.rar only) • Max: 25MB
                 </p>
                 <textarea
-                  id="hidden-content"
                   value={hiddenContent}
                   onChange={(e) => {
                     if (hiddenFile) {
@@ -685,20 +660,19 @@ export default function CreateVault() {
                       e.target.value = "";
                       return;
                     }
-                    // Validate file type
-                    if (
-                      !file.name.toLowerCase().endsWith(".zip") &&
-                      !file.name.toLowerCase().endsWith(".rar")
-                    ) {
+                    if (!file.name.toLowerCase().endsWith(".zip") && !file.name.toLowerCase().endsWith(".rar")) {
                       setError("Only .zip and .rar files are allowed");
+                      e.target.value = "";
+                      return;
+                    }
+                    if (file.size > MAX_FILE_SIZE) {
+                      setError(`File too large. Maximum size is 25MB (${(file.size / 1024 / 1024).toFixed(2)}MB provided)`);
                       e.target.value = "";
                       return;
                     }
                     setHiddenFile(file);
                     setError("");
                   }}
-                  aria-label="Upload hidden file (.zip or .rar)"
-                  title="Upload hidden file (.zip or .rar)"
                   className="custom-file-input"
                   id="hidden-file-input"
                 />
@@ -713,18 +687,9 @@ export default function CreateVault() {
                   📁 Choose File (.zip/.rar)
                 </label>
                 {hiddenFile && (
-                  <div
-                    style={{
-                      marginTop: 8,
-                      fontSize: 11,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
+                  <div style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ color: "#4ade80" }}>
-                      ✓ {hiddenFile.name} (
-                      {(hiddenFile.size / 1024 / 1024).toFixed(2)} MB)
+                      ✓ {hiddenFile.name} ({(hiddenFile.size / 1024 / 1024).toFixed(2)} MB)
                     </span>
                     <button
                       type="button"
@@ -743,63 +708,23 @@ export default function CreateVault() {
                     </button>
                   </div>
                 )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="decoy-password"
-                  className="form-label"
-                >
-                  Decoy Password (Optional)
-                </label>
-                <input
-                  id="decoy-password"
-                  type="password"
-                  value={decoyPassphrase}
-                  onChange={(e) => setDecoyPassphrase(e.target.value)}
-                  placeholder="Password to reveal decoy content..."
-                  className="form-input"
-                />
-                {(decoyContent.trim() || decoyFile) && (
-                  <p
-                    style={{
-                      marginTop: 6,
-                      fontSize: 11,
-                      lineHeight: 1.4,
-                      color: "#fbbf24",
-                      opacity: 0.9,
-                    }}
-                  >
-                    ⚠️ As you entered decoy content, decoy password is required
+                <div>
+                  <label htmlFor="hidden-password" style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
+                    Hidden Password (Required)
+                  </label>
+                  <input
+                    id="hidden-password"
+                    type="password"
+                    value={passphrase}
+                    onChange={(e) => setPassphrase(e.target.value)}
+                    placeholder="Enter a strong password..."
+                    className="form-input"
+                  />
+                  <p style={{ marginTop: 6, fontSize: 11, lineHeight: 1.4, textAlign: "center", opacity: 0.7 }}>
+                    Both passwords must be 12+ characters with uppercase, lowercase, number, and special character
                   </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="hidden-password" className="form-label">
-                  Hidden Layer Password (Required)
-                </label>
-                <input
-                  id="hidden-password"
-                  type="password"
-                  value={passphrase}
-                  onChange={(e) => setPassphrase(e.target.value)}
-                  placeholder="Enter a strong password..."
-                  className="form-input"
-                />
-                <p
-                  style={{
-                    marginTop: 6,
-                    fontSize: 11,
-                    lineHeight: 1.4,
-                    textAlign: "center",
-                    opacity: 0.7,
-                  }}
-                >
-                  Both passwords must be 12+ characters with uppercase,
-                  lowercase, number, and special character
-                </p>
-              </div>
+                </div>
+              </CollapsiblePanel>
 
               <div
                 style={{

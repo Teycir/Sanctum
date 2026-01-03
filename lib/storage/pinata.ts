@@ -70,15 +70,26 @@ export class PinataClient {
   async getBytes(cid: string): Promise<Uint8Array> {
     if (!cid?.trim()) throw new Error('CID cannot be empty')
 
-    const response = await fetch(`${this.gateway}/ipfs/${cid}`)
+    // Try Cloudflare gateway first (faster), fallback to Pinata
+    const gateways = [
+      'https://cloudflare-ipfs.com/ipfs',
+      'https://ipfs.io/ipfs',
+      `${this.gateway}/ipfs`
+    ]
 
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => response.statusText)
-      throw new Error(`Pinata fetch failed: ${errorText}`)
+    for (const gateway of gateways) {
+      try {
+        const response = await fetch(`${gateway}/${cid}`, { signal: AbortSignal.timeout(10000) })
+        if (response.ok) {
+          const buffer = await response.arrayBuffer()
+          return new Uint8Array(buffer)
+        }
+      } catch {
+        continue
+      }
     }
 
-    const buffer = await response.arrayBuffer()
-    return new Uint8Array(buffer)
+    throw new Error('Failed to download from all IPFS gateways')
   }
 
   // Legacy method names for compatibility

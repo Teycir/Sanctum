@@ -400,7 +400,17 @@ export default function ViewVault() {
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="back-button"
+          style={{
+            marginBottom: 20,
+            padding: 0,
+            background: "transparent",
+            color: "#fff",
+            border: "none",
+            fontSize: 24,
+            cursor: "pointer",
+            opacity: 0.7,
+            transition: "opacity 0.2s",
+          }}
           onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
           onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.7")}
         >
