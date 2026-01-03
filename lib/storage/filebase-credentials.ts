@@ -1,5 +1,5 @@
 // ============================================================================
-// AUTOMATIC FILEBASE CREDENTIALS ENCRYPTION
+// FILEBASE CREDENTIALS ENCRYPTION
 // ============================================================================
 
 const STORAGE_KEY = 'sanctum_filebase_encrypted';
@@ -8,14 +8,13 @@ const DEVICE_KEY_NAME = 'sanctum_device_key';
 interface FilebaseCredentials {
   accessKey: string;
   secretKey: string;
-  bucket: string;
 }
 
 async function getDeviceKey(): Promise<CryptoKey> {
   const stored = localStorage.getItem(DEVICE_KEY_NAME);
   
   if (stored) {
-    const keyData = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+    const keyData = Uint8Array.from(atob(stored), c => c.codePointAt(0) ?? 0);
     return crypto.subtle.importKey(
       'raw',
       keyData,
@@ -33,7 +32,7 @@ async function getDeviceKey(): Promise<CryptoKey> {
   
   const exported = await crypto.subtle.exportKey('raw', key);
   const keyData = new Uint8Array(exported);
-  localStorage.setItem(DEVICE_KEY_NAME, btoa(String.fromCharCode(...keyData)));
+  localStorage.setItem(DEVICE_KEY_NAME, btoa(String.fromCodePoint(...keyData)));
   
   return key;
 }
@@ -53,7 +52,7 @@ export async function saveFilebaseCredentials(credentials: FilebaseCredentials):
   combined.set(iv, 0);
   combined.set(new Uint8Array(encrypted), iv.length);
   
-  localStorage.setItem(STORAGE_KEY, btoa(String.fromCharCode(...combined)));
+  localStorage.setItem(STORAGE_KEY, btoa(String.fromCodePoint(...combined)));
 }
 
 export async function loadFilebaseCredentials(): Promise<FilebaseCredentials | null> {
@@ -62,7 +61,7 @@ export async function loadFilebaseCredentials(): Promise<FilebaseCredentials | n
   
   try {
     const key = await getDeviceKey();
-    const combined = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+    const combined = Uint8Array.from(atob(stored), c => c.codePointAt(0) ?? 0);
     const iv = combined.slice(0, 12);
     const encrypted = combined.slice(12);
     

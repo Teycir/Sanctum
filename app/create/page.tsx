@@ -25,6 +25,7 @@ export default function CreateVault() {
   const [filebaseBucket, setFilebaseBucket] = useState("sanctum-vaults");
   const [provider, setProvider] = useState<"pinata" | "filebase">("pinata");
   const [hasStoredJWT, setHasStoredJWT] = useState(false);
+  const [hasStoredFilebase, setHasStoredFilebase] = useState(false);
   const [jwtStatus, setJwtStatus] = useState<
     "validating" | "valid" | "invalid" | null
   >(null);
@@ -70,6 +71,14 @@ export default function CreateVault() {
         setHasStoredJWT(true);
         validateJWT(jwt);
       }
+      
+      const { loadFilebaseCredentials } = await import("@/lib/storage/filebase-credentials");
+      const credentials = await loadFilebaseCredentials();
+      if (credentials) {
+        setFilebaseAccessKey(credentials.accessKey);
+        setFilebaseSecretKey(credentials.secretKey);
+        setHasStoredFilebase(true);
+      }
     })();
   }, []);
 
@@ -111,6 +120,25 @@ export default function CreateVault() {
       return () => clearTimeout(timer);
     }
   }, [pinataJWT, hasStoredJWT]);
+
+  const saveFilebaseCredentials = async (accessKey: string, secretKey: string) => {
+    if (!accessKey.trim() || !secretKey.trim()) return;
+    
+    try {
+      const { saveFilebaseCredentials } = await import("@/lib/storage/filebase-credentials");
+      await saveFilebaseCredentials({ accessKey: accessKey.trim(), secretKey: secretKey.trim() });
+      setHasStoredFilebase(true);
+    } catch {
+      // Ignore save errors
+    }
+  };
+
+  useEffect(() => {
+    if (!hasStoredFilebase && filebaseAccessKey.trim() && filebaseSecretKey.trim()) {
+      const timer = setTimeout(() => saveFilebaseCredentials(filebaseAccessKey, filebaseSecretKey), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [filebaseAccessKey, filebaseSecretKey, hasStoredFilebase]);
 
   useEffect(() => {
     const fetchQuota = async () => {
@@ -275,7 +303,11 @@ export default function CreateVault() {
           return;
         }
       } catch (err) {
-        console.warn("Unable to check storage quota:", err);
+        if (err instanceof TypeError || err instanceof RangeError) {
+          console.warn("Unable to check storage quota:", err);
+        } else {
+          throw err;
+        }
       }
     } else {
       try {
@@ -302,7 +334,11 @@ export default function CreateVault() {
           return;
         }
       } catch (err) {
-        console.warn("Unable to check storage quota:", err);
+        if (err instanceof TypeError || err instanceof RangeError) {
+          console.warn("Unable to check storage quota:", err);
+        } else {
+          throw err;
+        }
       }
     }
 
@@ -366,6 +402,8 @@ export default function CreateVault() {
         passphrase: sanitizedPassphrase,
         decoyPassphrase: sanitizedDuress,
         argonProfile: ARGON2_PROFILES.desktop,
+        decoyFilename: decoyFile?.name,
+        hiddenFilename: hiddenFile?.name,
         ipfsCredentials:
           provider === "pinata"
             ? {
@@ -374,9 +412,7 @@ export default function CreateVault() {
               }
             : {
                 provider: "filebase",
-                filebaseAccessKey: filebaseAccessKey.trim(),
-                filebaseSecretKey: filebaseSecretKey.trim(),
-                filebaseBucket: filebaseBucket.trim(),
+                filebaseToken: btoa(`${filebaseAccessKey.trim()}:${filebaseSecretKey.trim()}`),
               },
       });
 
@@ -521,6 +557,7 @@ export default function CreateVault() {
                 <input
                   type="file"
                   accept=".zip,.rar"
+                  disabled={!!decoyContent.trim()}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
@@ -546,7 +583,14 @@ export default function CreateVault() {
                   className="custom-file-input"
                   id="decoy-file-input"
                 />
-                <label htmlFor="decoy-file-input" className="custom-file-button">
+                <label 
+                  htmlFor="decoy-file-input" 
+                  className="custom-file-button"
+                  style={{
+                    opacity: decoyContent.trim() ? 0.5 : 1,
+                    cursor: decoyContent.trim() ? 'not-allowed' : 'pointer'
+                  }}
+                >
                   📁 Choose File (.zip/.rar)
                 </label>
                 {decoyFile && (
@@ -632,6 +676,7 @@ export default function CreateVault() {
                 <input
                   type="file"
                   accept=".zip,.rar"
+                  disabled={!!hiddenContent.trim()}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
@@ -657,7 +702,14 @@ export default function CreateVault() {
                   className="custom-file-input"
                   id="hidden-file-input"
                 />
-                <label htmlFor="hidden-file-input" className="custom-file-button">
+                <label 
+                  htmlFor="hidden-file-input" 
+                  className="custom-file-button"
+                  style={{
+                    opacity: hiddenContent.trim() ? 0.5 : 1,
+                    cursor: hiddenContent.trim() ? 'not-allowed' : 'pointer'
+                  }}
+                >
                   📁 Choose File (.zip/.rar)
                 </label>
                 {hiddenFile && (
@@ -695,33 +747,18 @@ export default function CreateVault() {
 
               <div>
                 <label
-                  style={{
-                    display: "block",
-                    marginBottom: 6,
-                    fontSize: 13,
-                    fontWeight: 600,
-                  }}
+                  htmlFor="decoy-password"
+                  className="form-label"
                 >
-                  Decoy Password{" "}
-                  {decoyContent.trim() || decoyFile
-                    ? "(Required)"
-                    : "(Optional)"}
+                  Decoy Password (Optional)
                 </label>
                 <input
+                  id="decoy-password"
                   type="password"
                   value={decoyPassphrase}
                   onChange={(e) => setDecoyPassphrase(e.target.value)}
                   placeholder="Password to reveal decoy content..."
-                  style={{
-                    width: "100%",
-                    padding: 10,
-                    background: "rgba(255, 255, 255, 0.05)",
-                    border: "1px solid rgba(255, 255, 255, 0.2)",
-                    borderRadius: 8,
-                    color: "#fff",
-                    fontSize: 13,
-                    boxSizing: "border-box",
-                  }}
+                  className="form-input"
                 />
                 {(decoyContent.trim() || decoyFile) && (
                   <p
@@ -740,7 +777,7 @@ export default function CreateVault() {
 
               <div>
                 <label htmlFor="hidden-password" className="form-label">
-                  Hidden Layer Password
+                  Hidden Layer Password (Required)
                 </label>
                 <input
                   id="hidden-password"

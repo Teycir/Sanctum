@@ -11,7 +11,9 @@ export const StoredVaultSchema = z.object({
   salt: z.instanceof(Uint8Array).refine(
     (data) => data.length === 32,
     'Salt must be 32 bytes'
-  )
+  ),
+  decoyFilename: z.string().optional(),
+  hiddenFilename: z.string().optional()
 });
 
 export const CreateVaultParamsSchema = z.object({
@@ -19,7 +21,9 @@ export const CreateVaultParamsSchema = z.object({
   hiddenContent: z.instanceof(Uint8Array),
   passphrase: z.string().min(1, 'Passphrase required'),
   decoyPassphrase: z.string().optional(),
-  argonProfile: z.custom<Argon2Profile>().optional()
+  argonProfile: z.custom<Argon2Profile>().optional(),
+  decoyFilename: z.string().optional(),
+  hiddenFilename: z.string().optional()
 });
 
 export const UnlockVaultParamsSchema = z.object({

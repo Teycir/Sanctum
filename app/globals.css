@@ -89,8 +89,8 @@
     --radius: 0.5rem;
 
     /* Typography */
-    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+    --font-mono: "JetBrains Mono", "Fira Code", monospace;
   }
 
   body {
@@ -114,7 +114,7 @@
   }
 
   body::before {
-    content: '';
+    content: "";
     position: fixed;
     top: 0;
     left: 0;
@@ -141,7 +141,7 @@
   }
 
   body::after {
-    content: '';
+    content: "";
     position: fixed;
     top: -50%;
     left: -50%;
@@ -225,7 +225,8 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     text-shadow:
       0 0 5px rgba(255, 255, 255, 0.5),
       0 0 10px rgba(200, 150, 255, 0.3);
@@ -239,7 +240,8 @@
 }
 
 @keyframes subtle-shimmer {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.5;
   }
   50% {
@@ -266,7 +268,7 @@
 .form-input {
   width: 100%;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   color: #fff;
@@ -285,7 +287,7 @@
 .provider-input {
   width: 100%;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   color: #fff;
@@ -297,7 +299,7 @@
 .provider-input-last {
   width: 100%;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   color: #fff;
@@ -308,7 +310,7 @@
 .jwt-input {
   width: 100%;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 6px;
   color: #fff;
   font-size: 12px;
@@ -324,8 +326,8 @@
 .custom-file-button {
   display: inline-block;
   padding: 8px 16px;
-  background: rgba(168, 85, 247, 0.4);
-  border: 1px solid rgba(168, 85, 247, 0.4);
+  background: rgba(168, 85, 247, 0.6);
+  border: 1px solid rgba(168, 85, 247, 0.6);
   border-radius: 6px;
   color: #fff;
   font-size: 12px;
@@ -335,8 +337,8 @@
 }
 
 .custom-file-button:hover {
-  background: rgba(168, 85, 247, 0.6);
-  border-color: rgba(168, 85, 247, 0.8);
+  background: rgba(168, 85, 247, 0.8);
+  border-color: rgba(168, 85, 247, 1);
 }
 
 .custom-file-input {

@@ -109,23 +109,29 @@ export function createHiddenVault(
   };
 }
 
+export interface UnlockResult {
+  readonly content: Uint8Array;
+  readonly isDecoy: boolean;
+}
+
 /**
  * Unlock hidden vault layer
  * @param result Hidden vault result
  * @param passphrase User passphrase (empty for decoy)
- * @returns Decrypted layer content
+ * @returns Decrypted layer content with isDecoy flag
  * @throws Error if decryption fails
  */
 export function unlockHiddenVault(
   result: HiddenVaultResult,
   passphrase: string,
-): Uint8Array {
+): UnlockResult {
   try {
-    return decrypt({ blob: result.decoyBlob, passphrase });
+    const content = decrypt({ blob: result.decoyBlob, passphrase });
+    return { content, isDecoy: true };
   } catch {
     // If decoy decryption fails, try hidden layer
-    // This is expected behavior for plausible deniability
     const hiddenPassphrase: string = deriveLayerPassphrase(passphrase, 1, result.salt);
-    return decrypt({ blob: result.hiddenBlob, passphrase: hiddenPassphrase });
+    const content = decrypt({ blob: result.hiddenBlob, passphrase: hiddenPassphrase });
+    return { content, isDecoy: false };
   }
 }

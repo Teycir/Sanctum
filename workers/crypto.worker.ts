@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { createHiddenVault, unlockHiddenVault } from '../lib/duress/layers';
-import type { HiddenVaultParams, HiddenVaultResult } from '../lib/duress/layers';
+import type { HiddenVaultParams, HiddenVaultResult, UnlockResult } from '../lib/duress/layers';
 
 self.onmessage = async (e: MessageEvent) => {
   const { type, payload, id } = e.data;
@@ -19,8 +19,8 @@ self.onmessage = async (e: MessageEvent) => {
 
       case 'unlock-vault': {
         const { result, passphrase } = payload as { result: HiddenVaultResult; passphrase: string };
-        const content = unlockHiddenVault(result, passphrase);
-        self.postMessage({ type: 'unlock-vault-result', payload: content, id });
+        const unlockResult: UnlockResult = unlockHiddenVault(result, passphrase);
+        self.postMessage({ type: 'unlock-vault-result', payload: unlockResult, id });
         break;
       }
 

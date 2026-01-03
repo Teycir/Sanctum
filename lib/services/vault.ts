@@ -25,6 +25,8 @@ export interface CreateVaultParams {
   readonly decoyPassphrase?: string;
   readonly argonProfile?: Argon2Profile;
   readonly ipfsCredentials?: UploadCredentials;
+  readonly decoyFilename?: string;
+  readonly hiddenFilename?: string;
 }
 
 export interface CreateVaultResult {
@@ -41,6 +43,7 @@ export interface UnlockVaultParams {
 export interface UnlockVaultResult {
   readonly content: Uint8Array;
   readonly isDecoy: boolean;
+  readonly filename?: string;
 }
 
 // ============================================================================
@@ -80,7 +83,15 @@ export class VaultService {
       });
 
       const stored = await uploadVault(vault, params.ipfsCredentials);
-      const metadata = serializeVaultMetadata(stored);
+      
+      // Add filenames to metadata
+      const storedWithFilenames = {
+        ...stored,
+        decoyFilename: params.decoyFilename,
+        hiddenFilename: params.hiddenFilename
+      };
+      
+      const metadata = serializeVaultMetadata(storedWithFilenames);
       const encodedMetadata = base64UrlEncode(metadata);
 
       const baseURL =
@@ -123,13 +134,13 @@ export class VaultService {
       const vault = await downloadVault(stored);
 
       // Use worker for non-blocking Argon2
-      const content = await this.crypto.unlockHiddenVault(
+      const { content, isDecoy } = await this.crypto.unlockHiddenVault(
         vault,
         validated.passphrase,
       );
-      const isDecoy = validated.passphrase === "";
+      const filename = isDecoy ? stored.decoyFilename : stored.hiddenFilename;
 
-      return { content, isDecoy };
+      return { content, isDecoy, filename };
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to unlock vault: ${error.message}`);

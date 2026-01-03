@@ -2,7 +2,7 @@
 // CRYPTO WORKER WRAPPER
 // ============================================================================
 
-import type { HiddenVaultParams, HiddenVaultResult } from '../duress/layers';
+import type { HiddenVaultParams, HiddenVaultResult, UnlockResult } from '../duress/layers';
 
 export class CryptoWorker {
   private worker: Worker | null = null;
@@ -43,7 +43,7 @@ export class CryptoWorker {
     });
   }
 
-  async unlockHiddenVault(result: HiddenVaultResult, passphrase: string): Promise<Uint8Array> {
+  async unlockHiddenVault(result: HiddenVaultResult, passphrase: string): Promise<UnlockResult> {
     if (!this.worker) await this.init();
     
     const id = this.messageId++;

@@ -22,13 +22,7 @@ export const FILEBASE_BUCKET_INSTRUCTIONS =
 
 export type UploadCredentials =
   | { provider: 'pinata'; pinataJWT: string }
-  | {
-      provider: 'filebase';
-      filebaseAccessKey: string;
-      filebaseSecretKey: string;
-      /** Must be 'sanctum-vaults' */
-      filebaseBucket: string;
-    };
+  | { provider: 'filebase'; filebaseToken: string };
 
 export interface UploadResult {
   cid: string;
@@ -42,11 +36,7 @@ export async function uploadToIPFS(
   credentials: UploadCredentials
 ): Promise<UploadResult> {
   if (credentials.provider === 'filebase') {
-    const filebase = new FilebaseClient(
-      credentials.filebaseAccessKey,
-      credentials.filebaseSecretKey,
-      credentials.filebaseBucket
-    );
+    const filebase = new FilebaseClient(credentials.filebaseToken);
     const cid = await filebase.upload(data);
     return { cid };
   }

@@ -136,5 +136,6 @@ export async function unlockSplitKeyVault(
     salt: base64UrlDecode(salt),
   };
 
-  return unlockHiddenVault(vault, passphrase);
+  const { content } = unlockHiddenVault(vault, passphrase);
+  return content;
 }

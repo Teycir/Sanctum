@@ -11,6 +11,8 @@ export interface StoredVault {
   readonly decoyCID: string;
   readonly hiddenCID: string;
   readonly salt: Uint8Array;
+  readonly decoyFilename?: string;
+  readonly hiddenFilename?: string;
 }
 
 // ============================================================================
@@ -52,16 +54,16 @@ export async function downloadVault(
   const { PinataClient } = await import('./pinata');
   const { FilebaseClient } = await import('./filebase');
   
-  // Try Pinata first
+  // Try Pinata first (public gateway, no auth needed)
   try {
-    const pinata = new PinataClient('');
+    const pinata = new PinataClient('', 'https://gateway.pinata.cloud');
     const decoyBlob = await pinata.download(stored.decoyCID);
     const hiddenBlob = await pinata.download(stored.hiddenCID);
     return { decoyBlob, hiddenBlob, salt: stored.salt };
   } catch (error) {
     // Fallback to Filebase on network/gateway errors
     console.warn('Pinata download failed, trying Filebase fallback:', error);
-    const filebase = new FilebaseClient('', '', '');
+    const filebase = new FilebaseClient('');
     const decoyBlob = await filebase.download(stored.decoyCID);
     const hiddenBlob = await filebase.download(stored.hiddenCID);
     return { decoyBlob, hiddenBlob, salt: stored.salt };
@@ -76,13 +78,19 @@ export async function downloadVault(
 export function serializeVaultMetadata(stored: StoredVault): Uint8Array {
   const decoyCIDBytes = new TextEncoder().encode(stored.decoyCID);
   const hiddenCIDBytes = new TextEncoder().encode(stored.hiddenCID);
+  const decoyFilenameBytes = new TextEncoder().encode(stored.decoyFilename || '');
+  const hiddenFilenameBytes = new TextEncoder().encode(stored.hiddenFilename || '');
   
   return concat(
     encodeU32LE(decoyCIDBytes.length),
     decoyCIDBytes,
     encodeU32LE(hiddenCIDBytes.length),
     hiddenCIDBytes,
-    stored.salt
+    stored.salt,
+    encodeU32LE(decoyFilenameBytes.length),
+    decoyFilenameBytes,
+    encodeU32LE(hiddenFilenameBytes.length),
+    hiddenFilenameBytes
   );
 }
 
@@ -109,7 +117,31 @@ export function deserializeVaultMetadata(data: Uint8Array): StoredVault {
   offset += hiddenCIDLength;
   
   const salt = data.slice(offset, offset + 32);
+  offset += 32;
   
-  const result = { decoyCID, hiddenCID, salt };
+  // Optional filenames (backward compatible)
+  let decoyFilename: string | undefined;
+  let hiddenFilename: string | undefined;
+  
+  if (offset < data.length) {
+    const decoyFilenameLength = decodeU32LE(data, offset);
+    offset += 4;
+    if (decoyFilenameLength > 0) {
+      const decoyFilenameBytes = data.slice(offset, offset + decoyFilenameLength);
+      decoyFilename = new TextDecoder().decode(decoyFilenameBytes);
+      offset += decoyFilenameLength;
+    }
+    
+    if (offset < data.length) {
+      const hiddenFilenameLength = decodeU32LE(data, offset);
+      offset += 4;
+      if (hiddenFilenameLength > 0) {
+        const hiddenFilenameBytes = data.slice(offset, offset + hiddenFilenameLength);
+        hiddenFilename = new TextDecoder().decode(hiddenFilenameBytes);
+      }
+    }
+  }
+  
+  const result = { decoyCID, hiddenCID, salt, decoyFilename, hiddenFilename };
   return StoredVaultSchema.parse(result);
 }

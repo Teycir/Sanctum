@@ -73,7 +73,7 @@ function PinataConfig({
         </p>
       )}
       <p style={{ fontSize: 10, opacity: 0.6, marginTop: 6 }}>
-        Get free JWT at pinata.cloud (1GB free storage)
+        Get free JWT at pinata.cloud (1GB free storage, permanent)
       </p>
     </>
   );
@@ -178,7 +178,7 @@ function FilebaseConfig({
         }}
       />
       <p style={{ fontSize: 10, opacity: 0.6, marginTop: 6 }}>
-        Get free account at filebase.com (5GB free storage)
+        Get free account at filebase.com (5GB free storage, permanent)
       </p>
     </>
   );
@@ -226,7 +226,7 @@ export function IPFSProviderSelector({
             fontWeight: provider === "pinata" ? 600 : 400,
           }}
         >
-          Pinata (1GB free)
+          Pinata (1GB, permanent)
         </button>
         <button
           type="button"
@@ -246,7 +246,7 @@ export function IPFSProviderSelector({
             fontWeight: provider === "filebase" ? 600 : 400,
           }}
         >
-          Filebase (5GB free)
+          Filebase (5GB, permanent)
         </button>
       </div>
 

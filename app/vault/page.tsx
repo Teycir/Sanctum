@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
+import { LoadingOverlay } from "../components/LoadingOverlay";
 
 const INACTIVITY_TIMEOUT_MS = 60000;
 
@@ -41,11 +42,14 @@ interface UnlockedContentProps {
   readonly content: string;
   readonly isDecoy: boolean;
   readonly copied: boolean;
+  readonly downloading: boolean;
   readonly onCopy: () => void;
   readonly onLock: () => void;
 }
 
-function UnlockedContent({ content, isDecoy, copied, onCopy, onLock }: UnlockedContentProps) {
+function UnlockedContent({ content, isDecoy, copied, downloading, onCopy, onLock }: UnlockedContentProps) {
+  const isFile = content.endsWith('.bin') || content.endsWith('.rar') || content.endsWith('.zip') || content.endsWith('.7z') || content.endsWith('.tar') || content.endsWith('.gz');
+  
   return (
     <div style={{ position: "relative" }}>
       <motion.div
@@ -81,68 +85,138 @@ function UnlockedContent({ content, isDecoy, copied, onCopy, onLock }: UnlockedC
           pointerEvents: "none"
         }}
       />
+      
       <motion.div
         initial={{ opacity: 0, scale: 0.9, filter: "blur(20px)" }}
         animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
         transition={{ duration: 0.8, delay: 0.7 }}
         style={{
-          padding: 20,
+          padding: 24,
           background: isDecoy ? "rgba(255, 165, 0, 0.1)" : "rgba(0, 255, 0, 0.1)",
           border: `1px solid ${isDecoy ? "rgba(255, 165, 0, 0.3)" : "rgba(0, 255, 0, 0.3)"}`,
-          borderRadius: 8,
-          marginBottom: 20,
+          borderRadius: 12,
+          marginBottom: 24,
         }}
       >
-        <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, opacity: 0.8 }}>
-          {isDecoy ? "⚠️ Decoy Layer" : "✓ Hidden Layer"}
-        </p>
-        <div
-          style={{
-            padding: 12,
-            background: "rgba(0, 0, 0, 0.3)",
-            borderRadius: 6,
-            fontSize: 14,
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            maxHeight: 400,
-            overflow: "auto",
-          }}
-        >
-          {content}
+        <div style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: 8, 
+          marginBottom: 16,
+          fontSize: 16,
+          fontWeight: 600
+        }}>
+          <span style={{ fontSize: 20 }}>{isDecoy ? "⚠️" : "✓"}</span>
+          <span>{isDecoy ? "Decoy Layer" : "Hidden Layer"}</span>
         </div>
+        
+        {isFile ? (
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 1.2 }}
+            style={{
+              padding: 32,
+              background: "rgba(0, 0, 0, 0.3)",
+              borderRadius: 8,
+              textAlign: "center",
+            }}
+          >
+            {downloading ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  style={{ fontSize: 48, marginBottom: 16 }}
+                >
+                  ⬇️
+                </motion.div>
+                <div style={{ fontSize: 16, fontWeight: 500 }}>Downloading...</div>
+                <div style={{ fontSize: 13, opacity: 0.6, marginTop: 8 }}>{content}</div>
+              </>
+            ) : (
+              <>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", delay: 1.3 }}
+                  style={{ fontSize: 48, marginBottom: 16 }}
+                >
+                  ✓
+                </motion.div>
+                <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>Download Complete</div>
+                <div style={{ 
+                  fontSize: 14, 
+                  opacity: 0.9, 
+                  marginBottom: 12,
+                  wordBreak: "break-all"
+                }}>
+                  {content}
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.6 }}>Check your downloads folder</div>
+              </>
+            )}
+          </motion.div>
+        ) : (
+          <div
+            style={{
+              padding: 16,
+              background: "rgba(0, 0, 0, 0.3)",
+              borderRadius: 8,
+              fontSize: 14,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              maxHeight: 400,
+              overflow: "auto",
+              fontFamily: "monospace",
+              lineHeight: 1.6
+            }}
+          >
+            {content}
+          </div>
+        )}
       </motion.div>
+      
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 1.5 }}
-        style={{ display: "flex", gap: 12, justifyContent: "center" }}
+        style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}
       >
-        {content !== '[File downloaded]' && (
+        {!isFile && (
           <button
+            type="button"
             onClick={onCopy}
+            disabled={copied}
             style={{
               padding: "12px 24px",
-              background: "rgba(168, 85, 247, 0.3)",
+              background: copied ? "rgba(0, 255, 0, 0.3)" : "rgba(168, 85, 247, 0.3)",
               color: "#fff",
-              border: "1px solid rgba(168, 85, 247, 0.5)",
+              border: `1px solid ${copied ? "rgba(0, 255, 0, 0.5)" : "rgba(168, 85, 247, 0.5)"}`,
               borderRadius: 8,
               fontSize: 14,
-              cursor: "pointer",
+              fontWeight: 500,
+              cursor: copied ? "default" : "pointer",
               transition: "all 0.2s ease",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(168, 85, 247, 0.5)";
-              e.currentTarget.style.transform = "translateY(-2px)";
+              if (!copied) {
+                e.currentTarget.style.background = "rgba(168, 85, 247, 0.5)";
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(168, 85, 247, 0.3)";
-              e.currentTarget.style.transform = "translateY(0)";
+              if (!copied) {
+                e.currentTarget.style.background = "rgba(168, 85, 247, 0.3)";
+                e.currentTarget.style.transform = "translateY(0)";
+              }
             }}
           >
-            {copied ? "Copied!" : "Copy Content"}
+            {copied ? "✓ Copied!" : "📋 Copy Content"}
           </button>
         )}
         <button
+          type="button"
           onClick={onLock}
           style={{
             padding: "12px 24px",
@@ -151,6 +225,7 @@ function UnlockedContent({ content, isDecoy, copied, onCopy, onLock }: UnlockedC
             border: "1px solid rgba(255, 255, 255, 0.2)",
             borderRadius: 8,
             fontSize: 14,
+            fontWeight: 500,
             cursor: "pointer",
             transition: "all 0.2s ease",
           }}
@@ -163,7 +238,7 @@ function UnlockedContent({ content, isDecoy, copied, onCopy, onLock }: UnlockedC
             e.currentTarget.style.transform = "translateY(0)";
           }}
         >
-          Lock Vault
+          🔒 Lock Vault
         </button>
       </motion.div>
     </div>
@@ -179,6 +254,9 @@ export default function ViewVault() {
   const [error, setError] = useState("");
   const [isBlurred, setIsBlurred] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState("");
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -207,6 +285,29 @@ export default function ViewVault() {
 
     setError("");
     setLoading(true);
+    setProgress(10);
+    setLoadingStep("Fetching vault metadata...");
+
+    const progressSteps = [
+      { progress: 10, step: "Fetching vault metadata...", delay: 0 },
+      { progress: 30, step: "Downloading from IPFS...", delay: 800 },
+      { progress: 60, step: "Deriving keys...", delay: 1600 },
+      { progress: 85, step: "Decrypting content...", delay: 2400 },
+    ];
+
+    const startTime = Date.now();
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        const elapsed = Date.now() - startTime;
+        const currentStep = progressSteps.find(
+          (s) => elapsed >= s.delay && elapsed < s.delay + 800,
+        );
+        if (currentStep && loadingStep !== currentStep.step) {
+          setLoadingStep(currentStep.step);
+        }
+        return Math.min(prev + 1, 90);
+      });
+    }, 50);
 
     const { VaultService } = await import("@/lib/services/vault");
     const vaultService = new VaultService();
@@ -218,29 +319,49 @@ export default function ViewVault() {
         passphrase: passphrase.trim(),
       });
       
-      // Try to decode as text, if fails it's a binary file
+      clearInterval(progressInterval);
+      setProgress(100);
+      setLoadingStep("Complete!");
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      // Try to decode as text
       try {
-        const decoded = new TextDecoder().decode(result.content);
+        const decoded = new TextDecoder('utf-8', { fatal: true }).decode(result.content);
+        const sample = decoded.slice(0, 1024);
+        if (sample.includes('\0')) {
+          throw new Error('Binary content detected');
+        }
         setContent(decoded);
       } catch {
         // Binary file - trigger download
-        const blob = new Blob([new Uint8Array(result.content)]);
+        setDownloading(true);
+        const filename = result.filename || (result.isDecoy ? 'decoy-content.bin' : 'hidden-content.bin');
+        const blob = new Blob([new Uint8Array(result.content)], { type: 'application/octet-stream' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
+        a.style.display = 'none';
         a.href = url;
-        a.download = result.isDecoy ? 'decoy-content' : 'hidden-content';
+        a.download = filename;
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(url);
-        setContent('[File downloaded]');
+        setTimeout(() => {
+          a.remove();
+          URL.revokeObjectURL(url);
+          setDownloading(false);
+        }, 1000);
+        setContent(filename);
       }
       
       setIsDecoy(result.isDecoy);
       triggerConfetti();
     } catch (err) {
+      clearInterval(progressInterval);
       setError(err instanceof Error ? err.message : "Failed to unlock vault");
     } finally {
       await vaultService.stop();
       setLoading(false);
+      setLoadingStep("");
+      setProgress(0);
     }
   };
 
@@ -261,32 +382,25 @@ export default function ViewVault() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-        filter: isBlurred ? "blur(8px)" : "none",
-        transition: "filter 0.3s ease",
-      }}
-    >
+    <>
+      {loading && <LoadingOverlay step={loadingStep} progress={progress} />}
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 20,
+          filter: isBlurred ? "blur(8px)" : "none",
+          transition: "filter 0.3s ease",
+        }}
+      >
       <div style={{ width: "100%", maxWidth: 600 }}>
         <button
+          type="button"
           onClick={() => router.push("/")}
-          style={{
-            marginBottom: 24,
-            padding: 0,
-            background: "transparent",
-            color: "#fff",
-            border: "none",
-            fontSize: 24,
-            cursor: "pointer",
-            opacity: 0.7,
-            transition: "opacity 0.2s",
-          }}
+          className="back-button"
           onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
           onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.7")}
         >
@@ -309,6 +423,7 @@ export default function ViewVault() {
             content={content}
             isDecoy={isDecoy}
             copied={copied}
+            downloading={downloading}
             onCopy={handleCopy}
             onLock={handleLock}
           />
@@ -351,6 +466,7 @@ export default function ViewVault() {
 
             <div style={{ display: "flex", justifyContent: "center" }}>
               <button
+                type="button"
                 onClick={handleUnlock}
                 disabled={loading}
                 className="start-btn"
@@ -368,6 +484,7 @@ export default function ViewVault() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
