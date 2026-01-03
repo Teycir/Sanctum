@@ -190,12 +190,12 @@
 }
 
 .start-btn {
-  padding: 16px 48px;
+  padding: 13.6px 40.8px;
   background: linear-gradient(135deg, #fff 0%, #f0f0f0 50%, #e0e0e0 100%);
   color: #000;
   border: none;
-  border-radius: 12px;
-  font-size: clamp(16px, 3vw, 18px);
+  border-radius: 10.2px;
+  font-size: clamp(13.6px, 3vw, 15.3px);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
