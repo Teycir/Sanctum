@@ -1051,14 +1051,6 @@ export default function CreateVault() {
                       setError("Failed to copy to clipboard");
                     }
                   }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background =
-                      "rgba(13, 71, 161, 0.3)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background =
-                      "rgba(13, 71, 161, 0.2)")
-                  }
                   style={{
                     padding: "8px 16px",
                     background: "rgba(13, 71, 161, 0.2)",
@@ -1070,6 +1062,14 @@ export default function CreateVault() {
                     marginBottom: 16,
                     transition: "background 0.2s",
                   }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background =
+                      "rgba(13, 71, 161, 0.5)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background =
+                      "rgba(13, 71, 161, 0.2)")
+                  }
                 >
                   {copied ? "✓ Copied!" : "Copy URL"}
                 </button>
@@ -1079,6 +1079,7 @@ export default function CreateVault() {
                     gap: 8,
                     justifyContent: "center",
                     marginBottom: 12,
+                    flexWrap: "wrap",
                   }}
                 >
                   <button
@@ -1092,14 +1093,6 @@ export default function CreateVault() {
                         setError("Failed to copy CID");
                       }
                     }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background =
-                        "rgba(13, 71, 161, 0.2)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background =
-                        "rgba(13, 71, 161, 0.1)")
-                    }
                     style={{
                       padding: "4px 8px",
                       background: "rgba(13, 71, 161, 0.1)",
@@ -1110,6 +1103,14 @@ export default function CreateVault() {
                       cursor: "pointer",
                       transition: "background 0.2s",
                     }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background =
+                        "rgba(13, 71, 161, 0.3)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background =
+                        "rgba(13, 71, 161, 0.1)")
+                    }
                   >
                     {copiedDecoy ? "✓ Copied!" : "Copy Decoy CID"}
                   </button>
@@ -1124,14 +1125,6 @@ export default function CreateVault() {
                         setError("Failed to copy CID");
                       }
                     }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background =
-                        "rgba(13, 71, 161, 0.2)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background =
-                        "rgba(13, 71, 161, 0.1)")
-                    }
                     style={{
                       padding: "4px 8px",
                       background: "rgba(13, 71, 161, 0.1)",
@@ -1142,6 +1135,14 @@ export default function CreateVault() {
                       cursor: "pointer",
                       transition: "background 0.2s",
                     }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background =
+                        "rgba(13, 71, 161, 0.3)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background =
+                        "rgba(13, 71, 161, 0.1)")
+                    }
                   >
                     {copiedHidden ? "✓ Copied!" : "Copy Hidden CID"}
                   </button>
@@ -1183,12 +1184,6 @@ export default function CreateVault() {
                       a.click();
                       URL.revokeObjectURL(url);
                     }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "rgba(255, 193, 7, 0.2)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "rgba(255, 193, 7, 0.1)")
-                    }
                     style={{
                       padding: "6px 12px",
                       background: "rgba(255, 193, 7, 0.1)",
@@ -1199,6 +1194,12 @@ export default function CreateVault() {
                       cursor: "pointer",
                       transition: "background 0.2s",
                     }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "rgba(255, 193, 7, 0.3)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "rgba(255, 193, 7, 0.1)")
+                    }
                   >
                     🔑 Download Passwords
                   </button>
@@ -1214,12 +1215,6 @@ export default function CreateVault() {
                       a.click();
                       URL.revokeObjectURL(url);
                     }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "rgba(13, 71, 161, 0.3)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "rgba(13, 71, 161, 0.2)")
-                    }
                     style={{
                       padding: "6px 12px",
                       background: "rgba(13, 71, 161, 0.2)",
@@ -1230,8 +1225,14 @@ export default function CreateVault() {
                       cursor: "pointer",
                       transition: "background 0.2s",
                     }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "rgba(13, 71, 161, 0.5)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "rgba(13, 71, 161, 0.2)")
+                    }
                   >
-                    📦 Download All
+                    ⬇️ Download All
                   </button>
                 </div>
               </div>
