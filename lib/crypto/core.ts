@@ -3,14 +3,15 @@
 // ============================================================================
 
 import { xchacha20poly1305 } from '@noble/ciphers/chacha';
-import { sha256 } from '@noble/hashes/sha256';
+import { sha256 } from '@noble/hashes/sha2';
 import { VAULT_VERSION, BLOB_SIZES, type Argon2Profile } from './constants';
 import { randomBytes, encodeArgonParams, decodeArgonParams, wipeMemory } from './utils';
-import { deriveKeys } from './kdf';
 import { generateCommitment, verifyCommitment } from './commitment';
 import { type EncryptionResult } from './padding';
 
 export type { EncryptionResult } from './padding';
+export { deriveKeys } from './kdf';
+export { assembleBlob } from './padding';
 
 export interface EncryptionParams {
   readonly plaintext: Uint8Array;
@@ -26,9 +27,6 @@ export interface DecryptionParams {
 // ============================================================================
 // PURE FUNCTIONS - Exported
 // ============================================================================
-
-export { deriveKeys };
-export { assembleBlob } from './padding';
 
 /**
  * Generate synthetic nonce for nonce-misuse resistance
@@ -65,6 +63,7 @@ export function encrypt(
   providedSalt?: Uint8Array
 ): EncryptionResult {
   const salt = providedSalt || randomBytes(BLOB_SIZES.salt);
+  const { deriveKeys } = require('./kdf');
   const { encKey, comKey } = deriveKeys(params.passphrase, salt, params.argonProfile);
 
   const header = new Uint8Array(BLOB_SIZES.header);
@@ -118,6 +117,7 @@ export function decrypt(params: DecryptionParams): Uint8Array {
 
   const ciphertext = params.blob.slice(offset, offset + ciphertextLength);
 
+  const { deriveKeys } = require('./kdf');
   const { encKey, comKey } = deriveKeys(params.passphrase, salt, argonParams);
 
   const computedCommitment = generateCommitment(comKey, header, ciphertext);

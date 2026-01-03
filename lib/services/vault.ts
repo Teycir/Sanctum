@@ -8,6 +8,7 @@ import {
   serializeVaultMetadata,
   deserializeVaultMetadata,
 } from "../storage/vault";
+import type { UploadCredentials } from "../storage/uploader";
 import { CryptoWorker } from "../workers/crypto";
 import { base64UrlEncode, base64UrlDecode } from "../crypto/utils";
 import { ARGON2_PROFILES, type Argon2Profile } from "../crypto/constants";
@@ -21,11 +22,9 @@ export interface CreateVaultParams {
   readonly decoyContent: Uint8Array;
   readonly hiddenContent: Uint8Array;
   readonly passphrase: string;
-  readonly duressPassphrase?: string;
+  readonly decoyPassphrase?: string;
   readonly argonProfile?: Argon2Profile;
-  readonly ipfsCredentials?: {
-    pinataJWT: string;
-  };
+  readonly ipfsCredentials?: UploadCredentials;
 }
 
 export interface CreateVaultResult {
@@ -49,7 +48,7 @@ export interface UnlockVaultResult {
 // ============================================================================
 
 export class VaultService {
-  private crypto: CryptoWorker;
+  private readonly crypto: CryptoWorker;
 
   constructor() {
     this.crypto = new CryptoWorker();
@@ -73,7 +72,7 @@ export class VaultService {
       const vault = await this.crypto.createHiddenVault({
         content,
         passphrase: validated.passphrase,
-        duressPassphrase: validated.duressPassphrase,
+        decoyPassphrase: validated.decoyPassphrase,
         argonProfile:
           (typeof validated.argonProfile === "string"
             ? ARGON2_PROFILES[validated.argonProfile]
@@ -88,7 +87,7 @@ export class VaultService {
         globalThis.window === undefined
           ? ""
           : globalThis.window.location.origin;
-      const vaultURL = `${baseURL}/v#${encodedMetadata}`;
+      const vaultURL = `${baseURL}/vault#${encodedMetadata}`;
 
       return {
         vaultURL,

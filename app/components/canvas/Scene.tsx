@@ -3,6 +3,7 @@
 import { Canvas } from '@react-three/fiber';
 import { Environment, Sparkles, PerspectiveCamera } from '@react-three/drei';
 import { Suspense } from 'react';
+import { PremiumObject } from './PremiumObject';
 
 export default function Scene() {
     return (
@@ -18,6 +19,8 @@ export default function Scene() {
                 <pointLight position={[-10, -10, -10]} intensity={1} />
 
                 <Suspense fallback={null}>
+                    <PremiumObject />
+                    
                     <Sparkles
                         count={100}
                         scale={12}

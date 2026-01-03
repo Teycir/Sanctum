@@ -250,3 +250,95 @@
 .animate-subtle-shimmer {
   animation: subtle-shimmer 3s ease-in-out infinite;
 }
+
+.file-input {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.provider-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #c084fc;
+}
+
+.provider-input {
+  width: 100%;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
+
+.provider-input-last {
+  width: 100%;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.jwt-input {
+  width: 100%;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.bucket-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c084fc;
+}
+
+.custom-file-button {
+  display: inline-block;
+  padding: 8px 16px;
+  background: rgba(168, 85, 247, 0.4);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+}
+
+.custom-file-button:hover {
+  background: rgba(168, 85, 247, 0.6);
+  border-color: rgba(168, 85, 247, 0.8);
+}
+
+.custom-file-input {
+  display: none;
+}

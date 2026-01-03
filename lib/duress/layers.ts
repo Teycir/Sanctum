@@ -18,7 +18,7 @@ export interface LayerContent {
 export interface HiddenVaultParams {
   readonly content: LayerContent;
   readonly passphrase: string;
-  readonly duressPassphrase?: string; // Optional duress password for decoy
+  readonly decoyPassphrase?: string; // Optional duress password for decoy
   readonly argonProfile: Argon2Profile;
 }
 
@@ -65,14 +65,18 @@ export function deriveLayerPassphrase(
 export function createHiddenVault(
   params: HiddenVaultParams,
 ): HiddenVaultResult {
-  if (!params.duressPassphrase) {
-    throw new Error('Duress passphrase is required');
+  // Only require decoyPassphrase if decoy content is not empty
+  if (params.content.decoy.length > 0 && !params.decoyPassphrase) {
+    throw new Error('Decoy passphrase is required when decoy content is provided');
   }
+  
+  // Use empty string as decoy passphrase if not provided (for empty decoy)
+  const decoyPass = params.decoyPassphrase || '';
   
   // Encrypt decoy with duress passphrase
   const decoyEncrypted = encrypt({
     plaintext: params.content.decoy,
-    passphrase: params.duressPassphrase,
+    passphrase: decoyPass,
     argonProfile: params.argonProfile,
   });
 

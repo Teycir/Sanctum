@@ -1,56 +1,47 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { HeliaIPFS } from '@/lib/helia/client';
-import { warmUpHelia, stopHelia } from '@/lib/helia/singleton';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { VaultService } from '@/lib/services/vault';
+import { uploadToIPFS } from '@/lib/storage/uploader';
+import type { UploadCredentials } from '@/lib/storage/uploader';
 
 describe('IPFS Storage Integration Tests', () => {
-  let heliaClient: HeliaIPFS;
+  let credentials: UploadCredentials;
 
-  beforeAll(async () => {
-    warmUpHelia();
-    heliaClient = new HeliaIPFS();
-    await heliaClient.init();
-  }, 60000);
-
-  afterAll(async () => {
-    await heliaClient.stop();
-    await stopHelia();
+  beforeAll(() => {
+    // Mock credentials for testing
+    credentials = {
+      provider: 'pinata',
+      pinataJWT: process.env.PINATA_JWT || 'test-jwt'
+    };
   });
 
   describe('Basic Upload/Download Cycle', () => {
-    it('should upload and retrieve data via IPFS', async () => {
+    it('should upload data via IPFS', async () => {
       const testData = new TextEncoder().encode('Test content for IPFS');
 
-      const cid = await heliaClient.upload(testData);
-      expect(cid).toBeTruthy();
-      expect(cid).toMatch(/^[a-z0-9]+$/i);
-
-      const retrieved = await heliaClient.download(cid, { timeout: 30000 });
-      expect(retrieved).toEqual(testData);
-      expect(new TextDecoder().decode(retrieved)).toBe('Test content for IPFS');
+      const result = await uploadToIPFS(testData, credentials);
+      expect(result.cid).toBeTruthy();
+      expect(result.cid).toMatch(/^[a-z0-9]+$/i);
     }, 60000);
 
     it('should handle large data uploads', async () => {
       const largeData = new Uint8Array(1024 * 100); // 100KB
       largeData.fill(42);
 
-      const cid = await heliaClient.upload(largeData);
-      const retrieved = await heliaClient.download(cid, { timeout: 30000 });
-
-      expect(retrieved.length).toBe(largeData.length);
-      expect(retrieved[0]).toBe(42);
+      const result = await uploadToIPFS(largeData, credentials);
+      expect(result.cid).toBeTruthy();
     }, 60000);
   });
 
   describe('Vault Service Integration', () => {
-    it('should create and unlock simple vault', async () => {
+    it('should create and unlock vault with decoy only', async () => {
       const vaultService = new VaultService();
       const testContent = 'Secret vault content';
 
       const result = await vaultService.createVault({
-        mode: 'simple',
-        content: { simple: new TextEncoder().encode(testContent) },
+        decoyContent: new TextEncoder().encode(testContent),
+        hiddenContent: new Uint8Array(0),
         passphrase: '',
+        ipfsCredentials: credentials,
       });
 
       expect(result.vaultURL).toBeTruthy();
@@ -62,7 +53,7 @@ describe('IPFS Storage Integration Tests', () => {
       });
 
       expect(new TextDecoder().decode(unlocked.content)).toBe(testContent);
-      expect(unlocked.isDecoy).toBe(false);
+      expect(unlocked.isDecoy).toBe(true);
 
       await vaultService.stop();
     }, 90000);
@@ -74,12 +65,10 @@ describe('IPFS Storage Integration Tests', () => {
       const passphrase = 'test-passphrase-123';
 
       const result = await vaultService.createVault({
-        mode: 'duress',
-        content: {
-          decoy: new TextEncoder().encode(decoyContent),
-          hidden: new TextEncoder().encode(hiddenContent),
-        },
+        decoyContent: new TextEncoder().encode(decoyContent),
+        hiddenContent: new TextEncoder().encode(hiddenContent),
         passphrase,
+        ipfsCredentials: credentials,
       });
 
       expect(result.vaultURL).toBeTruthy();
@@ -105,10 +94,17 @@ describe('IPFS Storage Integration Tests', () => {
   });
 
   describe('Error Handling', () => {
-    it('should timeout on invalid CID', async () => {
+    it('should reject invalid vault URL', async () => {
+      const vaultService = new VaultService();
+      
       await expect(
-        heliaClient.download('invalid-cid', { timeout: 5000 })
+        vaultService.unlockVault({
+          vaultURL: 'invalid-url',
+          passphrase: '',
+        })
       ).rejects.toThrow();
+
+      await vaultService.stop();
     }, 10000);
 
     it('should handle network errors gracefully', async () => {
@@ -116,7 +112,7 @@ describe('IPFS Storage Integration Tests', () => {
       
       await expect(
         vaultService.unlockVault({
-          vaultURL: 'http://localhost/v#invalid',
+          vaultURL: 'http://localhost/vault#invalid',
           passphrase: '',
         })
       ).rejects.toThrow();
@@ -126,19 +122,23 @@ describe('IPFS Storage Integration Tests', () => {
   });
 
   describe('Performance', () => {
-    it('should retrieve cached content faster on second attempt', async () => {
+    it('should create vault within reasonable time', async () => {
+      const vaultService = new VaultService();
       const testData = new TextEncoder().encode('Performance test data');
-      const cid = await heliaClient.upload(testData);
 
-      const start1 = Date.now();
-      await heliaClient.download(cid, { timeout: 30000 });
-      const time1 = Date.now() - start1;
+      const start = Date.now();
+      const result = await vaultService.createVault({
+        decoyContent: testData,
+        hiddenContent: new Uint8Array(0),
+        passphrase: '',
+        ipfsCredentials: credentials,
+      });
+      const elapsed = Date.now() - start;
 
-      const start2 = Date.now();
-      await heliaClient.download(cid, { timeout: 30000 });
-      const time2 = Date.now() - start2;
+      expect(result.vaultURL).toBeTruthy();
+      expect(elapsed).toBeLessThan(60000); // Should complete within 60s
 
-      expect(time2).toBeLessThan(time1);
+      await vaultService.stop();
     }, 90000);
   });
 });

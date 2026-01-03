@@ -30,7 +30,7 @@ test.describe("Vault Lifecycle", () => {
     // 5. Get Vault URL
     const vaultUrlLoc = page.locator("code").first();
     const vaultUrl = await vaultUrlLoc.innerText();
-    expect(vaultUrl).toContain("/v#");
+    expect(vaultUrl).toContain("/vault#");
 
     // 6. Navigate to Vault URL
     await page.goto(vaultUrl);

@@ -42,7 +42,7 @@ export async function uploadVault(
 }
 
 /**
- * Download hidden vault from Pinata gateway with public gateway fallback
+ * Download hidden vault from IPFS gateway with public gateway fallback
  * @param stored Stored vault metadata
  * @returns Hidden vault result
  */
@@ -50,16 +50,22 @@ export async function downloadVault(
   stored: StoredVault
 ): Promise<HiddenVaultResult> {
   const { PinataClient } = await import('./pinata');
-  const pinata = new PinataClient('');
+  const { FilebaseClient } = await import('./filebase');
   
-  const decoyBlob = await pinata.download(stored.decoyCID);
-  const hiddenBlob = await pinata.download(stored.hiddenCID);
-  
-  return {
-    decoyBlob,
-    hiddenBlob,
-    salt: stored.salt
-  };
+  // Try Pinata first
+  try {
+    const pinata = new PinataClient('');
+    const decoyBlob = await pinata.download(stored.decoyCID);
+    const hiddenBlob = await pinata.download(stored.hiddenCID);
+    return { decoyBlob, hiddenBlob, salt: stored.salt };
+  } catch (error) {
+    // Fallback to Filebase on network/gateway errors
+    console.warn('Pinata download failed, trying Filebase fallback:', error);
+    const filebase = new FilebaseClient('', '', '');
+    const decoyBlob = await filebase.download(stored.decoyCID);
+    const hiddenBlob = await filebase.download(stored.hiddenCID);
+    return { decoyBlob, hiddenBlob, salt: stored.salt };
+  }
 }
 
 /**

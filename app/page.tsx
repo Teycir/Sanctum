@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AnimatedTagline } from './components/AnimatedTagline';
 import { CyclingFeatures } from './components/CyclingFeatures';
@@ -8,7 +7,6 @@ import { VaultIcon } from './components/VaultIcon';
 import DecryptedText from './components/DecryptedText';
 
 export default function Home() {
-  const router = useRouter();
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20, position: 'relative' }}>

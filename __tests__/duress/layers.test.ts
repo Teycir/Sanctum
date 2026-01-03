@@ -33,10 +33,11 @@ describe('hidden/vault', () => {
       const result = createHiddenVault({
         content: { decoy, hidden },
         passphrase: 'master-pass',
+        decoyPassphrase: 'decoy-pass',
         argonProfile: ARGON2_PROFILES.mobile
       });
 
-      const unlocked = unlockHiddenVault(result, '');
+      const unlocked = unlockHiddenVault(result, 'decoy-pass');
       expect(unlocked).toEqual(decoy);
     });
 
@@ -47,6 +48,7 @@ describe('hidden/vault', () => {
       const result = createHiddenVault({
         content: { decoy, hidden },
         passphrase: 'master-pass',
+        decoyPassphrase: 'decoy-pass',
         argonProfile: ARGON2_PROFILES.mobile
       });
 
@@ -61,6 +63,7 @@ describe('hidden/vault', () => {
       const result = createHiddenVault({
         content: { decoy, hidden },
         passphrase: 'correct-pass',
+        decoyPassphrase: 'decoy-pass',
         argonProfile: ARGON2_PROFILES.mobile
       });
 
@@ -90,7 +93,7 @@ describe('hidden/vault', () => {
       const result = createHiddenVault({
         content: { decoy, hidden },
         passphrase: 'real-pass',
-        duressPassphrase: 'duress-pass',
+        decoyPassphrase: 'duress-pass',
         argonProfile: ARGON2_PROFILES.mobile
       });
 
@@ -105,7 +108,7 @@ describe('hidden/vault', () => {
       const result = createHiddenVault({
         content: { decoy, hidden },
         passphrase: 'real-pass',
-        duressPassphrase: 'duress-pass',
+        decoyPassphrase: 'duress-pass',
         argonProfile: ARGON2_PROFILES.mobile
       });
 

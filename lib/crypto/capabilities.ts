@@ -28,10 +28,10 @@ export function detectCapabilities(): BrowserCapabilities {
 
   const sharedArrayBuffer = typeof SharedArrayBuffer !== "undefined";
   const crossOriginIsolated =
-    typeof globalThis.crossOriginIsolated !== "undefined" &&
+    globalThis.crossOriginIsolated !== undefined &&
     globalThis.crossOriginIsolated;
   const webWorkers = typeof Worker !== "undefined";
-  const webCrypto = typeof crypto?.subtle !== "undefined";
+  const webCrypto = crypto?.subtle !== undefined;
   const bigInt = typeof BigInt !== "undefined";
   const wasm = typeof WebAssembly !== "undefined";
 

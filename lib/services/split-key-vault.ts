@@ -15,7 +15,7 @@ import { generateCIDKey, encryptCID, decryptCID } from '../api/cid-encryption';
 export interface SplitKeyVaultParams {
   readonly content: LayerContent;
   readonly passphrase: string;
-  readonly duressPassphrase?: string;
+  readonly decoyPassphrase?: string;
   readonly argonProfile: Argon2Profile;
   readonly ipfsCredentials: UploadCredentials;
 }
@@ -41,7 +41,7 @@ export async function createSplitKeyVault(
   const vault = createHiddenVault({
     content: params.content,
     passphrase: params.passphrase,
-    duressPassphrase: params.duressPassphrase,
+    decoyPassphrase: params.decoyPassphrase,
     argonProfile: params.argonProfile,
   });
 
@@ -77,7 +77,7 @@ export async function createSplitKeyVault(
   });
 
   const baseURL = globalThis.window?.location.origin || '';
-  const vaultURL = `${baseURL}/v#${vaultId}|${base64UrlEncode(keyB)}`;
+  const vaultURL = `${baseURL}/vault#${vaultId}|${base64UrlEncode(keyB)}`;
 
   return { vaultURL, vaultId };
 }

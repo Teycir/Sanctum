@@ -41,10 +41,18 @@ wrangler.toml
 *.db-shm
 *.db-wal
 
-# Secrets
+# Secrets & Credentials
 *.pem
 *.key
 secrets/
+credentials.json
+.credentials
+filebase.json
+pinata.json
+
+# Test files with real credentials
+**/*.test.local.ts
+**/*.test.local.tsx
 
 # Temporary files
 tmp/

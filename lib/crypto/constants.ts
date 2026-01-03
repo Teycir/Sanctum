@@ -48,7 +48,9 @@ export const SIZE_CLASSES = [
   256 * 1024,       // 256 KB
   1 * 1024 * 1024,  // 1 MB
   4 * 1024 * 1024,  // 4 MB
-  16 * 1024 * 1024  // 16 MB
+  16 * 1024 * 1024, // 16 MB
+  64 * 1024 * 1024, // 64 MB
+  256 * 1024 * 1024 // 256 MB
 ] as const;
 
 export const MAX_VAULT_SIZE = SIZE_CLASSES[SIZE_CLASSES.length - 1];

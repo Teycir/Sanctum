@@ -18,7 +18,7 @@ export const CreateVaultParamsSchema = z.object({
   decoyContent: z.instanceof(Uint8Array),
   hiddenContent: z.instanceof(Uint8Array),
   passphrase: z.string().min(1, 'Passphrase required'),
-  duressPassphrase: z.string().optional(),
+  decoyPassphrase: z.string().optional(),
   argonProfile: z.custom<Argon2Profile>().optional()
 });
 

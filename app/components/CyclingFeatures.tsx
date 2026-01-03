@@ -57,7 +57,7 @@ export function CyclingFeatures() {
         >
           {FEATURES[index].split('').map((char, i) => (
             <motion.span
-              key={i}
+              key={`${index}-${i}-${char}`}
               className="inline-block"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

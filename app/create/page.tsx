@@ -2,27 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-
-const MAX_CONTENT_SIZE = 10 * 1024 * 1024; // 10 MB
-
-const sanitizeInput = (input: string): string => {
-  const entities = {
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#x27;",
-  };
-  try {
-    return Object.entries(entities).reduce(
-      (str, [char, entity]) => str.replaceAll(char, entity),
-      input,
-    );
-  } catch {
-    return input;
-  }
-};
+import { LoadingOverlay } from "../components/LoadingOverlay";
+import { sanitizeInput, validateVaultForm } from "@/lib/validation/vault-form";
 
 interface VaultResult {
   vaultURL: string;
@@ -33,12 +14,20 @@ interface VaultResult {
 export default function CreateVault() {
   const router = useRouter();
   const [decoyContent, setDecoyContent] = useState("");
+  const [decoyFile, setDecoyFile] = useState<File | null>(null);
   const [hiddenContent, setHiddenContent] = useState("");
+  const [hiddenFile, setHiddenFile] = useState<File | null>(null);
   const [passphrase, setPassphrase] = useState("");
-  const [duressPassphrase, setDuressPassphrase] = useState("");
+  const [decoyPassphrase, setDecoyPassphrase] = useState("");
   const [pinataJWT, setPinataJWT] = useState("");
+  const [filebaseAccessKey, setFilebaseAccessKey] = useState("");
+  const [filebaseSecretKey, setFilebaseSecretKey] = useState("");
+  const [filebaseBucket, setFilebaseBucket] = useState("sanctum-vaults");
+  const [provider, setProvider] = useState<"pinata" | "filebase">("pinata");
   const [hasStoredJWT, setHasStoredJWT] = useState(false);
-  const [jwtStatus, setJwtStatus] = useState<'validating' | 'valid' | 'invalid' | null>(null);
+  const [jwtStatus, setJwtStatus] = useState<
+    "validating" | "valid" | "invalid" | null
+  >(null);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
   const [progress, setProgress] = useState(0);
@@ -48,6 +37,11 @@ export default function CreateVault() {
   const [copied, setCopied] = useState(false);
   const [copiedDecoy, setCopiedDecoy] = useState(false);
   const [copiedHidden, setCopiedHidden] = useState(false);
+  const [storageQuota, setStorageQuota] = useState<{
+    used: number;
+    limit: number;
+    available: number;
+  } | null>(null);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -69,7 +63,7 @@ export default function CreateVault() {
 
   useEffect(() => {
     (async () => {
-      const { loadJWT } = await import('@/lib/storage/jwt');
+      const { loadJWT } = await import("@/lib/storage/jwt");
       const jwt = await loadJWT();
       if (jwt) {
         setPinataJWT(jwt);
@@ -81,30 +75,33 @@ export default function CreateVault() {
 
   const validateJWT = async (jwt: string) => {
     if (!jwt.trim()) return;
-    
-    setJwtStatus('validating');
+
+    setJwtStatus("validating");
     try {
-      const response = await fetch('https://api.pinata.cloud/data/testAuthentication', {
-        headers: { 'Authorization': `Bearer ${jwt}` }
-      });
-      
+      const response = await fetch(
+        "https://api.pinata.cloud/data/testAuthentication",
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        },
+      );
+
       if (response.ok) {
-        setJwtStatus('valid');
+        setJwtStatus("valid");
         if (!hasStoredJWT) {
-          const { saveJWT } = await import('@/lib/storage/jwt');
+          const { saveJWT } = await import("@/lib/storage/jwt");
           await saveJWT(jwt);
           setHasStoredJWT(true);
         }
       } else {
-        setJwtStatus('invalid');
+        setJwtStatus("invalid");
         if (hasStoredJWT) {
-          const { clearJWT } = await import('@/lib/storage/jwt');
+          const { clearJWT } = await import("@/lib/storage/jwt");
           clearJWT();
           setHasStoredJWT(false);
         }
       }
     } catch {
-      setJwtStatus('invalid');
+      setJwtStatus("invalid");
     }
   };
 
@@ -115,80 +112,198 @@ export default function CreateVault() {
     }
   }, [pinataJWT, hasStoredJWT]);
 
-  const validatePassword = (password: string, label: string): string | null => {
-    if (password.length < 12) return `${label} must be at least 12 characters`;
-    if (!/[A-Z]/.test(password)) return `${label} must contain at least one uppercase letter`;
-    if (!/[a-z]/.test(password)) return `${label} must contain at least one lowercase letter`;
-    if (!/\d/.test(password)) return `${label} must contain at least one number`;
-    if (!/[^A-Za-z0-9]/.test(password)) return `${label} must contain at least one special character`;
+  useEffect(() => {
+    const fetchQuota = async () => {
+      if (provider === "pinata" && jwtStatus === "valid") {
+        try {
+          const { checkPinataQuota } =
+            await import("@/lib/storage/pinata-quota");
+          const quota = await checkPinataQuota(pinataJWT.trim());
+          setStorageQuota(quota);
+        } catch {
+          setStorageQuota(null);
+        }
+      } else if (
+        provider === "filebase" &&
+        filebaseAccessKey &&
+        filebaseSecretKey
+      ) {
+        try {
+          const { checkFilebaseQuota } =
+            await import("@/lib/storage/filebase-quota");
+          const quota = await checkFilebaseQuota(
+            filebaseAccessKey.trim(),
+            filebaseSecretKey.trim(),
+            filebaseBucket.trim(),
+          );
+          setStorageQuota(quota);
+        } catch {
+          setStorageQuota(null);
+        }
+      } else {
+        setStorageQuota(null);
+      }
+    };
+    fetchQuota();
+  }, [
+    provider,
+    jwtStatus,
+    pinataJWT,
+    filebaseAccessKey,
+    filebaseSecretKey,
+    filebaseBucket,
+  ]);
+
+  const getStorageWarning = () => {
+    if (!storageQuota) return null;
+    const percentage = (storageQuota.used / storageQuota.limit) * 100;
+    if (percentage >= 95) {
+      return {
+        level: "critical" as const,
+        message: `Storage at ${percentage.toFixed(1)}% (${(storageQuota.used / 1024 / 1024).toFixed(1)}MB/${(storageQuota.limit / 1024 / 1024).toFixed(0)}MB). Uploads blocked.`,
+      };
+    }
+    if (percentage >= 80) {
+      return {
+        level: "warning" as const,
+        message: `Storage at ${percentage.toFixed(1)}% (${(storageQuota.used / 1024 / 1024).toFixed(1)}MB/${(storageQuota.limit / 1024 / 1024).toFixed(0)}MB). Consider deleting old vaults.`,
+      };
+    }
     return null;
   };
 
+  const isFormValid = () => {
+    if (loading) return false;
+    if (!hiddenContent.trim() && !hiddenFile) return false;
+    if (!passphrase.trim()) return false;
+    if (provider === "pinata") return jwtStatus === "valid";
+    return filebaseAccessKey.trim() && filebaseSecretKey.trim();
+  };
+
+  const getButtonOpacity = () => (isFormValid() ? 1 : 0.5);
+  const getButtonCursor = () => (isFormValid() ? "pointer" : "not-allowed");
+
   const handleCreate = async () => {
-    const sanitizedDecoy = sanitizeInput(decoyContent.trim());
-    const sanitizedHidden = sanitizeInput(hiddenContent.trim());
+    if (!hiddenContent.trim() && !hiddenFile) {
+      setError("Please enter hidden content or upload a file");
+      return;
+    }
+
+    const sanitizedDecoy = decoyFile ? "" : sanitizeInput(decoyContent.trim());
+    const sanitizedHidden = hiddenFile
+      ? ""
+      : sanitizeInput(hiddenContent.trim());
     const sanitizedPassphrase = sanitizeInput(passphrase.trim());
-    const sanitizedDuress = sanitizeInput(duressPassphrase.trim());
+    const sanitizedDuress = sanitizeInput(decoyPassphrase.trim());
 
-    if (!sanitizedHidden) {
-      setError("Please enter hidden content");
-      return;
-    }
-    
-    // Decoy is optional, but if provided, duress password is required
-    if (sanitizedDecoy && !sanitizedDuress) {
-      setError("Duress password is required when decoy content is provided");
-      return;
-    }
-    
-    // If duress password is provided, decoy content is required
-    if (sanitizedDuress && !sanitizedDecoy) {
-      setError("Decoy content is required when duress password is provided");
-      return;
-    }
-    
-    const decoySize = new TextEncoder().encode(sanitizedDecoy).length;
-    const hiddenSize = new TextEncoder().encode(sanitizedHidden).length;
-    if (decoySize > MAX_CONTENT_SIZE) {
-      setError(
-        `Decoy content too large (${(decoySize / 1024 / 1024).toFixed(2)} MB). Maximum size is 10 MB`,
-      );
-      return;
-    }
-    if (hiddenSize > MAX_CONTENT_SIZE) {
-      setError(
-        `Hidden content too large (${(hiddenSize / 1024 / 1024).toFixed(2)} MB). Maximum size is 10 MB`,
-      );
-      return;
-    }
-    if (!sanitizedPassphrase) {
-      setError("Please enter a password for hidden layer");
-      return;
-    }
-    
-    const hiddenError = validatePassword(sanitizedPassphrase, "Hidden password");
-    if (hiddenError) {
-      setError(hiddenError);
-      return;
-    }
-    
-    // Only validate duress password if it's provided
-    if (sanitizedDuress) {
-      const duressError = validatePassword(sanitizedDuress, "Duress password");
-      if (duressError) {
-        setError(duressError);
+    // Only validate text content if no files
+    if (!decoyFile && !hiddenFile) {
+      const validationError = validateVaultForm({
+        decoyContent: sanitizedDecoy,
+        hiddenContent: sanitizedHidden,
+        passphrase: sanitizedPassphrase,
+        decoyPassphrase: sanitizedDuress,
+      });
+
+      if (validationError) {
+        setError(validationError);
         return;
       }
-      if (sanitizedPassphrase === sanitizedDuress) {
-        setError("Hidden password must be different from duress password");
+    } else {
+      // Validate passwords only
+      if (!sanitizedPassphrase) {
+        setError("Please enter a password for hidden layer");
         return;
+      }
+      const { validatePassword } = await import("@/lib/validation/vault-form");
+      const passphraseError = validatePassword(
+        sanitizedPassphrase,
+        "Hidden password",
+      );
+      if (passphraseError) {
+        setError(passphraseError);
+        return;
+      }
+      if ((decoyContent.trim() || decoyFile) && !sanitizedDuress) {
+        setError("Decoy password is required when decoy content is provided");
+        return;
+      }
+      if (sanitizedDuress) {
+        const decoyError = validatePassword(sanitizedDuress, "Decoy password");
+        if (decoyError) {
+          setError(decoyError);
+          return;
+        }
+        if (sanitizedPassphrase === sanitizedDuress) {
+          setError("Hidden password must be different from decoy password");
+          return;
+        }
       }
     }
 
-    // Validate JWT before proceeding
-    if (jwtStatus !== 'valid') {
+    if (provider === "pinata" && jwtStatus !== "valid") {
       setError("Please provide a valid Pinata JWT");
       return;
+    }
+    if (
+      provider === "filebase" &&
+      (!filebaseAccessKey.trim() || !filebaseSecretKey.trim())
+    ) {
+      setError("Please provide Filebase access key and secret key");
+      return;
+    }
+
+    // Check storage quota
+    if (provider === "pinata") {
+      try {
+        const { calculateTotalSize } =
+          await import("@/lib/validation/vault-form");
+        const { checkPinataQuota, validatePinataSpace } =
+          await import("@/lib/storage/pinata-quota");
+
+        const totalSize = calculateTotalSize(
+          sanitizedDecoy,
+          sanitizedHidden,
+          decoyFile || undefined,
+          hiddenFile || undefined,
+        );
+        const quota = await checkPinataQuota(pinataJWT.trim());
+        const quotaError = validatePinataSpace(totalSize, quota);
+
+        if (quotaError) {
+          setError(quotaError);
+          return;
+        }
+      } catch (err) {
+        console.warn("Unable to check storage quota:", err);
+      }
+    } else {
+      try {
+        const { calculateTotalSize } =
+          await import("@/lib/validation/vault-form");
+        const { checkFilebaseQuota, validateFilebaseSpace } =
+          await import("@/lib/storage/filebase-quota");
+
+        const totalSize = calculateTotalSize(
+          sanitizedDecoy,
+          sanitizedHidden,
+          decoyFile || undefined,
+          hiddenFile || undefined,
+        );
+        const quota = await checkFilebaseQuota(
+          filebaseAccessKey.trim(),
+          filebaseSecretKey.trim(),
+          filebaseBucket.trim(),
+        );
+        const quotaError = validateFilebaseSpace(totalSize, quota);
+
+        if (quotaError) {
+          setError(quotaError);
+          return;
+        }
+      } catch (err) {
+        console.warn("Unable to check storage quota:", err);
+      }
     }
 
     setError("");
@@ -201,13 +316,15 @@ export default function CreateVault() {
       { progress: 10, step: "Deriving keys...", delay: 0 },
       { progress: 30, step: "Encrypting decoy layer...", delay: 800 },
       { progress: 50, step: "Encrypting hidden layer...", delay: 1600 },
-      { progress: 85, step: "Uploading to Pinata...", delay: 2400 },
+      { progress: 85, step: "Uploading to IPFS...", delay: 2400 },
     ];
 
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         const elapsed = Date.now() - startTime;
-        const currentStep = progressSteps.find(s => elapsed >= s.delay && elapsed < s.delay + 800);
+        const currentStep = progressSteps.find(
+          (s) => elapsed >= s.delay && elapsed < s.delay + 800,
+        );
         if (currentStep && loadingStep !== currentStep.step) {
           setLoadingStep(currentStep.step);
         }
@@ -220,20 +337,47 @@ export default function CreateVault() {
     try {
       const [{ VaultService }, { ARGON2_PROFILES }] = await Promise.all([
         import("@/lib/services/vault"),
-        import("@/lib/crypto/constants")
+        import("@/lib/crypto/constants"),
       ]);
-      
+
       const vaultService = new VaultService();
 
+      // Convert files to Uint8Array if present
+      let decoyData: Uint8Array;
+      let hiddenData: Uint8Array;
+
+      if (decoyFile) {
+        const arrayBuffer = await decoyFile.arrayBuffer();
+        decoyData = new Uint8Array(arrayBuffer);
+      } else {
+        decoyData = new TextEncoder().encode(sanitizedDecoy);
+      }
+
+      if (hiddenFile) {
+        const arrayBuffer = await hiddenFile.arrayBuffer();
+        hiddenData = new Uint8Array(arrayBuffer);
+      } else {
+        hiddenData = new TextEncoder().encode(sanitizedHidden);
+      }
+
       const vaultResult = await vaultService.createVault({
-        decoyContent: new TextEncoder().encode(sanitizedDecoy),
-        hiddenContent: new TextEncoder().encode(sanitizedHidden),
+        decoyContent: decoyData,
+        hiddenContent: hiddenData,
         passphrase: sanitizedPassphrase,
-        duressPassphrase: sanitizedDuress,
+        decoyPassphrase: sanitizedDuress,
         argonProfile: ARGON2_PROFILES.desktop,
-        ipfsCredentials: {
-          pinataJWT: pinataJWT.trim(),
-        },
+        ipfsCredentials:
+          provider === "pinata"
+            ? {
+                provider: "pinata",
+                pinataJWT: pinataJWT.trim(),
+              }
+            : {
+                provider: "filebase",
+                filebaseAccessKey: filebaseAccessKey.trim(),
+                filebaseSecretKey: filebaseSecretKey.trim(),
+                filebaseBucket: filebaseBucket.trim(),
+              },
       });
 
       clearInterval(progressInterval);
@@ -256,89 +400,7 @@ export default function CreateVault() {
 
   return (
     <>
-      {loading && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0, 0, 0, 0.8)",
-            backdropFilter: "blur(8px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-          }}
-        >
-          <div
-            style={{
-              padding: 32,
-              background:
-                "linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(168, 85, 247, 0.1))",
-              border: "1px solid rgba(168, 85, 247, 0.4)",
-              borderRadius: 16,
-              textAlign: "center",
-              width: 380,
-              boxSizing: "border-box",
-              boxShadow: "0 0 40px rgba(168, 85, 247, 0.3)",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 16,
-                fontWeight: 600,
-                color: "#e9d5ff",
-                height: 24,
-                marginBottom: 20,
-                width: "100%",
-                boxSizing: "border-box",
-              }}
-            >
-              <motion.div
-                key={loadingStep}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                style={{
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  width: "100%",
-                }}
-              >
-                {loadingStep || "Processing..."}
-              </motion.div>
-            </div>
-
-            <div
-              style={{
-                width: "100%",
-                height: 6,
-                background: "rgba(168, 85, 247, 0.2)",
-                borderRadius: 3,
-                overflow: "hidden",
-              }}
-            >
-              <motion.div
-                initial={{ width: "10%" }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                style={{
-                  height: "100%",
-                  background: "linear-gradient(90deg, #a855f7, #c084fc)",
-                  boxShadow:
-                    "0 0 20px rgba(168, 85, 247, 0.8), 0 0 40px rgba(168, 85, 247, 0.4)",
-                }}
-              />
-            </div>
-          </div>
-        </motion.div>
-      )}
+      {loading && <LoadingOverlay step={loadingStep} progress={progress} />}
 
       <div
         style={{
@@ -383,10 +445,35 @@ export default function CreateVault() {
             ←
           </button>
 
-          {!result ? (
+          {result === undefined ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {(() => {
+                const warning = getStorageWarning();
+                return (
+                  warning && (
+                    <div
+                      style={{
+                        padding: 12,
+                        background:
+                          warning.level === "critical"
+                            ? "rgba(255, 0, 0, 0.1)"
+                            : "rgba(255, 193, 7, 0.1)",
+                        border: `1px solid ${warning.level === "critical" ? "rgba(255, 0, 0, 0.3)" : "rgba(255, 193, 7, 0.3)"}`,
+                        borderRadius: 8,
+                        color:
+                          warning.level === "critical" ? "#ff6b6b" : "#fbbf24",
+                        fontSize: 13,
+                      }}
+                    >
+                      {warning.level === "critical" ? "🚨" : "⚠️"}{" "}
+                      {warning.message}
+                    </div>
+                  )
+                );
+              })()}
               <div>
                 <label
+                  htmlFor="decoy-content"
                   style={{
                     display: "block",
                     marginBottom: 6,
@@ -396,10 +483,27 @@ export default function CreateVault() {
                 >
                   Decoy Content (Optional)
                 </label>
+                <p
+                  style={{
+                    fontSize: 11,
+                    color: "rgba(168, 85, 247, 0.6)",
+                    marginBottom: 8,
+                  }}
+                >
+                  💡 Choose either text OR file (.zip/.rar only) • Max: 256MB
+                </p>
                 <textarea
+                  id="decoy-content"
                   value={decoyContent}
-                  onChange={(e) => setDecoyContent(e.target.value)}
+                  onChange={(e) => {
+                    if (decoyFile) {
+                      setError("Clear file first to enter text");
+                      return;
+                    }
+                    setDecoyContent(e.target.value);
+                  }}
                   placeholder="Innocent content shown under duress..."
+                  disabled={!!decoyFile}
                   style={{
                     width: "100%",
                     minHeight: 80,
@@ -411,25 +515,106 @@ export default function CreateVault() {
                     fontSize: 13,
                     resize: "vertical",
                     boxSizing: "border-box",
+                    opacity: decoyFile ? 0.5 : 1,
                   }}
                 />
-              </div>
-
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: 6,
-                    fontSize: 13,
-                    fontWeight: 600,
+                <input
+                  type="file"
+                  accept=".zip,.rar"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (decoyContent.trim()) {
+                      setError("Clear text first to upload file");
+                      e.target.value = "";
+                      return;
+                    }
+                    // Validate file type
+                    if (
+                      !file.name.toLowerCase().endsWith(".zip") &&
+                      !file.name.toLowerCase().endsWith(".rar")
+                    ) {
+                      setError("Only .zip and .rar files are allowed");
+                      e.target.value = "";
+                      return;
+                    }
+                    setDecoyFile(file);
+                    setError("");
                   }}
-                >
-                  Hidden Content
+                  aria-label="Upload decoy file (.zip or .rar)"
+                  title="Upload decoy file (.zip or .rar)"
+                  className="custom-file-input"
+                  id="decoy-file-input"
+                />
+                <label htmlFor="decoy-file-input" className="custom-file-button">
+                  📁 Choose File (.zip/.rar)
                 </label>
+                {decoyFile && (
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 11,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <span style={{ color: "#4ade80" }}>
+                      ✓ {decoyFile.name} (
+                      {(decoyFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setDecoyFile(null)}
+                      style={{
+                        padding: "2px 6px",
+                        background: "rgba(255, 0, 0, 0.2)",
+                        border: "1px solid rgba(255, 0, 0, 0.3)",
+                        borderRadius: 4,
+                        color: "#ff6b6b",
+                        fontSize: 10,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="hidden-content"
+                  style={{
+                    display: "block",
+                    marginBottom: 6,
+                    fontSize: 13,
+                    fontWeight: 600,
+                  }}
+                >
+                  Hidden Content (Required)
+                </label>
+                <p
+                  style={{
+                    fontSize: 11,
+                    color: "rgba(168, 85, 247, 0.6)",
+                    marginBottom: 8,
+                  }}
+                >
+                  💡 Choose either text OR file (.zip/.rar only) • Max: 256MB
+                </p>
                 <textarea
+                  id="hidden-content"
                   value={hiddenContent}
-                  onChange={(e) => setHiddenContent(e.target.value)}
+                  onChange={(e) => {
+                    if (hiddenFile) {
+                      setError("Clear file first to enter text");
+                      return;
+                    }
+                    setHiddenContent(e.target.value);
+                  }}
                   placeholder="Enter your real secret content..."
+                  disabled={!!hiddenFile}
                   style={{
                     width: "100%",
                     minHeight: 80,
@@ -441,8 +626,71 @@ export default function CreateVault() {
                     fontSize: 13,
                     resize: "vertical",
                     boxSizing: "border-box",
+                    opacity: hiddenFile ? 0.5 : 1,
                   }}
                 />
+                <input
+                  type="file"
+                  accept=".zip,.rar"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (hiddenContent.trim()) {
+                      setError("Clear text first to upload file");
+                      e.target.value = "";
+                      return;
+                    }
+                    // Validate file type
+                    if (
+                      !file.name.toLowerCase().endsWith(".zip") &&
+                      !file.name.toLowerCase().endsWith(".rar")
+                    ) {
+                      setError("Only .zip and .rar files are allowed");
+                      e.target.value = "";
+                      return;
+                    }
+                    setHiddenFile(file);
+                    setError("");
+                  }}
+                  aria-label="Upload hidden file (.zip or .rar)"
+                  title="Upload hidden file (.zip or .rar)"
+                  className="custom-file-input"
+                  id="hidden-file-input"
+                />
+                <label htmlFor="hidden-file-input" className="custom-file-button">
+                  📁 Choose File (.zip/.rar)
+                </label>
+                {hiddenFile && (
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 11,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <span style={{ color: "#4ade80" }}>
+                      ✓ {hiddenFile.name} (
+                      {(hiddenFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setHiddenFile(null)}
+                      style={{
+                        padding: "2px 6px",
+                        background: "rgba(255, 0, 0, 0.2)",
+                        border: "1px solid rgba(255, 0, 0, 0.3)",
+                        borderRadius: 4,
+                        color: "#ff6b6b",
+                        fontSize: 10,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -454,12 +702,15 @@ export default function CreateVault() {
                     fontWeight: 600,
                   }}
                 >
-                  Duress Password (Optional)
+                  Decoy Password{" "}
+                  {decoyContent.trim() || decoyFile
+                    ? "(Required)"
+                    : "(Optional)"}
                 </label>
                 <input
                   type="password"
-                  value={duressPassphrase}
-                  onChange={(e) => setDuressPassphrase(e.target.value)}
+                  value={decoyPassphrase}
+                  onChange={(e) => setDecoyPassphrase(e.target.value)}
                   placeholder="Password to reveal decoy content..."
                   style={{
                     width: "100%",
@@ -472,83 +723,246 @@ export default function CreateVault() {
                     boxSizing: "border-box",
                   }}
                 />
+                {(decoyContent.trim() || decoyFile) && (
+                  <p
+                    style={{
+                      marginTop: 6,
+                      fontSize: 11,
+                      lineHeight: 1.4,
+                      color: "#fbbf24",
+                      opacity: 0.9,
+                    }}
+                  >
+                    ⚠️ As you entered decoy content, decoy password is required
+                  </p>
+                )}
               </div>
 
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: 6,
-                    fontSize: 13,
-                    fontWeight: 600,
-                  }}
-                >
+                <label htmlFor="hidden-password" className="form-label">
                   Hidden Layer Password
                 </label>
                 <input
+                  id="hidden-password"
                   type="password"
                   value={passphrase}
                   onChange={(e) => setPassphrase(e.target.value)}
                   placeholder="Enter a strong password..."
-                  style={{
-                    width: "100%",
-                    padding: 10,
-                    background: "rgba(255, 255, 255, 0.05)",
-                    border: "1px solid rgba(255, 255, 255, 0.2)",
-                    borderRadius: 8,
-                    color: "#fff",
-                    fontSize: 13,
-                    boxSizing: "border-box",
-                  }}
+                  className="form-input"
                 />
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 0.7, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
+                <p
                   style={{
                     marginTop: 6,
                     fontSize: 11,
                     lineHeight: 1.4,
                     textAlign: "center",
+                    opacity: 0.7,
                   }}
                 >
-                  Both passwords must be 12+ characters with uppercase, lowercase, number, and special character
-                </motion.div>
+                  Both passwords must be 12+ characters with uppercase,
+                  lowercase, number, and special character
+                </p>
               </div>
 
-              <div style={{ marginTop: 8, padding: 12, background: "rgba(168, 85, 247, 0.1)", borderRadius: 8 }}>
-                <label style={{ display: "block", marginBottom: 8, fontSize: 12, fontWeight: 600, color: "#c084fc" }}>
-                  Pinata JWT
-                </label>
-                <input
-                  type="password"
-                  value={pinataJWT}
-                  onChange={(e) => {
-                    setPinataJWT(e.target.value);
-                    setJwtStatus(null);
-                  }}
-                  placeholder="Enter your Pinata JWT token"
+              <div
+                style={{
+                  marginTop: 8,
+                  padding: 12,
+                  background: "rgba(168, 85, 247, 0.1)",
+                  borderRadius: 8,
+                }}
+              >
+                <div
                   style={{
-                    width: "100%",
-                    padding: 8,
-                    background: "rgba(255, 255, 255, 0.05)",
-                    border: `1px solid ${jwtStatus === 'valid' ? 'rgba(0, 255, 0, 0.4)' : jwtStatus === 'invalid' ? 'rgba(255, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.2)'}`,
-                    borderRadius: 6,
-                    color: "#fff",
+                    display: "block",
+                    marginBottom: 8,
                     fontSize: 12,
-                    boxSizing: "border-box",
+                    fontWeight: 600,
+                    color: "#c084fc",
                   }}
-                />
-                {jwtStatus && (
-                  <p style={{ fontSize: 10, marginTop: 6, color: jwtStatus === 'valid' ? '#4ade80' : jwtStatus === 'invalid' ? '#ff6b6b' : '#a855f7' }}>
-                    {jwtStatus === 'validating' && '⏳ Validating JWT...'}
-                    {jwtStatus === 'valid' && '✓ Valid JWT - Encrypted and saved'}
-                    {jwtStatus === 'invalid' && '✗ Invalid JWT - Please check your token'}
-                  </p>
+                >
+                  IPFS Provider
+                </div>
+                <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => setProvider("pinata")}
+                    style={{
+                      flex: 1,
+                      padding: 8,
+                      background:
+                        provider === "pinata"
+                          ? "rgba(168, 85, 247, 0.3)"
+                          : "rgba(255, 255, 255, 0.05)",
+                      border: `1px solid ${provider === "pinata" ? "rgba(168, 85, 247, 0.5)" : "rgba(255, 255, 255, 0.2)"}`,
+                      borderRadius: 6,
+                      color: "#fff",
+                      fontSize: 12,
+                      cursor: "pointer",
+                      fontWeight: provider === "pinata" ? 600 : 400,
+                    }}
+                  >
+                    Pinata (1GB free)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProvider("filebase")}
+                    style={{
+                      flex: 1,
+                      padding: 8,
+                      background:
+                        provider === "filebase"
+                          ? "rgba(168, 85, 247, 0.3)"
+                          : "rgba(255, 255, 255, 0.05)",
+                      border: `1px solid ${provider === "filebase" ? "rgba(168, 85, 247, 0.5)" : "rgba(255, 255, 255, 0.2)"}`,
+                      borderRadius: 6,
+                      color: "#fff",
+                      fontSize: 12,
+                      cursor: "pointer",
+                      fontWeight: provider === "filebase" ? 600 : 400,
+                    }}
+                  >
+                    Filebase (5GB free)
+                  </button>
+                </div>
+
+                {provider === "pinata" ? (
+                  <>
+                    <label htmlFor="pinata-jwt" className="provider-label">
+                      Pinata JWT
+                    </label>
+                    <input
+                      id="pinata-jwt"
+                      type="password"
+                      value={pinataJWT}
+                      onChange={(e) => {
+                        setPinataJWT(e.target.value);
+                        setJwtStatus(null);
+                      }}
+                      placeholder="Enter your Pinata JWT token"
+                      style={{
+                        width: "100%",
+                        padding: 8,
+                        background: "rgba(255, 255, 255, 0.05)",
+                        border: `1px solid ${(() => {
+                          if (jwtStatus === "valid")
+                            return "rgba(0, 255, 0, 0.4)";
+                          if (jwtStatus === "invalid")
+                            return "rgba(255, 0, 0, 0.4)";
+                          return "rgba(255, 255, 255, 0.2)";
+                        })()}`,
+                        borderRadius: 6,
+                        color: "#fff",
+                        fontSize: 12,
+                        boxSizing: "border-box",
+                      }}
+                    />
+                    {jwtStatus && (
+                      <p
+                        style={{
+                          fontSize: 10,
+                          marginTop: 6,
+                          color: (() => {
+                            if (jwtStatus === "valid") return "#4ade80";
+                            if (jwtStatus === "invalid") return "#ff6b6b";
+                            return "#a855f7";
+                          })(),
+                        }}
+                      >
+                        {jwtStatus === "validating" && "⏳ Validating JWT..."}
+                        {jwtStatus === "valid" &&
+                          "✓ Valid JWT - Encrypted and saved"}
+                        {jwtStatus === "invalid" &&
+                          "✗ Invalid JWT - Please check your token"}
+                      </p>
+                    )}
+                    <p style={{ fontSize: 10, opacity: 0.6, marginTop: 6 }}>
+                      Get free JWT at pinata.cloud (1GB free storage)
+                    </p>
+                    {storageQuota && (
+                      <div
+                        style={{
+                          marginTop: 8,
+                          padding: 8,
+                          background: "rgba(168, 85, 247, 0.15)",
+                          borderRadius: 6,
+                        }}
+                      >
+                        <p style={{ fontSize: 10, opacity: 0.8 }}>
+                          {(storageQuota.available / 1024 / 1024).toFixed(0)} MB
+                          free of{" "}
+                          {(storageQuota.limit / 1024 / 1024).toFixed(0)} MB (
+                          {(
+                            (storageQuota.available / storageQuota.limit) *
+                            100
+                          ).toFixed(1)}
+                          % available)
+                        </p>
+                        <p style={{ fontSize: 9, opacity: 0.6, marginTop: 4 }}>
+                          💾 Accepts .zip or .rar files
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <label
+                      htmlFor="filebase-access-key"
+                      className="provider-label"
+                    >
+                      Filebase Credentials
+                    </label>
+                    <input
+                      id="filebase-access-key"
+                      type="password"
+                      value={filebaseAccessKey}
+                      onChange={(e) => setFilebaseAccessKey(e.target.value)}
+                      placeholder="Access Key"
+                      className="provider-input"
+                    />
+                    <input
+                      type="password"
+                      value={filebaseSecretKey}
+                      onChange={(e) => setFilebaseSecretKey(e.target.value)}
+                      placeholder="Secret Key"
+                      className="provider-input"
+                    />
+                    <input
+                      type="text"
+                      value={filebaseBucket}
+                      onChange={(e) => setFilebaseBucket(e.target.value)}
+                      placeholder="Bucket Name (must exist in your account)"
+                      className="provider-input-last"
+                    />
+                    <p style={{ fontSize: 10, opacity: 0.6, marginTop: 6 }}>
+                      Create bucket at filebase.com first, then enter name here
+                    </p>
+                    {storageQuota && (
+                      <div
+                        style={{
+                          marginTop: 8,
+                          padding: 8,
+                          background: "rgba(168, 85, 247, 0.15)",
+                          borderRadius: 6,
+                        }}
+                      >
+                        <p style={{ fontSize: 10, opacity: 0.8 }}>
+                          {(storageQuota.available / 1024 / 1024).toFixed(0)} MB
+                          free of{" "}
+                          {(storageQuota.limit / 1024 / 1024).toFixed(0)} MB (
+                          {(
+                            (storageQuota.available / storageQuota.limit) *
+                            100
+                          ).toFixed(1)}
+                          % available)
+                        </p>
+                        <p style={{ fontSize: 9, opacity: 0.6, marginTop: 4 }}>
+                          💾 Accepts .zip or .rar files
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
-                <p style={{ fontSize: 10, opacity: 0.6, marginTop: 6 }}>
-                  Get free JWT at pinata.cloud (1GB free storage)
-                </p>
               </div>
 
               {error && (
@@ -570,13 +984,13 @@ export default function CreateVault() {
                 <button
                   type="button"
                   onClick={handleCreate}
-                  disabled={loading || jwtStatus !== 'valid' || !hiddenContent.trim() || !passphrase.trim()}
+                  disabled={!isFormValid()}
                   className="start-btn"
                   style={{
                     width: "50%",
                     padding: "14px 12px",
-                    opacity: (loading || jwtStatus !== 'valid' || !hiddenContent.trim() || !passphrase.trim()) ? 0.5 : 1,
-                    cursor: (loading || jwtStatus !== 'valid' || !hiddenContent.trim() || !passphrase.trim()) ? "not-allowed" : "pointer",
+                    opacity: getButtonOpacity(),
+                    cursor: getButtonCursor(),
                     boxSizing: "border-box",
                   }}
                 >
@@ -625,8 +1039,14 @@ export default function CreateVault() {
                       setError("Failed to copy to clipboard");
                     }
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.3)"}
-                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.2)"}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background =
+                      "rgba(168, 85, 247, 0.3)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background =
+                      "rgba(168, 85, 247, 0.2)")
+                  }
                   style={{
                     padding: "8px 16px",
                     background: "rgba(168, 85, 247, 0.2)",
@@ -641,7 +1061,14 @@ export default function CreateVault() {
                 >
                   {copied ? "✓ Copied!" : "Copy URL"}
                 </button>
-                <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 12 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    justifyContent: "center",
+                    marginBottom: 12,
+                  }}
+                >
                   <button
                     type="button"
                     onClick={async () => {
@@ -653,8 +1080,14 @@ export default function CreateVault() {
                         setError("Failed to copy CID");
                       }
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.2)"}
-                    onMouseLeave={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.1)"}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background =
+                        "rgba(168, 85, 247, 0.2)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background =
+                        "rgba(168, 85, 247, 0.1)")
+                    }
                     style={{
                       padding: "4px 8px",
                       background: "rgba(168, 85, 247, 0.1)",
@@ -679,8 +1112,14 @@ export default function CreateVault() {
                         setError("Failed to copy CID");
                       }
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.2)"}
-                    onMouseLeave={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.1)"}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background =
+                        "rgba(168, 85, 247, 0.2)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background =
+                        "rgba(168, 85, 247, 0.1)")
+                    }
                     style={{
                       padding: "4px 8px",
                       background: "rgba(168, 85, 247, 0.1)",
@@ -695,10 +1134,19 @@ export default function CreateVault() {
                     {copiedHidden ? "✓ Copied!" : "Copy Hidden CID"}
                   </button>
                 </div>
-                <p style={{ fontSize: 12, opacity: 0.6, marginTop: 12, wordBreak: "break-all" }}>
+                <p
+                  style={{
+                    fontSize: 12,
+                    opacity: 0.6,
+                    marginTop: 12,
+                    wordBreak: "break-all",
+                  }}
+                >
                   Decoy CID: {result.decoyCID}
                 </p>
-                <p style={{ fontSize: 12, opacity: 0.6, wordBreak: "break-all" }}>
+                <p
+                  style={{ fontSize: 12, opacity: 0.6, wordBreak: "break-all" }}
+                >
                   Hidden CID: {result.hiddenCID}
                 </p>
               </div>
@@ -708,8 +1156,14 @@ export default function CreateVault() {
                 <button
                   type="button"
                   onClick={() => router.push(result.vaultURL)}
-                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.4)"}
-                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(168, 85, 247, 0.3)"}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background =
+                      "rgba(168, 85, 247, 0.4)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background =
+                      "rgba(168, 85, 247, 0.3)")
+                  }
                   style={{
                     padding: "12px 24px",
                     background: "rgba(168, 85, 247, 0.3)",
@@ -728,12 +1182,20 @@ export default function CreateVault() {
                   onClick={() => {
                     setResult(undefined);
                     setDecoyContent("");
+                    setDecoyFile(null);
                     setHiddenContent("");
+                    setHiddenFile(null);
                     setPassphrase("");
-                    setDuressPassphrase("");
+                    setDecoyPassphrase("");
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.15)"}
-                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)"}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background =
+                      "rgba(255, 255, 255, 0.15)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background =
+                      "rgba(255, 255, 255, 0.1)")
+                  }
                   style={{
                     padding: "12px 24px",
                     background: "rgba(255, 255, 255, 0.1)",
