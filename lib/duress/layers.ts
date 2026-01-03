@@ -60,16 +60,19 @@ export function deriveLayerPassphrase(
  * Create hidden vault with decoy and hidden layers
  * @param params Hidden vault parameters
  * @returns Complete decoy and hidden blobs with shared salt
- * @throws Error if encryption fails
+ * @throws Error if encryption fails or duress passphrase is empty
  */
 export function createHiddenVault(
   params: HiddenVaultParams,
 ): HiddenVaultResult {
-  // Encrypt decoy with duress passphrase (or empty if not provided)
-  const decoyPassphrase: string = params.duressPassphrase || "";
+  if (!params.duressPassphrase) {
+    throw new Error('Duress passphrase is required');
+  }
+  
+  // Encrypt decoy with duress passphrase
   const decoyEncrypted = encrypt({
     plaintext: params.content.decoy,
-    passphrase: decoyPassphrase,
+    passphrase: params.duressPassphrase,
     argonProfile: params.argonProfile,
   });
 

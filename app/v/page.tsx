@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Lock } from "lucide-react";
 import { VaultService } from "@/lib/services/vault";
-import { warmUpHelia } from "@/lib/helia/singleton";
-import { useConnectionStatus } from "@/lib/helia/connection-monitor";
 
 const INACTIVITY_TIMEOUT_MS = 60000;
 
@@ -16,23 +16,7 @@ export default function ViewVault() {
   const [isDecoy, setIsDecoy] = useState(false);
   const [error, setError] = useState("");
   const [isBlurred, setIsBlurred] = useState(false);
-  const { connectionState, peerCount } = useConnectionStatus();
-
-  const getConnectionBackground = () => {
-    if (connectionState === 'connected') return 'rgba(0, 255, 0, 0.1)';
-    if (connectionState === 'degraded') return 'rgba(255, 165, 0, 0.1)';
-    return 'rgba(255, 255, 255, 0.05)';
-  };
-
-  const getConnectionBorder = () => {
-    if (connectionState === 'connected') return 'rgba(0, 255, 0, 0.3)';
-    if (connectionState === 'degraded') return 'rgba(255, 165, 0, 0.3)';
-    return 'rgba(255, 255, 255, 0.2)';
-  };
-
-  useEffect(() => {
-    warmUpHelia();
-  }, []);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -63,9 +47,6 @@ export default function ViewVault() {
     setLoading(true);
 
     const vaultService = new VaultService();
-    const warningTimeout = setTimeout(() => {
-      setError("Connecting to IPFS network. This may take up to 60 seconds...");
-    }, 10000);
 
     try {
       const vaultURL = `${globalThis.window.location.origin}/v#${hash}`;
@@ -73,12 +54,37 @@ export default function ViewVault() {
         vaultURL,
         passphrase: passphrase.trim(),
       });
-
-      clearTimeout(warningTimeout);
       setContent(new TextDecoder().decode(result.content));
       setIsDecoy(result.isDecoy);
+      
+      // Trigger confetti on successful unlock
+      if (typeof window !== "undefined") {
+        const confetti = (await import("canvas-confetti")).default;
+        const duration = 2000;
+        const end = Date.now() + duration;
+        
+        (function frame() {
+          confetti({
+            particleCount: 3,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0, y: 0.6 },
+            colors: ["#a855f7", "#ffffff", "#a855f7"]
+          });
+          confetti({
+            particleCount: 3,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1, y: 0.6 },
+            colors: ["#a855f7", "#ffffff", "#a855f7"]
+          });
+          
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        })();
+      }
     } catch (err) {
-      clearTimeout(warningTimeout);
       setError(err instanceof Error ? err.message : "Failed to unlock vault");
     } finally {
       await vaultService.stop();
@@ -131,8 +137,46 @@ export default function ViewVault() {
         </h1>
 
         {content ? (
-          <div>
-            <div
+          <div style={{ position: "relative" }}>
+            {/* Lock Shatter Animation */}
+            <motion.div
+              initial={{ scale: 1, opacity: 1 }}
+              animate={{ 
+                scale: [1, 1.2, 0],
+                opacity: [1, 1, 0],
+                rotate: [0, 0, 45]
+              }}
+              transition={{ duration: 0.5, times: [0, 0.3, 1] }}
+              style={{
+                position: "fixed",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 20,
+                pointerEvents: "none"
+              }}
+            >
+              <Lock style={{ width: 128, height: 128, color: "#a855f7" }} />
+            </motion.div>
+            
+            {/* Flash Effect */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ duration: 0.2, delay: 0.5 }}
+              style={{
+                position: "fixed",
+                inset: 0,
+                background: "#a855f7",
+                zIndex: 10,
+                pointerEvents: "none"
+              }}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, filter: "blur(20px)" }}
+              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+              transition={{ duration: 0.8, delay: 0.7 }}
               style={{
                 padding: 20,
                 background: isDecoy
@@ -167,12 +211,19 @@ export default function ViewVault() {
               >
                 {content}
               </div>
-            </div>
-            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+            </motion.div>
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 1.5 }}
+              style={{ display: "flex", gap: 12, justifyContent: "center" }}
+            >
               <button
                 onClick={async () => {
                   try {
                     await navigator.clipboard.writeText(content);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1000);
                   } catch {
                     setError("Failed to copy to clipboard");
                   }
@@ -185,9 +236,18 @@ export default function ViewVault() {
                   borderRadius: 8,
                   fontSize: 14,
                   cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(168, 85, 247, 0.5)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(168, 85, 247, 0.3)";
+                  e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
-                Copy Content
+                {copied ? "Copied!" : "Copy Content"}
               </button>
               <button
                 onClick={() => {
@@ -203,34 +263,23 @@ export default function ViewVault() {
                   borderRadius: 8,
                   fontSize: 14,
                   cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                  e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
                 Lock Vault
               </button>
-            </div>
+            </motion.div>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {connectionState !== "offline" && (
-              <div
-                style={{
-                  padding: 12,
-                  background: getConnectionBackground(),
-                  border: `1px solid ${getConnectionBorder()}`,
-                  borderRadius: 8,
-                  fontSize: 13,
-                  textAlign: "center",
-                  opacity: 0.8,
-                }}
-              >
-                {connectionState === "connecting" &&
-                  `Connecting to IPFS network... (${peerCount} peers)`}
-                {connectionState === "degraded" &&
-                  `⚠️ Limited connectivity (${peerCount} peers) - unlock may be slow`}
-                {connectionState === "connected" &&
-                  `✓ Connected to IPFS (${peerCount} peers)`}
-              </div>
-            )}
             <div>
               <input
                 type="password"

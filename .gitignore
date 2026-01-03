@@ -29,21 +29,17 @@ yarn-error.log*
 # Vercel
 .vercel
 
-# Wrangler
+# Cloudflare
 .wrangler/
 .dev.vars
 .prod.vars
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Cloudflare
 wrangler.toml
+
+# D1 Database
+.wrangler/state/
+*.db
+*.db-shm
+*.db-wal
 
 # Secrets
 *.pem

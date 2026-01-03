@@ -8,7 +8,6 @@ import {
   serializeVaultMetadata,
   deserializeVaultMetadata,
 } from "../storage/vault";
-import { createHeliaClient, type IHeliaClient } from "../helia";
 import { CryptoWorker } from "../workers/crypto";
 import { base64UrlEncode, base64UrlDecode } from "../crypto/utils";
 import { ARGON2_PROFILES, type Argon2Profile } from "../crypto/constants";
@@ -22,8 +21,11 @@ export interface CreateVaultParams {
   readonly decoyContent: Uint8Array;
   readonly hiddenContent: Uint8Array;
   readonly passphrase: string;
-  readonly duressPassphrase?: string; // Optional duress password
+  readonly duressPassphrase?: string;
   readonly argonProfile?: Argon2Profile;
+  readonly ipfsCredentials?: {
+    pinataJWT: string;
+  };
 }
 
 export interface CreateVaultResult {
@@ -47,11 +49,9 @@ export interface UnlockVaultResult {
 // ============================================================================
 
 export class VaultService {
-  private ipfs: IHeliaClient;
   private crypto: CryptoWorker;
 
   constructor() {
-    this.ipfs = createHeliaClient();
     this.crypto = new CryptoWorker();
   }
 
@@ -63,7 +63,6 @@ export class VaultService {
   async createVault(params: CreateVaultParams): Promise<CreateVaultResult> {
     try {
       const validated = CreateVaultParamsSchema.parse(params);
-      await this.ipfs.init();
 
       const content: LayerContent = {
         decoy: validated.decoyContent,
@@ -81,11 +80,14 @@ export class VaultService {
             : validated.argonProfile) || ARGON2_PROFILES.desktop,
       });
 
-      const stored = await uploadVault(vault, this.ipfs);
+      const stored = await uploadVault(vault, params.ipfsCredentials);
       const metadata = serializeVaultMetadata(stored);
       const encodedMetadata = base64UrlEncode(metadata);
 
-      const baseURL = globalThis.window === undefined ? "" : globalThis.window.location.origin;
+      const baseURL =
+        globalThis.window === undefined
+          ? ""
+          : globalThis.window.location.origin;
       const vaultURL = `${baseURL}/v#${encodedMetadata}`;
 
       return {
@@ -97,7 +99,7 @@ export class VaultService {
       if (error instanceof Error) {
         throw new Error(`Failed to create vault: ${error.message}`);
       }
-      throw new Error('Failed to create vault');
+      throw new Error("Failed to create vault");
     }
   }
 
@@ -109,7 +111,6 @@ export class VaultService {
   async unlockVault(params: UnlockVaultParams): Promise<UnlockVaultResult> {
     try {
       const validated = UnlockVaultParamsSchema.parse(params);
-      await this.ipfs.init();
 
       const hash = validated.vaultURL.split("#")[1];
       if (!hash) {
@@ -118,7 +119,9 @@ export class VaultService {
 
       const metadata = base64UrlDecode(hash);
       const stored = deserializeVaultMetadata(metadata);
-      const vault = await downloadVault(stored, this.ipfs);
+
+      // Download directly from Pinata gateway (no JWT needed for public reads)
+      const vault = await downloadVault(stored);
 
       // Use worker for non-blocking Argon2
       const content = await this.crypto.unlockHiddenVault(
@@ -132,26 +135,18 @@ export class VaultService {
       if (error instanceof Error) {
         throw new Error(`Failed to unlock vault: ${error.message}`);
       }
-      throw new Error('Failed to unlock vault');
+      throw new Error("Failed to unlock vault");
     }
   }
 
   /**
-   * Stop IPFS node and terminate workers
+   * Stop workers
    */
   async stop(): Promise<void> {
     try {
-      await this.ipfs.stop();
-    } catch (ipfsError) {
-      // Log IPFS stop error but continue to terminate worker
-      console.error('IPFS stop failed:', ipfsError);
-    } finally {
-      try {
-        this.crypto.terminate();
-      } catch (workerError) {
-        // Log worker termination error
-        console.error('Worker termination failed:', workerError);
-      }
+      this.crypto.terminate();
+    } catch (workerError) {
+      console.error("Worker termination failed:", workerError);
     }
   }
 }

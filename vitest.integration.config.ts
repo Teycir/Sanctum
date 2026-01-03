@@ -8,7 +8,7 @@ export default defineConfig({
     testTimeout: 120000,
     hookTimeout: 60000,
     globals: true,
-    environment: 'happy-dom',
+    environment: 'node',
     setupFiles: ['__tests__/integration/setup.ts'],
     coverage: {
       provider: 'v8',

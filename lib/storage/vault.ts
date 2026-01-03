@@ -3,10 +3,9 @@
 // ============================================================================
 
 import type { HiddenVaultResult } from '../duress/layers';
-import type { IHeliaClient } from '../helia';
 import { concat, encodeU32LE, decodeU32LE } from '../crypto/utils';
 import { StoredVaultSchema } from '../validation/schemas';
-import { retrieveVault, isP2PTAvailable } from '../p2pt';
+import { uploadToIPFS, type UploadCredentials } from './uploader';
 
 export interface StoredVault {
   readonly decoyCID: string;
@@ -21,56 +20,40 @@ export interface StoredVault {
 /**
  * Upload hidden vault to IPFS
  * @param vault Hidden vault result
- * @param ipfs IPFS client
+ * @param credentials IPFS pinning service credentials
  * @returns Stored vault with CIDs
  */
 export async function uploadVault(
   vault: HiddenVaultResult,
-  ipfs: IHeliaClient
+  credentials?: UploadCredentials
 ): Promise<StoredVault> {
-  const decoyCID = await ipfs.upload(vault.decoyBlob);
-  const hiddenCID = await ipfs.upload(vault.hiddenBlob);
+  if (!credentials) {
+    throw new Error('IPFS credentials required');
+  }
+  
+  const decoyResult = await uploadToIPFS(vault.decoyBlob, credentials);
+  const hiddenResult = await uploadToIPFS(vault.hiddenBlob, credentials);
   
   return {
-    decoyCID,
-    hiddenCID,
+    decoyCID: decoyResult.cid,
+    hiddenCID: hiddenResult.cid,
     salt: vault.salt
   };
 }
 
 /**
- * Download hidden vault from IPFS with P2PT fallback
+ * Download hidden vault from Pinata gateway with public gateway fallback
  * @param stored Stored vault metadata
- * @param ipfs IPFS client
  * @returns Hidden vault result
  */
 export async function downloadVault(
-  stored: StoredVault,
-  ipfs: IHeliaClient
+  stored: StoredVault
 ): Promise<HiddenVaultResult> {
-  let decoyBlob: Uint8Array;
-  let hiddenBlob: Uint8Array;
+  const { PinataClient } = await import('./pinata');
+  const pinata = new PinataClient('');
   
-  // Try P2PT first if available (faster peer retrieval)
-  if (isP2PTAvailable()) {
-    try {
-      const decoyResult = await retrieveVault(stored.decoyCID, { timeoutMs: 10000 });
-      decoyBlob = decoyResult.data;
-    } catch {
-      decoyBlob = await ipfs.download(stored.decoyCID);
-    }
-    
-    try {
-      const hiddenResult = await retrieveVault(stored.hiddenCID, { timeoutMs: 10000 });
-      hiddenBlob = hiddenResult.data;
-    } catch {
-      hiddenBlob = await ipfs.download(stored.hiddenCID);
-    }
-  } else {
-    // Fallback to Helia only
-    decoyBlob = await ipfs.download(stored.decoyCID);
-    hiddenBlob = await ipfs.download(stored.hiddenCID);
-  }
+  const decoyBlob = await pinata.download(stored.decoyCID);
+  const hiddenBlob = await pinata.download(stored.hiddenCID);
   
   return {
     decoyBlob,

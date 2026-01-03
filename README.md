@@ -55,7 +55,7 @@
 
 1. Visit [duress.vault](https://duress.vault) (coming soon)
 2. Select vault mode (Simple, Hidden, Chain, or Stego)
-3. Configure free IPFS providers (Filebase + Pinata)
+3. Configure Pinata (free IPFS provider)
 4. Create your vault with optional passphrase
 5. Share the link - only you know the passphrase
 
@@ -147,10 +147,15 @@ Hide encrypted data inside innocent-looking images using LSB steganography.
 
 - **Frontend**: Next.js 14 + React + Web Crypto API
 - **Hosting**: Cloudflare Pages (static site, free tier)
+- **Database**: Cloudflare D1 (split-key storage)
 - **Cryptography**: @noble/ciphers + @noble/hashes (XChaCha20-Poly1305, Argon2id)
-- **Storage**: IPFS via Helia (client-side) + user-provided pinning (Filebase/Pinata)
+- **Storage**: IPFS via Pinata (primary) with public gateway fallback
 - **State**: RAM-only (Web Workers, no persistence)
-- **Backend**: None (fully client-side)
+  - Keys never written to disk
+  - Auto-wiped on browser close
+  - Protected from disk forensics
+  - Isolated in Web Worker memory
+- **Backend**: Minimal (only split-key storage, no content access)
 
 ### Zero-Trust Design
 
@@ -161,25 +166,22 @@ Hide encrypted data inside innocent-looking images using LSB steganography.
 │  │   Web Worker (RAM-only)     │   │
 │  │   • Argon2id key derivation │   │
 │  │   • XChaCha20 encryption    │   │
+│  │   • 3-layer encryption      │   │
 │  │   • Auto-clear on idle      │   │
-│  └─────────────────────────────┘   │
-│  ┌─────────────────────────────┐   │
-│  │   Helia (IPFS Client)       │   │
-│  │   • Content addressing      │   │
-│  │   • P2P retrieval           │   │
 │  └─────────────────────────────┘   │
 └──────────────┬──────────────────────┘
                │
-               ▼
-    ┌──────────────────────┐
-    │   IPFS Pinning APIs  │
-    │   (Filebase, Pinata) │
-    │   • User-provided    │
-    │   • Free tier        │
-    └──────────────────────┘
+               ├──────────► Cloudflare D1
+               │            • Encrypted Key A
+               │            • Encrypted CIDs
+               │            • Access logs
+               │
+               └──────────► IPFS Pinata
+                            • Encrypted blobs
+                            • Public gateways
 ```
 
-**Critical**: Fully client-side. No backend, no database, no server trust required.
+**Critical**: All encryption client-side. Server only stores encrypted fragments.
 
 ## 🛡️ Security: Attack Scenarios
 
@@ -197,15 +199,20 @@ Hide encrypted data inside innocent-looking images using LSB steganography.
 
 ### "Can they brute-force the passphrase?"
 
-**❌ NO.** PBKDF2 with 100,000+ iterations makes brute-force computationally infeasible. Use strong passphrases (6+ Diceware words).
+**❌ NO.** Argon2id with 256MB memory and 3 iterations makes brute-force computationally infeasible. Use strong passphrases (6+ Diceware words).
 
 ### "What if they seize the IPFS providers?"
 
-**✅ SAFE.** Data is encrypted before upload. Providers only see encrypted blobs. Without Key B (in URL) and passphrase, decryption is impossible.
+**✅ SAFE.** Data is triple-encrypted:
+1. Passphrase encryption (user secret)
+2. Master key encryption (Key A + Key B)
+3. CID storage encryption (prevents direct access)
+
+Providers only see encrypted blobs. Without vault access through our API, decryption is impossible.
 
 ### "Can they force the server to reveal Key A?"
 
-**❌ NO.** Key A is in the URL hash, never sent to server. Server only has encrypted Key A fragment, which requires Key B (in URL) to decrypt.
+**❌ NO.** Key A is encrypted and stored on server. Key B is in the URL hash, never sent to server. Server only has encrypted Key A fragment, which requires Key B (in URL) to decrypt.
 
 ### "What if they compromise Cloudflare Workers?"
 
@@ -247,11 +254,19 @@ Server only stores encrypted fragments and CIDs.
 
 ### Security Features
 
+- **3-Layer Encryption**: Passphrase → Master Key (Split) → CID Storage
 - **Plausible Deniability**: No metadata reveals hidden layers
-- **Timing Attack Prevention**: Constant-time operations
-- **Split-Key Architecture**: Keys split between server and URL
-- **Rate Limiting**: Protection against brute force
-- **CSRF Protection**: Secure cross-origin requests
+- **Timing Attack Prevention**: Constant-time operations with random delays
+- **Split-Key Architecture**: Key A (server, encrypted) + Key B (URL hash)
+- **Rate Limiting**: 5 attempts/min per vault, 50/hour per fingerprint
+- **Honeypot Detection**: Auto-ban enumeration attacks
+- **Request Fingerprinting**: SHA-256(IP + User-Agent)
+- **Suspicious Pattern Detection**: >10 vaults in 5min = blocked
+- **CID Encryption**: Prevents direct Pinata access bypass
+- **Input Validation**: Vault ID, key format, request size checks
+- **CSRF Protection**: Origin/referer validation
+- **Security Headers**: X-Frame-Options, CSP, nosniff
+- **Access Logging**: Full audit trail with fingerprints
 - **Nonce Replay Protection**: Prevent replay attacks
 
 ### OpSec Best Practices
@@ -267,21 +282,13 @@ Server only stores encrypted fragments and CIDs.
 
 See [OPSEC.md](./docs/OPSEC.md) for comprehensive guidelines.
 
-## 🌐 Supported Storage Providers
+## 🌐 Storage Provider
 
-### Filebase (Recommended Primary)
-- **Free Tier**: 5 GB storage, 1,000 files
-- **API**: S3-compatible
-- **Signup**: Email only (no credit card)
-- **Features**: Geo-redundant, fast CDN
-
-### Pinata (Recommended Secondary)
+### Pinata (Primary)
 - **Free Tier**: 1 GB storage, 500 files, 10 GB bandwidth/month
 - **API**: REST + dedicated gateways
-- **Signup**: Email only
-- **Features**: Reliable, widely trusted
-
-**Multi-Provider Strategy**: Combine both for 6+ GB free redundant storage.
+- **Signup**: Email only (no credit card)
+- **Features**: Reliable, widely trusted, CID-based retrieval with public gateway fallback
 
 ## ❓ FAQ: How It Works
 
@@ -304,8 +311,8 @@ See [OPSEC.md](./docs/OPSEC.md) for comprehensive guidelines.
 
 1. Visit the Sanctum website (coming soon)
 2. Select vault mode (Simple/Hidden/Chain/Stego)
-3. Configure IPFS providers (Filebase + Pinata)
-   - Enter free API keys (email signup only)
+3. Configure Pinata (free IPFS provider)
+   - Enter free API key (email signup only)
 4. Enter content:
    - **Decoy content** (what adversaries see)
    - **Hidden content** (your real secrets)
@@ -379,10 +386,7 @@ See [OPSEC.md](./docs/OPSEC.md) for comprehensive guidelines.
 
 **Maximum file size: 10 MB (configurable)**
 
-Combined free tier limits:
-- Filebase: 5 GB
-- Pinata: 1 GB
-- **Total**: 6+ GB free storage
+Pinata free tier: 1 GB storage
 
 **For larger files:**
 - Use external storage and seal the download link
@@ -393,7 +397,6 @@ Combined free tier limits:
 **Indefinitely** (as long as IPFS providers maintain the data)
 
 **Provider retention:**
-- Filebase: Permanent (while account active)
 - Pinata: Permanent (while account active)
 
 **Best practices:**
@@ -493,7 +496,7 @@ Business Source License 1.1 - see [LICENSE](./LICENSE) for details.
 
 - **TimeSeal** - Parent project providing cryptographic patterns
 - **Cloudflare Pages** - Free static site hosting
-- **Filebase & Pinata** - Free IPFS pinning services
+- **Pinata** - Free IPFS pinning service
 - **VeraCrypt** - Inspiration for plausible deniability
 
 ## 🔗 Links

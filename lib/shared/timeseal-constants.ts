@@ -46,6 +46,5 @@ export const HONEYPOT_IDS = [
 // Allowed Origins - Use getAppConfig() from appConfig.ts instead
 // These are fallback defaults only
 export const DEFAULT_ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
+  'https://sanctum-vault.pages.dev',
 ];

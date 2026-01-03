@@ -1,0 +1,11 @@
+name = "sanctum-vault"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# IMPORTANT: Copy this file to wrangler.toml and replace with your actual database_id
+# Get your database_id by running: npx wrangler d1 create sanctum-keys
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sanctum-keys"
+database_id = "YOUR-DATABASE-ID-HERE"  # Replace with actual ID from wrangler d1 create

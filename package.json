@@ -23,7 +23,12 @@
     "test:e2e:real": "NEXT_PUBLIC_USE_MOCK_IPFS=false playwright test --project=chromium",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",
-    "copy-timeseal": "node scripts/copy-timeseal.js"
+    "copy-timeseal": "node scripts/copy-timeseal.js",
+    "db:setup": "./scripts/setup-db.sh",
+    "db:migrate": "npx wrangler d1 execute sanctum-keys --file=./schema.sql",
+    "db:migrate:remote": "npx wrangler d1 execute sanctum-keys --remote --file=./schema.sql",
+    "db:reset": "npx wrangler d1 execute sanctum-keys --command='DROP TABLE IF EXISTS vault_keys; DROP TABLE IF EXISTS vault_access_log; DROP TABLE IF EXISTS banned_fingerprints;' && npm run db:migrate",
+    "deploy": "npm run build && npx wrangler pages deploy out"
   },
   "dependencies": {
     "@helia/unixfs": "^4.0.0",
@@ -33,6 +38,7 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "@types/three": "^0.182.0",
+    "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
@@ -52,6 +58,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.10.2",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.18",
@@ -59,6 +66,7 @@
     "@vitest/coverage-v8": "^2.1.9",
     "@vitest/ui": "^2.1.8",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^17.2.3",
     "eslint": "^9.18.0",
     "eslint-config-next": "^15.1.0",
     "happy-dom": "^20.0.11",
