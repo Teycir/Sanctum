@@ -290,9 +290,9 @@ export default function ViewVault() {
 
     const progressSteps = [
       { progress: 10, step: "Fetching vault metadata...", delay: 0 },
-      { progress: 30, step: "Downloading from IPFS...", delay: 800 },
-      { progress: 60, step: "Deriving keys...", delay: 1600 },
-      { progress: 85, step: "Decrypting content...", delay: 2400 },
+      { progress: 25, step: "Downloading from IPFS...", delay: 800 },
+      { progress: 45, step: "Deriving keys...", delay: 1600 },
+      { progress: 60, step: "Decrypting content (be patient)...", delay: 2400 },
     ];
 
     const startTime = Date.now();
@@ -305,7 +305,7 @@ export default function ViewVault() {
         if (currentStep && loadingStep !== currentStep.step) {
           setLoadingStep(currentStep.step);
         }
-        return Math.min(prev + 1, 90);
+        return Math.min(prev + 1, 66);
       });
     }, 50);
 
@@ -321,8 +321,8 @@ export default function ViewVault() {
       
       clearInterval(progressInterval);
       setProgress(100);
-      setLoadingStep("Complete!");
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      setLoadingStep("Success!");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       
       // Try to decode as text
       try {
