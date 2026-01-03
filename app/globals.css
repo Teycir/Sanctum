@@ -62,17 +62,17 @@
 
 @layer base {
   :root {
-    /* Colors - Dark cyberpunk theme */
+    /* Colors - Dark cyberpunk theme with marine blue */
     --background: 0 0% 3%;
     --foreground: 0 0% 98%;
 
-    --primary: 142 76% 36%;
+    --primary: 200 80% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 142 76% 20%;
+    --secondary: 200 80% 35%;
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 142 76% 45%;
+    --accent: 200 80% 60%;
     --accent-foreground: 0 0% 100%;
 
     --muted: 0 0% 15%;
@@ -80,7 +80,7 @@
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 142 76% 36%;
+    --ring: 200 80% 50%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -123,17 +123,17 @@
     background:
       radial-gradient(
         ellipse at 15% 20%,
-        rgba(138, 43, 226, 0.15) 0%,
+        rgba(30, 144, 255, 0.15) 0%,
         transparent 50%
       ),
       radial-gradient(
         ellipse at 85% 80%,
-        rgba(75, 0, 130, 0.12) 0%,
+        rgba(0, 119, 182, 0.12) 0%,
         transparent 50%
       ),
       radial-gradient(
         circle at 50% 50%,
-        rgba(72, 61, 139, 0.08) 0%,
+        rgba(70, 130, 180, 0.08) 0%,
         transparent 60%
       );
     pointer-events: none;
@@ -150,27 +150,27 @@
     background:
       radial-gradient(
         circle at 30% 40%,
-        rgba(147, 112, 219, 0.15) 0%,
+        rgba(30, 144, 255, 0.15) 0%,
         transparent 30%
       ),
       radial-gradient(
         circle at 70% 60%,
-        rgba(123, 104, 238, 0.12) 0%,
+        rgba(65, 105, 225, 0.12) 0%,
         transparent 35%
       ),
       radial-gradient(
         circle at 50% 80%,
-        rgba(138, 43, 226, 0.1) 0%,
+        rgba(0, 119, 182, 0.1) 0%,
         transparent 40%
       ),
       radial-gradient(
         circle at 20% 70%,
-        rgba(75, 0, 130, 0.08) 0%,
+        rgba(70, 130, 180, 0.08) 0%,
         transparent 35%
       ),
       radial-gradient(
         circle at 80% 30%,
-        rgba(106, 90, 205, 0.1) 0%,
+        rgba(100, 149, 237, 0.1) 0%,
         transparent 40%
       );
     filter: blur(100px);
@@ -281,7 +281,7 @@
   margin-bottom: 8px;
   font-size: 12px;
   font-weight: 600;
-  color: #c084fc;
+  color: #1e90ff;
 }
 
 .provider-input {
@@ -320,14 +320,14 @@
 .bucket-label {
   font-size: 12px;
   font-weight: 600;
-  color: #c084fc;
+  color: #1e90ff;
 }
 
 .custom-file-button {
   display: inline-block;
   padding: 8px 16px;
-  background: rgba(168, 85, 247, 0.6);
-  border: 1px solid rgba(168, 85, 247, 0.6);
+  background: rgba(30, 144, 255, 0.6);
+  border: 1px solid rgba(30, 144, 255, 0.6);
   border-radius: 6px;
   color: #fff;
   font-size: 12px;
@@ -337,8 +337,8 @@
 }
 
 .custom-file-button:hover {
-  background: rgba(168, 85, 247, 0.8);
-  border-color: rgba(168, 85, 247, 1);
+  background: rgba(30, 144, 255, 0.8);
+  border-color: rgba(30, 144, 255, 1);
 }
 
 .custom-file-input {

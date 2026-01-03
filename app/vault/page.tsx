@@ -21,14 +21,14 @@ function triggerConfetti() {
         angle: 60,
         spread: 55,
         origin: { x: 0, y: 0.6 },
-        colors: ["#a855f7", "#ffffff", "#a855f7"]
+        colors: ["#1e90ff", "#ffffff", "#1e90ff"]
       });
       confetti({
         particleCount: 3,
         angle: 120,
         spread: 55,
         origin: { x: 1, y: 0.6 },
-        colors: ["#a855f7", "#ffffff", "#a855f7"]
+        colors: ["#1e90ff", "#ffffff", "#1e90ff"]
       });
       
       if (Date.now() < end) {
@@ -70,7 +70,7 @@ function UnlockedContent({ content, isDecoy, copied, downloading, onCopy, onLock
           pointerEvents: "none"
         }}
       >
-        <Lock style={{ width: 128, height: 128, color: "#a855f7" }} />
+        <Lock style={{ width: 128, height: 128, color: "#1e90ff" }} />
       </motion.div>
       
       <motion.div
@@ -80,7 +80,7 @@ function UnlockedContent({ content, isDecoy, copied, downloading, onCopy, onLock
         style={{
           position: "fixed",
           inset: 0,
-          background: "#a855f7",
+          background: "#1e90ff",
           zIndex: 10,
           pointerEvents: "none"
         }}
@@ -190,9 +190,9 @@ function UnlockedContent({ content, isDecoy, copied, downloading, onCopy, onLock
             disabled={copied}
             style={{
               padding: "12px 24px",
-              background: copied ? "rgba(0, 255, 0, 0.3)" : "rgba(168, 85, 247, 0.3)",
+              background: copied ? "rgba(0, 255, 0, 0.3)" : "rgba(30, 144, 255, 0.3)",
               color: "#fff",
-              border: `1px solid ${copied ? "rgba(0, 255, 0, 0.5)" : "rgba(168, 85, 247, 0.5)"}`,
+              border: `1px solid ${copied ? "rgba(0, 255, 0, 0.5)" : "rgba(30, 144, 255, 0.5)"}`,
               borderRadius: 8,
               fontSize: 14,
               fontWeight: 500,
@@ -201,13 +201,13 @@ function UnlockedContent({ content, isDecoy, copied, downloading, onCopy, onLock
             }}
             onMouseEnter={(e) => {
               if (!copied) {
-                e.currentTarget.style.background = "rgba(168, 85, 247, 0.5)";
+                e.currentTarget.style.background = "rgba(30, 144, 255, 0.5)";
                 e.currentTarget.style.transform = "translateY(-2px)";
               }
             }}
             onMouseLeave={(e) => {
               if (!copied) {
-                e.currentTarget.style.background = "rgba(168, 85, 247, 0.3)";
+                e.currentTarget.style.background = "rgba(30, 144, 255, 0.3)";
                 e.currentTarget.style.transform = "translateY(0)";
               }
             }}
