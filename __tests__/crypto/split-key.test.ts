@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
   generateSplitKeys,
-  encryptKeyA,
-  decryptKeyA,
-  serializeKeyA,
-  deserializeKeyA,
+  encryptKeyB,
+  decryptKeyB,
+  serializeKeyB,
+  deserializeKeyB,
   deriveMasterKey,
 } from '../../lib/crypto/split-key';
 
@@ -47,39 +47,42 @@ describe('Split-Key Encryption', () => {
     });
   });
 
-  describe('encryptKeyA / decryptKeyA', () => {
-    it('should encrypt and decrypt Key A', () => {
-      const keyA = new Uint8Array(32).fill(42);
+  describe('encryptKeyB / decryptKeyB', () => {
+    it('should encrypt and decrypt KeyB', () => {
+      const keyB = new Uint8Array(32).fill(42);
       const vaultId = 'test-vault-123';
+      const serverSecret = 'test-secret';
 
-      const encrypted = encryptKeyA(keyA, vaultId);
-      const decrypted = decryptKeyA(encrypted.encrypted, encrypted.nonce, vaultId);
+      const encrypted = encryptKeyB(keyB, vaultId, serverSecret);
+      const decrypted = decryptKeyB(encrypted.encrypted, encrypted.iv, vaultId, serverSecret);
 
-      expect(decrypted).toEqual(keyA);
+      expect(decrypted).toEqual(keyB);
     });
 
     it('should fail with wrong vault ID', () => {
-      const keyA = new Uint8Array(32).fill(42);
+      const keyB = new Uint8Array(32).fill(42);
       const vaultId = 'test-vault-123';
+      const serverSecret = 'test-secret';
 
-      const encrypted = encryptKeyA(keyA, vaultId);
+      const encrypted = encryptKeyB(keyB, vaultId, serverSecret);
 
       expect(() => {
-        decryptKeyA(encrypted.encrypted, encrypted.nonce, 'wrong-vault-id');
+        decryptKeyB(encrypted.encrypted, encrypted.iv, 'wrong-vault-id', serverSecret);
       }).toThrow();
     });
   });
 
-  describe('serializeKeyA / deserializeKeyA', () => {
-    it('should serialize and deserialize encrypted Key A', () => {
-      const keyA = new Uint8Array(32).fill(42);
+  describe('serializeKeyB / deserializeKeyB', () => {
+    it('should serialize and deserialize encrypted KeyB', () => {
+      const keyB = new Uint8Array(32).fill(42);
       const vaultId = 'test-vault-123';
+      const serverSecret = 'test-secret';
 
-      const encrypted = encryptKeyA(keyA, vaultId);
-      const serialized = serializeKeyA(encrypted);
-      const deserialized = deserializeKeyA(serialized);
+      const encrypted = encryptKeyB(keyB, vaultId, serverSecret);
+      const serialized = serializeKeyB(encrypted);
+      const deserialized = deserializeKeyB(serialized);
 
-      expect(deserialized.nonce).toEqual(encrypted.nonce);
+      expect(deserialized.iv).toEqual(encrypted.iv);
       expect(deserialized.encrypted).toEqual(encrypted.encrypted);
     });
   });
@@ -87,14 +90,15 @@ describe('Split-Key Encryption', () => {
   describe('End-to-End Split-Key Flow', () => {
     it('should complete full split-key cycle', async () => {
       const vaultId = 'test-vault-e2e';
+      const serverSecret = 'test-secret';
       const { keyA, keyB, masterKey } = await generateSplitKeys();
 
-      const encrypted = encryptKeyA(keyA, vaultId);
-      const serialized = serializeKeyA(encrypted);
+      const encrypted = encryptKeyB(keyB, vaultId, serverSecret);
+      const serialized = serializeKeyB(encrypted);
 
-      const deserialized = deserializeKeyA(serialized);
-      const decryptedKeyA = decryptKeyA(deserialized.encrypted, deserialized.nonce, vaultId);
-      const derivedMasterKey = await deriveMasterKey(decryptedKeyA, keyB);
+      const deserialized = deserializeKeyB(serialized);
+      const decryptedKeyB = decryptKeyB(deserialized.encrypted, deserialized.iv, vaultId, serverSecret);
+      const derivedMasterKey = await deriveMasterKey(keyA, decryptedKeyB);
 
       expect(derivedMasterKey).toEqual(masterKey);
     });

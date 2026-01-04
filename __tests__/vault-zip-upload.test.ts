@@ -1,7 +1,64 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { VaultService } from '../lib/services/vault';
 import { ARGON2_PROFILES } from '../lib/crypto/constants';
 import JSZip from 'jszip';
+
+const mockStorage = new Map<string, Uint8Array>();
+const mockVaultKeys = new Map<string, any>();
+
+// Mock fetch for API calls
+global.fetch = vi.fn((url: string | URL, options?: any) => {
+  const urlStr = typeof url === 'string' ? url : url.toString();
+  
+  if (urlStr.includes('/api/vault/store-key') && options?.method === 'POST') {
+    const body = JSON.parse(options.body);
+    mockVaultKeys.set(body.vaultId, {
+      keyB: body.keyB,
+      encryptedDecoyCID: body.encryptedDecoyCID,
+      encryptedHiddenCID: body.encryptedHiddenCID,
+      nonce: body.nonce
+    });
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ success: true })
+    } as Response);
+  }
+  if (urlStr.includes('/api/vault/get-key') && options?.method === 'POST') {
+    const body = JSON.parse(options.body);
+    const stored = mockVaultKeys.get(body.vaultId);
+    if (!stored) {
+      return Promise.resolve({
+        ok: false,
+        status: 404
+      } as Response);
+    }
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve(stored)
+    } as Response);
+  }
+  return Promise.reject(new Error('Unknown URL'));
+}) as any;
+
+vi.mock('../lib/storage/vault', async () => {
+  const actual = await vi.importActual('../lib/storage/vault');
+  return {
+    ...actual,
+    uploadVault: async (vault: any, credentials: any) => {
+      const decoyCID = `decoy-${Math.random().toString(36).slice(2)}`;
+      const hiddenCID = `hidden-${Math.random().toString(36).slice(2)}`;
+      mockStorage.set(decoyCID, vault.decoyBlob);
+      mockStorage.set(hiddenCID, vault.hiddenBlob);
+      return { decoyCID, hiddenCID, salt: vault.salt };
+    },
+    downloadVault: async (stored: any) => {
+      const decoyBlob = mockStorage.get(stored.decoyCID);
+      const hiddenBlob = mockStorage.get(stored.hiddenCID);
+      if (!decoyBlob || !hiddenBlob) throw new Error('CID not found');
+      return { decoyBlob, hiddenBlob, salt: stored.salt };
+    },
+  };
+});
 
 // %%
 describe('Vault Zip File Upload/Download', () => {

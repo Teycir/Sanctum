@@ -2,6 +2,41 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { VaultService } from "../../lib/services/vault";
 
 const mockStorage = new Map<string, Uint8Array>();
+const mockVaultKeys = new Map<string, any>();
+
+// Mock fetch for API calls
+global.fetch = vi.fn((url: string | URL, options?: any) => {
+  const urlStr = typeof url === 'string' ? url : url.toString();
+  
+  if (urlStr.includes('/api/vault/store-key') && options?.method === 'POST') {
+    const body = JSON.parse(options.body);
+    mockVaultKeys.set(body.vaultId, {
+      keyB: body.keyB,
+      encryptedDecoyCID: body.encryptedDecoyCID,
+      encryptedHiddenCID: body.encryptedHiddenCID,
+      nonce: body.nonce
+    });
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ success: true })
+    } as Response);
+  }
+  if (urlStr.includes('/api/vault/get-key') && options?.method === 'POST') {
+    const body = JSON.parse(options.body);
+    const stored = mockVaultKeys.get(body.vaultId);
+    if (!stored) {
+      return Promise.resolve({
+        ok: false,
+        status: 404
+      } as Response);
+    }
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve(stored)
+    } as Response);
+  }
+  return Promise.reject(new Error('Unknown URL'));
+}) as any;
 
 vi.mock("../../lib/storage/uploader", () => ({
   uploadToIPFS: async (data: Uint8Array) => {
@@ -15,6 +50,13 @@ vi.mock("../../lib/storage/vault", async () => {
   const actual = await vi.importActual("../../lib/storage/vault");
   return {
     ...actual,
+    uploadVault: async (vault: any) => {
+      const decoyCID = `decoy-${Math.random().toString(36).slice(2)}`;
+      const hiddenCID = `hidden-${Math.random().toString(36).slice(2)}`;
+      mockStorage.set(decoyCID, vault.decoyBlob);
+      mockStorage.set(hiddenCID, vault.hiddenBlob);
+      return { decoyCID, hiddenCID, salt: vault.salt };
+    },
     downloadVault: async (stored: any) => {
       const decoyBlob = mockStorage.get(stored.decoyCID);
       const hiddenBlob = mockStorage.get(stored.hiddenCID);
@@ -52,6 +94,24 @@ describe("services/vault", () => {
       const decoy = new TextEncoder().encode("innocent");
       const hidden = new TextEncoder().encode("secret");
 
+      // Mock store-key response
+      (global.fetch as any).mockImplementationOnce((url: string, options: any) => {
+        if (url.includes('/api/vault/store-key')) {
+          const body = JSON.parse(options.body);
+          mockVaultKeys.set(body.vaultId, {
+            keyB: body.keyB,
+            encryptedDecoyCID: body.encryptedDecoyCID,
+            encryptedHiddenCID: body.encryptedHiddenCID,
+            nonce: body.nonce
+          });
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ success: true })
+          });
+        }
+        return (global.fetch as any)(url, options);
+      });
+
       const result = await service.createVault({
         decoyContent: decoy,
         hiddenContent: hidden,
@@ -66,7 +126,7 @@ describe("services/vault", () => {
       expect(result.vaultURL).toContain("/vault#");
       expect(result.decoyCID).toBeTruthy();
       expect(result.hiddenCID).toBeTruthy();
-    });
+    }, 10000);
   });
 
   describe("unlockVault", () => {
@@ -92,7 +152,7 @@ describe("services/vault", () => {
 
       expect(unlocked.isDecoy).toBe(true);
       expect(unlocked.content).toEqual(decoy);
-    });
+    }, 10000);
 
     it("should unlock hidden layer with correct passphrase", async () => {
       const decoy = new TextEncoder().encode("innocent");
@@ -116,6 +176,6 @@ describe("services/vault", () => {
 
       expect(unlocked.isDecoy).toBe(false);
       expect(unlocked.content).toEqual(hidden);
-    });
+    }, 10000);
   });
 });

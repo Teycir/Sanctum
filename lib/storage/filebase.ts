@@ -249,8 +249,8 @@ export class FilebaseClient {
   async download(cid: string): Promise<Uint8Array> {
     const gateways = [
       `https://ipfs.filebase.io/ipfs/${cid}`,
-      `https://ipfs.io/ipfs/${cid}`,
       `https://dweb.link/ipfs/${cid}`,
+      `https://ipfs.io/ipfs/${cid}`,
     ];
 
     const errors: string[] = [];

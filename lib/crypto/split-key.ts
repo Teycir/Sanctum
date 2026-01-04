@@ -8,14 +8,14 @@ import { randomBytes } from '@noble/hashes/utils';
 import { base64UrlEncode, base64UrlDecode } from './utils';
 
 export interface SplitKeyResult {
-  readonly keyA: Uint8Array; // Stored on server (encrypted)
-  readonly keyB: Uint8Array; // Embedded in URL hash
-  readonly masterKey: Uint8Array; // Combined key for encryption
+  readonly keyA: Uint8Array; // Given to user (in URL)
+  readonly keyB: Uint8Array; // Stored encrypted in DB
+  readonly masterKey: Uint8Array; // Derived from KeyA + KeyB
 }
 
-export interface EncryptedKeyA {
+export interface EncryptedKeyB {
   readonly encrypted: Uint8Array;
-  readonly nonce: Uint8Array;
+  readonly iv: Uint8Array;
 }
 
 /**
@@ -23,20 +23,16 @@ export interface EncryptedKeyA {
  * @returns Split keys and master key
  */
 export async function generateSplitKeys(): Promise<SplitKeyResult> {
-  // Generate two random 32-byte keys
   const keyA = randomBytes(32);
   const keyB = randomBytes(32);
-
-  // Derive master key using HKDF-like approach
   const masterKey = await deriveMasterKey(keyA, keyB);
-
   return { keyA, keyB, masterKey };
 }
 
 /**
- * Derive master key from Key A + Key B using SHA-256
- * @param keyA Key from server
- * @param keyB Key from URL
+ * Derive master key from KeyA + KeyB using HKDF-like approach
+ * @param keyA Key from URL
+ * @param keyB Key from database
  * @returns Master encryption key
  */
 export async function deriveMasterKey(
@@ -47,66 +43,76 @@ export async function deriveMasterKey(
     throw new Error('Both keys must be 32 bytes');
   }
 
-  // Concatenate keys
   const combined = new Uint8Array(64);
   combined.set(keyA, 0);
   combined.set(keyB, 32);
 
-  // Hash to derive master key
   return sha256(combined);
 }
 
 /**
- * Encrypt Key A for server storage using vault ID as encryption key
- * @param keyA Key A to encrypt
+ * Encrypt KeyB for database storage using HKDF-derived key
+ * 
+ * SECURITY: Follows TimeSeal pattern - KeyB encrypted with key derived from
+ * vaultId + server secret. Attacker needs: database access + server secret + KeyA from URL.
+ * 
+ * @param keyB KeyB to encrypt
  * @param vaultId Unique vault identifier
- * @returns Encrypted Key A with nonce
+ * @param serverSecret Server-side secret from environment
+ * @returns Encrypted KeyB with IV
  */
-export function encryptKeyA(keyA: Uint8Array, vaultId: string): EncryptedKeyA {
-  // Derive encryption key from vault ID
-  const idKey = sha256(new TextEncoder().encode(vaultId));
-  const nonce = randomBytes(24);
+export function encryptKeyB(
+  keyB: Uint8Array,
+  vaultId: string,
+  serverSecret: string
+): EncryptedKeyB {
+  const combined = new TextEncoder().encode(serverSecret + vaultId);
+  const encryptionKey = sha256(combined);
+  const iv = randomBytes(24);
   
-  const cipher = xchacha20poly1305(idKey, nonce);
-  const encrypted = cipher.encrypt(keyA);
+  const cipher = xchacha20poly1305(encryptionKey, iv);
+  const encrypted = cipher.encrypt(keyB);
 
-  return { encrypted, nonce };
+  return { encrypted, iv };
 }
 
 /**
- * Decrypt Key A from server storage
- * @param encrypted Encrypted Key A
- * @param nonce Nonce used for encryption
+ * Decrypt KeyB from database storage
+ * @param encrypted Encrypted KeyB
+ * @param iv IV used for encryption
  * @param vaultId Unique vault identifier
- * @returns Decrypted Key A
+ * @param serverSecret Server-side secret from environment
+ * @returns Decrypted KeyB
  */
-export function decryptKeyA(
+export function decryptKeyB(
   encrypted: Uint8Array,
-  nonce: Uint8Array,
-  vaultId: string
+  iv: Uint8Array,
+  vaultId: string,
+  serverSecret: string
 ): Uint8Array {
-  const idKey = sha256(new TextEncoder().encode(vaultId));
-  const cipher = xchacha20poly1305(idKey, nonce);
+  const combined = new TextEncoder().encode(serverSecret + vaultId);
+  const encryptionKey = sha256(combined);
+  const cipher = xchacha20poly1305(encryptionKey, iv);
   
   return cipher.decrypt(encrypted);
 }
 
 /**
- * Serialize encrypted Key A for storage
+ * Serialize encrypted KeyB for storage
  */
-export function serializeKeyA(encryptedKeyA: EncryptedKeyA): string {
-  const combined = new Uint8Array(encryptedKeyA.nonce.length + encryptedKeyA.encrypted.length);
-  combined.set(encryptedKeyA.nonce, 0);
-  combined.set(encryptedKeyA.encrypted, encryptedKeyA.nonce.length);
+export function serializeKeyB(encryptedKeyB: EncryptedKeyB): string {
+  const combined = new Uint8Array(encryptedKeyB.iv.length + encryptedKeyB.encrypted.length);
+  combined.set(encryptedKeyB.iv, 0);
+  combined.set(encryptedKeyB.encrypted, encryptedKeyB.iv.length);
   return base64UrlEncode(combined);
 }
 
 /**
- * Deserialize encrypted Key A from storage
+ * Deserialize encrypted KeyB from storage
  */
-export function deserializeKeyA(serialized: string): EncryptedKeyA {
+export function deserializeKeyB(serialized: string): EncryptedKeyB {
   const combined = base64UrlDecode(serialized);
-  const nonce = combined.slice(0, 24);
+  const iv = combined.slice(0, 24);
   const encrypted = combined.slice(24);
-  return { nonce, encrypted };
+  return { iv, encrypted };
 }

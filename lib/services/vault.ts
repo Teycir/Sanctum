@@ -17,6 +17,16 @@ import {
   UnlockVaultParamsSchema,
 } from "../validation/schemas";
 import type { LayerContent } from "../duress/layers";
+import {
+  generateSplitKeys,
+  deriveMasterKey,
+  encryptKeyB,
+  decryptKeyB,
+  serializeKeyB,
+  deserializeKeyB,
+} from "../crypto/split-key";
+import { xchacha20poly1305 } from '@noble/ciphers/chacha';
+import { randomBytes } from '@noble/hashes/utils';
 
 export interface CreateVaultParams {
   readonly decoyContent?: Uint8Array;
@@ -76,7 +86,6 @@ export class VaultService {
       hidden: validated.hiddenContent,
     };
 
-    // Use worker for non-blocking Argon2
     const vault = await this.crypto.createHiddenVault({
       content,
       passphrase: validated.passphrase,
@@ -89,21 +98,59 @@ export class VaultService {
 
     const stored = await uploadVault(vault, params.ipfsCredentials);
     
-    // Add filenames to metadata
-    const storedWithFilenames = {
-      ...stored,
-      decoyFilename: params.decoyFilename,
-      hiddenFilename: params.hiddenFilename
-    };
+    // Generate split keys (TimeSeal pattern)
+    const { keyA, keyB, masterKey } = await generateSplitKeys();
+    const vaultId = crypto.randomUUID();
     
-    const metadata = serializeVaultMetadata(storedWithFilenames);
-    const encodedMetadata = base64UrlEncode(metadata);
+    // Encrypt KeyB with server-side secret (server will do this)
+    // Client only sends KeyB, server encrypts it with VAULT_ENCRYPTION_SECRET
+    
+    // Encrypt CIDs with master key (separate nonces for each CID)
+    const decoyNonce = randomBytes(24);
+    const hiddenNonce = randomBytes(24);
+    const decoyCipher = xchacha20poly1305(masterKey, decoyNonce);
+    const hiddenCipher = xchacha20poly1305(masterKey, hiddenNonce);
+    const encryptedDecoyCID = decoyCipher.encrypt(new TextEncoder().encode(stored.decoyCID));
+    const encryptedHiddenCID = hiddenCipher.encrypt(new TextEncoder().encode(stored.hiddenCID));
+    
+    // Combine nonces for storage
+    const combinedNonces = new Uint8Array(48);
+    combinedNonces.set(decoyNonce, 0);
+    combinedNonces.set(hiddenNonce, 24);
+    
+    // Store KeyB + encrypted CIDs on server (server will encrypt KeyB)
+    const storeResponse = await fetch('/api/vault/store-key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vaultId,
+        keyB: base64UrlEncode(keyB),
+        encryptedDecoyCID: base64UrlEncode(encryptedDecoyCID),
+        encryptedHiddenCID: base64UrlEncode(encryptedHiddenCID),
+        salt: base64UrlEncode(vault.salt),
+        nonce: base64UrlEncode(combinedNonces),
+      }),
+    });
+    
+    if (!storeResponse.ok) {
+      throw new Error('Failed to store vault metadata');
+    }
+    
+    // Embed KeyA + vaultId in URL hash
+    const urlData = {
+      vaultId,
+      keyA: base64UrlEncode(keyA),
+      salt: base64UrlEncode(vault.salt),
+      decoyFilename: params.decoyFilename,
+      hiddenFilename: params.hiddenFilename,
+    };
+    const encodedData = base64UrlEncode(new TextEncoder().encode(JSON.stringify(urlData)));
 
     const baseURL =
       globalThis.window === undefined
         ? ""
         : globalThis.window.location.origin;
-    const vaultURL = `${baseURL}/vault#${encodedMetadata}`;
+    const vaultURL = `${baseURL}/vault#${encodedData}`;
 
     return {
       vaultURL,
@@ -131,13 +178,57 @@ export class VaultService {
       throw new Error("Invalid vault URL: missing metadata");
     }
 
-    const metadata = base64UrlDecode(hash);
-    const stored = deserializeVaultMetadata(metadata);
+    // Decode URL data (contains vaultId + KeyA + salt)
+    const urlDataBytes = base64UrlDecode(hash);
+    const urlDataStr = new TextDecoder().decode(urlDataBytes);
+    const urlData = JSON.parse(urlDataStr);
+    
+    const { vaultId, keyA: keyAEncoded, salt: saltEncoded, decoyFilename, hiddenFilename } = urlData;
+    const keyA = base64UrlDecode(keyAEncoded);
+    const salt = base64UrlDecode(saltEncoded);
+    
+    // Fetch decrypted KeyB and encrypted CIDs from server
+    // Server decrypts KeyB using VAULT_ENCRYPTION_SECRET before sending
+    const fetchResponse = await fetch('/api/vault/get-key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vaultId }),
+    });
+    if (!fetchResponse.ok) {
+      throw new Error('Vault not found');
+    }
+    const { keyB: keyBEncoded, encryptedDecoyCID, encryptedHiddenCID, nonce } = await fetchResponse.json();
+    
+    // Decode KeyB (already decrypted by server)
+    const keyB = base64UrlDecode(keyBEncoded);
+    
+    // Derive master key and decrypt CIDs
+    const masterKey = await deriveMasterKey(keyA, keyB);
+    const combinedNonces = base64UrlDecode(nonce);
+    const decoyNonce = combinedNonces.slice(0, 24);
+    const hiddenNonce = combinedNonces.slice(24, 48);
+    
+    const decoyCipher = xchacha20poly1305(masterKey, decoyNonce);
+    const hiddenCipher = xchacha20poly1305(masterKey, hiddenNonce);
+    
+    const decoyCID = new TextDecoder().decode(
+      decoyCipher.decrypt(base64UrlDecode(encryptedDecoyCID))
+    );
+    const hiddenCID = new TextDecoder().decode(
+      hiddenCipher.decrypt(base64UrlDecode(encryptedHiddenCID))
+    );
+    
+    // Reconstruct stored metadata for download
+    const stored = {
+      decoyCID,
+      hiddenCID,
+      salt,
+      decoyFilename,
+      hiddenFilename,
+    };
 
-    // Download directly from Pinata gateway (no JWT needed for public reads)
     const vault = await downloadVault(stored);
 
-    // Use worker for non-blocking Argon2
     const { content, isDecoy } = await this.crypto.unlockHiddenVault(
       vault,
       validated.passphrase,

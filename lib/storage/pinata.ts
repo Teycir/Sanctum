@@ -99,9 +99,9 @@ export class PinataClient {
     if (!cid?.trim()) throw new Error('CID cannot be empty')
 
     const gateways = [
-      'https://ipfs.io/ipfs',
       `${this.gateway}/ipfs`,
-      'https://dweb.link/ipfs'
+      'https://dweb.link/ipfs',
+      'https://ipfs.io/ipfs'
     ];
 
     for (const gateway of gateways) {

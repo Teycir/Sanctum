@@ -1,14 +1,14 @@
 .container {
   position: fixed;
-  top: 20px;
-  left: 20px;
-  padding: 8px 16px;
+  top: 60px;
+  right: 20px;
+  padding: 4px 8px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  font-size: 10px;
+  border-radius: 6px;
+  font-size: 9px;
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
   opacity: 0.5;
   transition: all 0.3s ease;
@@ -24,7 +24,7 @@
 
 .separator {
   opacity: 0.2;
-  font-size: 12px;
+  font-size: 10px;
   color: rgba(255, 255, 255, 0.3);
 }
 
@@ -47,12 +47,12 @@
   content: attr(data-tooltip);
   position: absolute;
   top: calc(100% + 8px);
-  left: 0;
-  padding: 6px 10px;
+  right: -8px;
+  padding: 4px 8px;
   background: rgba(0, 0, 0, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  font-size: 10px;
+  border-radius: 4px;
+  font-size: 9px;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
@@ -68,11 +68,11 @@
 
 @media (max-width: 768px) {
   .container {
-    top: 10px;
-    left: 10px;
-    padding: 6px 12px;
-    font-size: 9px;
-    gap: 8px;
+    top: 50px;
+    right: 10px;
+    padding: 3px 6px;
+    font-size: 8px;
+    gap: 6px;
   }
   
   .separator {
@@ -84,18 +84,19 @@
   }
   
   .feature::after {
-    font-size: 9px;
-    padding: 5px 8px;
+    font-size: 8px;
+    padding: 3px 6px;
+    right: -6px;
   }
 }
 
 @media (max-width: 480px) {
   .container {
-    top: 8px;
-    left: 8px;
-    padding: 5px 10px;
-    font-size: 8px;
-    gap: 6px;
+    top: 45px;
+    right: 8px;
+    padding: 2px 5px;
+    font-size: 7px;
+    gap: 4px;
   }
   
   .separator {

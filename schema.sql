@@ -1,15 +1,13 @@
 -- Cloudflare D1 Schema for Sanctum Split-Key Storage
--- Defense in Depth: Both URL-based (Key B) AND server-based (Key A) storage
+-- Defense in Depth: Split-key architecture (KeyA in URL + KeyB encrypted in DB)
 
 CREATE TABLE IF NOT EXISTS vault_keys (
   vault_id TEXT PRIMARY KEY,
-  encrypted_key_a TEXT NOT NULL,           -- Encrypted with Key B (from URL)
+  encrypted_key_b TEXT NOT NULL,           -- KeyB encrypted with SHA256(server secret + vaultId)
   encrypted_decoy_cid TEXT NOT NULL,       -- Encrypted CID for decoy layer
-  encrypted_hidden_cid TEXT,               -- Encrypted CID for hidden layer (NULL if simple vault)
-  salt TEXT NOT NULL,                      -- Argon2id salt
-  master_nonce TEXT NOT NULL,              -- XChaCha20 nonce
-  cid_encryption_key TEXT NOT NULL,        -- Key for CID encryption
-  mode TEXT NOT NULL DEFAULT 'simple',     -- 'simple' | 'duress'
+  encrypted_hidden_cid TEXT NOT NULL,      -- Encrypted CID for hidden layer
+  salt TEXT NOT NULL,                      -- Salt for Argon2id
+  nonce TEXT NOT NULL,                     -- Combined nonces for CID encryption (48 bytes)
   created_at INTEGER NOT NULL
 );
 

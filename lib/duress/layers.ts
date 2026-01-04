@@ -9,6 +9,7 @@ import { encrypt, decrypt } from "../crypto/core";
 import { assembleBlob } from "../crypto/padding";
 import { selectVaultSize, wipeMemory, encodeText } from "../crypto/utils";
 import type { Argon2Profile } from "../crypto/constants";
+import { constantTimeSelect } from "./timing";
 
 export interface LayerContent {
   readonly decoy: Uint8Array;
@@ -115,7 +116,7 @@ export interface UnlockResult {
 }
 
 /**
- * Unlock hidden vault layer
+ * Unlock hidden vault layer with constant-time execution
  * @param result Hidden vault result
  * @param passphrase User passphrase (empty for decoy)
  * @returns Decrypted layer content with isDecoy flag
@@ -125,13 +126,64 @@ export function unlockHiddenVault(
   result: HiddenVaultResult,
   passphrase: string,
 ): UnlockResult {
-  try {
-    const content = decrypt({ blob: result.decoyBlob, passphrase });
-    return { content, isDecoy: true };
-  } catch {
-    // If decoy decryption fails, try hidden layer
-    const hiddenPassphrase: string = deriveLayerPassphrase(passphrase, 1, result.salt);
-    const content = decrypt({ blob: result.hiddenBlob, passphrase: hiddenPassphrase });
-    return { content, isDecoy: false };
+  const hiddenPassphrase: string = deriveLayerPassphrase(passphrase, 1, result.salt);
+  
+  // Always attempt both decryptions to prevent timing attacks
+  const decryptionResults = constantTimeSelect(
+    true,
+    () => {
+      let decoyContent: Uint8Array | null = null;
+      let hiddenContent: Uint8Array | null = null;
+      let decoySuccess = false;
+      let hiddenSuccess = false;
+      
+      try {
+        decoyContent = decrypt({ blob: result.decoyBlob, passphrase });
+        decoySuccess = true;
+      } catch {
+        decoySuccess = false;
+      }
+      
+      try {
+        hiddenContent = decrypt({ blob: result.hiddenBlob, passphrase: hiddenPassphrase });
+        hiddenSuccess = true;
+      } catch {
+        hiddenSuccess = false;
+      }
+      
+      return { decoyContent, hiddenContent, decoySuccess, hiddenSuccess };
+    },
+    () => {
+      let decoyContent: Uint8Array | null = null;
+      let hiddenContent: Uint8Array | null = null;
+      let decoySuccess = false;
+      let hiddenSuccess = false;
+      
+      try {
+        hiddenContent = decrypt({ blob: result.hiddenBlob, passphrase: hiddenPassphrase });
+        hiddenSuccess = true;
+      } catch {
+        hiddenSuccess = false;
+      }
+      
+      try {
+        decoyContent = decrypt({ blob: result.decoyBlob, passphrase });
+        decoySuccess = true;
+      } catch {
+        decoySuccess = false;
+      }
+      
+      return { decoyContent, hiddenContent, decoySuccess, hiddenSuccess };
+    }
+  );
+  
+  // Return result based on which succeeded
+  if (decryptionResults.decoySuccess) {
+    return { content: decryptionResults.decoyContent!, isDecoy: true };
   }
+  if (decryptionResults.hiddenSuccess) {
+    return { content: decryptionResults.hiddenContent!, isDecoy: false };
+  }
+  
+  throw new Error('Invalid passphrase');
 }

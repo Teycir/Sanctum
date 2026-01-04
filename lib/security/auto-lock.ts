@@ -8,7 +8,7 @@ export interface AutoLockConfig {
 
 const DEFAULT_CONFIG: AutoLockConfig = {
   timeoutMs: SECURITY.autoLockTimeout,
-  events: ["mousedown", "keydown", "scroll", "touchstart"],
+  events: ["mousedown", "keydown", "touchstart"],
 };
 
 /**

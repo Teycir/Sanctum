@@ -198,13 +198,13 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 ### Security Features
 
 - **Plausible Deniability** - No metadata reveals hidden layers
-- **Split-Key Architecture** - Key A (server, encrypted) + Key B (URL hash)
+- **Split-Key Architecture** - KeyA (URL) + KeyB (encrypted in DB with HKDF)
+- **Timing Attack Prevention** - Constant-time decryption prevents layer detection
+- **CID Encryption** - IPFS CIDs encrypted with master key (KeyA + KeyB)
 - **Auto-Lock** - Locks vault after 5 minutes of inactivity
 - **Panic Key** - Double-press Escape for instant lockout
 - **Secure Clipboard** - Auto-clears after 60 seconds
 - **Rate Limiting** - 5 attempts/min per vault, 50/hour per fingerprint
-- **Timing Attack Prevention** - Constant-time operations
-- **CID Encryption** - Prevents direct IPFS access bypass
 - **CSRF Protection** - Origin/referer validation
 - **Security Headers** - X-Frame-Options, CSP, nosniff
 

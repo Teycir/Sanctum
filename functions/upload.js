@@ -1,4 +1,4 @@
-export default {
+const uploadHandler = {
   async fetch(request, env) {
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
@@ -16,13 +16,43 @@ export default {
     }
 
     try {
+      const contentType = request.headers.get('content-type') || '';
+      
+      // Binary upload (efficient)
+      if (contentType.includes('application/octet-stream')) {
+        const provider = request.headers.get('x-provider');
+        const jwt = request.headers.get('x-pinata-jwt');
+        const accessKey = request.headers.get('x-filebase-access-key');
+        const secretKey = request.headers.get('x-filebase-secret-key');
+        const bucket = request.headers.get('x-filebase-bucket') || 'sanctum-vaults';
+        
+        const data = await request.arrayBuffer();
+        
+        let result;
+        if (provider === 'pinata') {
+          result = await uploadToPinata(new Uint8Array(data), jwt);
+        } else if (provider === 'filebase') {
+          result = await uploadToFilebase(new Uint8Array(data), { accessKey, secretKey, bucket });
+        } else {
+          return new Response('Invalid provider', { status: 400 });
+        }
+        
+        return new Response(JSON.stringify(result), {
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      }
+      
+      // Legacy JSON array upload (deprecated)
       const { provider, data, credentials } = await request.json();
 
       let result;
       if (provider === 'pinata') {
-        result = await uploadToPinata(data, credentials.jwt);
+        result = await uploadToPinata(new Uint8Array(data), credentials.jwt);
       } else if (provider === 'filebase') {
-        result = await uploadToFilebase(data, credentials);
+        result = await uploadToFilebase(new Uint8Array(data), credentials);
       } else {
         return new Response('Invalid provider', { status: 400 });
       }
@@ -45,9 +75,11 @@ export default {
   },
 };
 
-async function uploadToPinata(data, jwt) {
+export default uploadHandler;
+
+async function uploadToPinata(dataArray, jwt) {
   const formData = new FormData();
-  const blob = new Blob([new Uint8Array(data)], { type: 'application/octet-stream' });
+  const blob = new Blob([dataArray], { type: 'application/octet-stream' });
   formData.append('file', blob, `sanctum-vault-${Date.now()}`);
   
   const metadata = JSON.stringify({
@@ -71,7 +103,7 @@ async function uploadToPinata(data, jwt) {
   return { cid: result.IpfsHash };
 }
 
-async function uploadToFilebase(data, credentials) {
+async function uploadToFilebase(dataArray, credentials) {
   // Implement Filebase S3 upload with proper signing
   const { accessKey, secretKey, bucket = 'sanctum-vaults' } = credentials;
   
@@ -85,7 +117,7 @@ async function uploadToFilebase(data, credentials) {
   const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, '');
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
   
-  const payloadHash = await sha256(new Uint8Array(data));
+  const payloadHash = await sha256(dataArray);
   
   const headers = {
     'host': 's3.filebase.com',
@@ -129,7 +161,7 @@ async function uploadToFilebase(data, credentials) {
   const response = await fetch(url, {
     method: 'PUT',
     headers,
-    body: new Uint8Array(data)
+    body: dataArray
   });
   
   if (!response.ok) {

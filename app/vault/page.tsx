@@ -121,7 +121,7 @@ function UnlockedContent({
           }}
         >
           <span style={{ fontSize: 20 }}>✓</span>
-          <span>Content Unlocked</span>
+          <span>Content Unlocked{isDecoy ? " (Decoy Layer)" : ""}</span>
         </div>
 
         {isFile ? (
@@ -415,7 +415,7 @@ export default function ViewVault() {
       timeout = setTimeout(() => setIsBlurred(true), INACTIVITY_TIMEOUT_MS);
     };
     resetTimer();
-    const events = ["mousedown", "keydown", "scroll", "touchstart"];
+    const events = ["mousedown", "keydown", "touchstart"];
     events.forEach((e) => globalThis.window.addEventListener(e, resetTimer));
     return () => {
       clearTimeout(timeout);
@@ -426,38 +426,14 @@ export default function ViewVault() {
   }, []);
 
   useEffect(() => {
-    const validateVault = async () => {
-      if (globalThis.window === undefined) return;
+    if (globalThis.window === undefined) return;
 
-      const hash = globalThis.window.location.hash.slice(1);
-      if (!hash) {
-        setError("Invalid vault URL: missing vault ID");
-        setVaultExists(false);
-        setValidating(false);
-        return;
-      }
-
-      try {
-        const { validateVaultExists } =
-          await import("@/lib/validation/vault-exists");
-        const vaultURL = `${globalThis.window.location.origin}/vault#${hash}`;
-        const result = await validateVaultExists(vaultURL);
-
-        if (!result.exists) {
-          setError(result.error || "Vault not found");
-          setVaultExists(false);
-        } else {
-          setVaultExists(true);
-        }
-      } catch {
-        // If validation fails, allow user to try anyway
-        setVaultExists(true);
-      } finally {
-        setValidating(false);
-      }
-    };
-
-    validateVault();
+    const hash = globalThis.window.location.hash.slice(1);
+    if (!hash) {
+      setError("Invalid vault URL: missing vault ID");
+      setVaultExists(false);
+    }
+    setValidating(false);
   }, []);
 
   const handleUnlock = async () => {
@@ -465,7 +441,8 @@ export default function ViewVault() {
 
     const hash = globalThis.window.location.hash.slice(1);
     if (!hash) {
-      setError("Invalid vault URL");
+      setError("Invalid vault URL: missing vault ID");
+      setVaultExists(false);
       return;
     }
 

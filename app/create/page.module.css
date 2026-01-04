@@ -207,8 +207,11 @@
     font-size: 9px;
     padding: 8px;
   }
-  
-  .passwordHint {
-    font-size: 10px;
-  }
+}
+
+.passwordHint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  margin-top: 8px;
 }

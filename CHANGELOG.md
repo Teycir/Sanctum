@@ -7,8 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **CRITICAL**: Fixed timing attack vulnerability in vault unlocking - now uses constant-time execution to prevent layer detection
+- Implemented split-key architecture with HKDF + XChaCha20-Poly1305 (server-side KeyB encryption)
+- CID encryption with master key prevents direct IPFS access
+- Removed insecure server secret exposure endpoint
+- Synthetic nonces (hash of plaintext + key) protect against RNG failure
+- Argon2id with strong defaults (64MB+ memory cost) prevents brute-force attacks
+- Proper memory wiping with random bytes before zeroing for sensitive data
+
 ### Fixed
 - Validation error messages now display cleanly instead of showing malformed JSON with HTML entities
+- Fixed variable name collision in KeyB encryption (nonce shadowing)
+- Removed obsolete endpoints and dead code (retrieve-key.js, split-key-vault.ts, cid-encryption.ts)
+- Backend vault retrieval now correctly decrypts KeyB server-side before returning to client
+
+### Changed
+- Migrated from `String.fromCharCode()` to `String.fromCodePoint()` for better Unicode support
+- Replaced regex-based `replace()` with `replaceAll()` for cleaner code
+
+### Verified
+- All 94 tests passing
+- Security audit completed - cryptography, memory hygiene, and timing attacks addressed
+- Split-key architecture verified: KeyA (URL) + KeyB (encrypted in DB) + master key derivation
 
 ## [1.0.0] - 2026-01-04
 

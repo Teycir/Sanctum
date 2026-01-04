@@ -91,6 +91,8 @@ export function selectVaultSize(contentLength: number): number {
  * @returns Profile name
  */
 export function detectArgonProfile(): Argon2ProfileName {
+  if (typeof navigator === 'undefined') return 'desktop'; // Default for SSR
+  
   const memory = (navigator as { deviceMemory?: number }).deviceMemory;
   
   if (memory && memory < 4) return 'mobile';
