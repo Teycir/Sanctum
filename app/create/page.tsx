@@ -565,7 +565,7 @@ export default function CreateVault() {
                 />
                 <input
                   type="file"
-                  accept=".zip,.rar"
+                  accept=".zip,.rar,application/zip,application/x-rar-compressed"
                   disabled={!!decoyContent.trim()}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -700,7 +700,7 @@ export default function CreateVault() {
                 />
                 <input
                   type="file"
-                  accept=".zip,.rar"
+                  accept=".zip,.rar,application/zip,application/x-rar-compressed"
                   disabled={!!hiddenContent.trim()}
                   onChange={(e) => {
                     const file = e.target.files?.[0];

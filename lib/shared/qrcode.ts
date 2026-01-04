@@ -13,8 +13,8 @@ export async function generateVaultQR(
 ): Promise<string> {
   const {
     errorCorrectionLevel = 'H', // High error correction for damaged codes
-    width = 300,
-    margin = 4,
+    width = 270,
+    margin = 3,
   } = options;
 
   return QRCode.toDataURL(vaultLink, {

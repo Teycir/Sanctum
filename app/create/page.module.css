@@ -96,7 +96,7 @@
 }
 
 .successContainer {
-  padding: 20px;
+  padding: 18px;
   background: rgba(0, 255, 0, 0.1);
   border: 1px solid rgba(0, 255, 0, 0.3);
   border-radius: 8px;
@@ -105,8 +105,8 @@
 }
 
 .qrCode {
-  width: min(200px, 90vw);
-  height: min(200px, 90vw);
+  width: min(180px, 90vw);
+  height: min(180px, 90vw);
   border: 2px solid rgba(0, 255, 0, 0.3);
   border-radius: 8px;
 }
