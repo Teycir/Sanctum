@@ -20,13 +20,15 @@
 ## 📑 Table of Contents
 
 - [Overview](#-overview)
+- [Quick Start](#-quick-start)
 - [Operating Modes](#-operating-modes)
 - [Architecture](#️-architecture)
-- [Security](#️-security-attack-scenarios)
-- [Storage Providers](#-supported-storage-providers)
-- [Tech Stack](#️-tech-stack)
-- [Quick Start](#-quick-start)
-- [Documentation](#-documentation)
+- [Security Attack Scenarios](#️-security-attack-scenarios)
+- [Storage Providers](#-storage-providers)
+- [FAQ](#-faq)
+- [Project Status](#-project-status)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ---
 
@@ -41,13 +43,14 @@
 ### Key Features
 
 - 🎭 **Plausible Deniability** - Hidden layers indistinguishable from decoy content
-- 🌐 **Decentralized Storage** - Data pinned on IPFS via user-provided free services  
-- 🔑 **Split-Key Encryption** - AES-GCM-256 with keys split between server and URL
-- 🚫 **Zero Server Trust** - All crypto operations happen in your browser
-- 💰 **100% Free** - No credit card, no paid services, stack multiple free tiers
-- 🔒 **Auto-Lock** - Automatic lockout after 5 minutes of inactivity
-- ⚡ **Panic Key** - Double-press Escape for instant emergency lockout
-- 📋 **Secure Clipboard** - Auto-clears sensitive data after 60 seconds
+- 🌐 **Decentralized Storage** - Data pinned on IPFS via free services (Pinata/Filebase)
+- 🔑 **XChaCha20-Poly1305** - Military-grade encryption with split-key architecture
+- 🚫 **Zero Server Trust** - All crypto operations in browser, keys never touch server
+- 💰 **100% Free** - No credit card required, stack multiple free tiers
+- 🔒 **Auto-Lock** - Locks after 5 minutes of inactivity
+- ⚡ **Panic Key** - Double-press Escape for instant lockout
+- 📋 **Secure Clipboard** - Auto-clears after 60 seconds
+- 📦 **File Support** - Upload .zip/.rar archives up to 25MB
 
 ---
 
@@ -55,7 +58,7 @@
 
 ### For Users
 
-1. Visit [duress.vault](https://duress.vault) (coming soon)
+1. Visit [sanctum-vault.pages.dev](https://sanctum-vault.pages.dev)
 2. Configure Pinata or Filebase (free IPFS providers)
 3. Create your vault with optional decoy content
 4. Set passphrase for hidden layer
@@ -78,7 +81,7 @@ npx wrangler login
 npm run dev
 ```
 
-See [QUICK-START.md](./QUICK-START.md) for detailed setup instructions.
+See [QUICK-START.md](./docs/QUICK-START.md) for detailed setup instructions.
 
 ## 📚 Documentation
 
@@ -102,9 +105,9 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 **Use Case:** $5 wrench attacks, device seizures, coercion scenarios.
 
 **How it works:**
-- **Without passphrase** → Shows decoy (innocent files, small funded wallet)
-- **With correct passphrase** → Shows hidden layer (real secrets)
-- **Single CID** → Impossible to prove hidden layer exists
+- **Without passphrase (or decoy passphrase)** → Shows decoy layer
+- **With hidden passphrase** → Shows hidden layer (real secrets)
+- **Two separate CIDs** → Each layer stored independently on IPFS
 
 ---
 
@@ -112,7 +115,7 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 
 ### Technology Stack
 
-- **Frontend**: Next.js 14 + React + Web Crypto API
+- **Frontend**: Next.js 15 + React + Web Crypto API
 - **Hosting**: Cloudflare Pages (static site, free tier)
 - **Database**: Cloudflare D1 (split-key storage)
 - **Cryptography**: @noble/ciphers + @noble/hashes (XChaCha20-Poly1305, Argon2id)
@@ -157,12 +160,11 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 **✅ YES, BY DESIGN.** Reveal the decoy layer. The adversary:
 - Sees funded wallet + innocent files
 - **Cannot prove** hidden layers exist
-- Has no metadata indicating additional content
 - Cryptographically indistinguishable from simple vault
 
 ### "What if they analyze the encrypted blob size?"
 
-**❌ NO.** All layers are encrypted and concatenated into a single blob. Size analysis reveals nothing about layer count or content.
+**✅ MITIGATED.** Each layer is padded to standard sizes, making size analysis unreliable.
 
 ### "Can they brute-force the passphrase?"
 
@@ -170,45 +172,19 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 
 ### "What if they seize the IPFS providers?"
 
-**✅ SAFE.** Data is triple-encrypted:
-1. Passphrase encryption (user secret)
-2. Master key encryption (Key A + Key B)
-3. CID storage encryption (prevents direct access)
-
-Providers only see encrypted blobs. Without vault access through our API, decryption is impossible.
-
-### "Can they force the server to reveal Key A?"
-
-**❌ NO.** Key A is encrypted and stored on server. Key B is in the URL hash, never sent to server. Server only has encrypted Key A fragment, which requires Key B (in URL) to decrypt.
+**✅ SAFE.** Data is encrypted before upload. Providers only see encrypted blobs. Without your passphrase and vault link, decryption is impossible.
 
 ### "What if they compromise Cloudflare Workers?"
 
-**⚠️ LIMITED IMPACT.** Attacker gets:
-- Encrypted Key A fragments (need Key B from URL)
-- Vault metadata (CID list, mode)
-- **Cannot get**: Passphrases, decrypted content, Key B
-
-### "Can timing attacks reveal hidden layers?"
-
-**❌ NO.** Constant-time operations prevent timing-based information leakage. Decoy and hidden decryption take identical time.
+**⚠️ LIMITED IMPACT.** Attacker gets encrypted metadata only. Cannot get: Passphrases, decrypted content, or Key B (in URL).
 
 ### "What if I lose the vault link?"
 
-**💀 LOST FOREVER.** Key B is in the URL hash. No Key B = No decryption. **Save your links securely.**
-
-### "Can the admin/creator decrypt my vault?"
-
-**❌ NO.** Not even the creator can decrypt without:
-1. Vault link (Key B in URL hash)
-2. Passphrase (for hidden layers)
-
-Server only stores encrypted fragments and CIDs.
+**💀 LOST FOREVER.** No recovery mechanism exists (by design). **Save your links securely.**
 
 ### "Can I delete a vault after creating it?"
 
-**❌ NO.** Vaults are immutable once created. Data is pinned on IPFS and cannot be deleted by the server.
-
-**Workaround:** Create new vault and don't share old link.
+**❌ NO.** IPFS data is immutable. **Workaround:** Don't share the link.
 
 ---
 
@@ -221,34 +197,27 @@ Server only stores encrypted fragments and CIDs.
 
 ### Security Features
 
-- **3-Layer Encryption**: Passphrase → Master Key (Split) → CID Storage
-- **Plausible Deniability**: No metadata reveals hidden layers
-- **Timing Attack Prevention**: Constant-time operations with random delays
-- **Split-Key Architecture**: Key A (server, encrypted) + Key B (URL hash)
-- **Auto-Lock**: Locks vault after 5 minutes of inactivity
-- **Panic Key**: Double-press Escape for instant lockout
-- **Secure Clipboard**: Auto-clears after 60 seconds
-- **Rate Limiting**: 5 attempts/min per vault, 50/hour per fingerprint
-- **Honeypot Detection**: Auto-ban enumeration attacks
-- **Request Fingerprinting**: SHA-256(IP + User-Agent)
-- **Suspicious Pattern Detection**: >10 vaults in 5min = blocked
-- **CID Encryption**: Prevents direct Pinata access bypass
-- **Input Validation**: Vault ID, key format, request size checks
-- **CSRF Protection**: Origin/referer validation
-- **Security Headers**: X-Frame-Options, CSP, nosniff
-- **Access Logging**: Full audit trail with fingerprints
-- **Nonce Replay Protection**: Prevent replay attacks
+- **Plausible Deniability** - No metadata reveals hidden layers
+- **Split-Key Architecture** - Key A (server, encrypted) + Key B (URL hash)
+- **Auto-Lock** - Locks vault after 5 minutes of inactivity
+- **Panic Key** - Double-press Escape for instant lockout
+- **Secure Clipboard** - Auto-clears after 60 seconds
+- **Rate Limiting** - 5 attempts/min per vault, 50/hour per fingerprint
+- **Timing Attack Prevention** - Constant-time operations
+- **CID Encryption** - Prevents direct IPFS access bypass
+- **CSRF Protection** - Origin/referer validation
+- **Security Headers** - X-Frame-Options, CSP, nosniff
 
 ### OpSec Best Practices
 
 ⚠️ **Critical Security Practices**:
 
-1. Fund your decoy wallet with realistic amounts ($50-500)
-2. MEMORIZE passphrases - never store digitally
-3. Use Tor Browser for maximum anonymity
-4. Clear browser cache/history after use
-5. Test decoy layer before relying on it
-6. Never reveal you have hidden layers
+1. **Fund decoy wallet** with realistic amounts ($50-500)
+2. **MEMORIZE passphrases** - never store digitally
+3. **Use Tor Browser** for maximum anonymity
+4. **Clear browser data** after each use
+5. **Test decoy layer** before relying on it
+6. **Never reveal** you have hidden layers
 
 See [OPSEC.md](./docs/OPSEC.md) for comprehensive guidelines.
 
@@ -283,87 +252,19 @@ Even "empty" encrypted blobs have minimum size (salt + nonce + auth tag + paddin
 
 ### How do I unlock a vault?
 
-1. Open the vault link (contains Key B in URL hash)
-2. **Without passphrase**: See decoy content
-3. **With passphrase**: See hidden content
-4. Download or copy the decrypted content
+1. Open the vault link
+2. Enter passphrase (no passphrase = decoy, correct passphrase = hidden)
+3. Download or copy the decrypted content
 
 ### What if I lose the vault link?
 
-**Lost forever.** No recovery mechanism exists (by design).
+**💀 LOST FOREVER.** No recovery mechanism exists (by design).
 
-**Best practices:**
-- Save vault links in password manager
-- Print QR code for physical backup
-- Never share vault links over unencrypted channels
-
-### How secure is the URL hash?
-
-URL hash (#KeyB) is never sent to server. Treat vault links like passwords.
-
-**Risks:** Browser history, bookmarks, extensions can access it.
-
-**Mitigation:** Use Tor Browser, clear history after use.
+**Best practices:** Save in password manager, print QR code, never share over unencrypted channels
 
 ### What are the file size limits?
 
-**Maximum: 10 MB** (configurable for self-hosted instances)
-
-### How long do vaults last?
-
-**Indefinitely** (as long as IPFS providers maintain the data and your account remains active)
-
----
-
-### Prerequisites
-
-- Node.js 18+
-- Cloudflare account (for Pages deployment)
-- Modern browser with Web Crypto API support
-
-### Project Structure
-
-```
-Sanctum/
-├── app/
-│   ├── api/              # API routes
-│   ├── components/       # React components
-│   └── v/[id]/          # Vault viewer page
-├── lib/
-│   ├── crypto.ts        # Split-key encryption (from TimeSeal)
-│   ├── duress.ts        # Layer derivation (new)
-│   ├── ipfs.ts          # IPFS uploads (new)
-│   └── [35+ libraries]  # Reused from TimeSeal
-├── migrations/          # Database schemas
-└── docs/               # Documentation
-```
-
-### Code Reuse from TimeSeal
-
-**Sanctum builds on TimeSeal's proven patterns**:
-
-- ✅ Client-side cryptography architecture
-- ✅ UI components & animations
-- ✅ Security best practices
-- ✅ Zero-trust design philosophy
-
-See [TimeSeal](https://github.com/Teycir/TimeSeal) for the parent project.
-
-### Building
-
-```bash
-# Development
-npm run dev
-
-# Build for production
-npm run build
-
-# Deploy to Cloudflare Pages
-npm run deploy
-
-# Test
-npm test
-```
+**Maximum: 25 MB** (per file, .zip or .rar archives supported)
 
 ## 📊 Project Status
 
@@ -373,16 +274,7 @@ npm test
 
 See [PROJECT-STATUS.md](./docs/PROJECT-STATUS.md) for details.
 
-## 💼 Services Offered
-
-- 🔒 **Privacy-First Development** - P2P applications, encrypted communication, zero-knowledge systems
-- 🚀 **Web Application Development** - Full-stack development with Next.js, React, TypeScript
-- 🛡️ **Security Tool Development** - Cryptographic systems, penetration testing tools, automation
-- 🤖 **AI Integration** - LLM-powered applications, intelligent automation, custom AI solutions
-
-**Get in Touch**: [teycirbensoltane.tn](https://teycirbensoltane.tn) | Available for freelance projects and consulting
-
----
+## 💼 Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
@@ -410,7 +302,7 @@ Business Source License 1.1 - see [LICENSE](./LICENSE) for details.
 
 ## 🔗 Links
 
-- **Website**: [duress.vault](https://duress.vault) (coming soon)
+- **Website**: [sanctum-vault.pages.dev](https://sanctum-vault.pages.dev)
 - **GitHub**: [github.com/Teycir/Sanctum](https://github.com/Teycir/Sanctum)
 - **TimeSeal**: [timeseal.online](https://timeseal.online)
 - **Documentation**: [docs.duress.vault](https://docs.duress.vault) (coming soon)
@@ -446,6 +338,4 @@ Sanctum is a tool for legitimate privacy and security needs. Users are responsib
 <div align="center">
 
 **Built with ❤️ and 🔒 by [Teycir Ben Soltane](https://teycirbensoltane.tn)**
-
-
 </div>

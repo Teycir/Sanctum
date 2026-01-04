@@ -7,8 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- TBD
+### Fixed
+- Validation error messages now display cleanly instead of showing malformed JSON with HTML entities
 
 ## [1.0.0] - 2026-01-04
 
