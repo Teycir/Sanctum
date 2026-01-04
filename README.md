@@ -45,6 +45,9 @@
 - 🔑 **Split-Key Encryption** - AES-GCM-256 with keys split between server and URL
 - 🚫 **Zero Server Trust** - All crypto operations happen in your browser
 - 💰 **100% Free** - No credit card, no paid services, stack multiple free tiers
+- 🔒 **Auto-Lock** - Automatic lockout after 5 minutes of inactivity
+- ⚡ **Panic Key** - Double-press Escape for instant emergency lockout
+- 📋 **Secure Clipboard** - Auto-clears sensitive data after 60 seconds
 
 ---
 
@@ -80,6 +83,7 @@ See [QUICK-START.md](./QUICK-START.md) for detailed setup instructions.
 ## 📚 Documentation
 
 - [Project Status](./docs/PROJECT-STATUS.md) - Current implementation status
+- [Security Features](./docs/SECURITY-FEATURES.md) - Auto-lock, panic key, secure clipboard
 - [Technical Specification](./docs/core/SPECIFICATION.md) - Complete technical spec
 - [Implementation Plan](./docs/core/IMPLEMENTATION-PLAN.md) - Development roadmap
 
@@ -221,6 +225,9 @@ Server only stores encrypted fragments and CIDs.
 - **Plausible Deniability**: No metadata reveals hidden layers
 - **Timing Attack Prevention**: Constant-time operations with random delays
 - **Split-Key Architecture**: Key A (server, encrypted) + Key B (URL hash)
+- **Auto-Lock**: Locks vault after 5 minutes of inactivity
+- **Panic Key**: Double-press Escape for instant lockout
+- **Secure Clipboard**: Auto-clears after 60 seconds
 - **Rate Limiting**: 5 attempts/min per vault, 50/hour per fingerprint
 - **Honeypot Detection**: Auto-ban enumeration attacks
 - **Request Fingerprinting**: SHA-256(IP + User-Agent)

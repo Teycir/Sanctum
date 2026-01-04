@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
 import { LoadingOverlay } from "../components/LoadingOverlay";
+import { SecurityStatus } from "../components/SecurityStatus";
+import { useAutoLock, usePanicKey, useSecureClipboard } from "@/lib/security";
 
 const INACTIVITY_TIMEOUT_MS = 60000;
 
@@ -41,13 +43,12 @@ function triggerConfetti() {
 interface UnlockedContentProps {
   readonly content: string;
   readonly isDecoy: boolean;
-  readonly copied: boolean;
   readonly downloading: boolean;
-  readonly onCopy: () => void;
   readonly onLock: () => void;
 }
 
-function UnlockedContent({ content, isDecoy, copied, downloading, onCopy, onLock }: UnlockedContentProps) {
+function UnlockedContent({ content, isDecoy, downloading, onLock }: UnlockedContentProps) {
+  const { copied, copyToClipboard } = useSecureClipboard();
   const isFile = content.endsWith('.bin') || content.endsWith('.rar') || content.endsWith('.zip') || content.endsWith('.7z') || content.endsWith('.tar') || content.endsWith('.gz');
   
   return (
@@ -186,7 +187,7 @@ function UnlockedContent({ content, isDecoy, copied, downloading, onCopy, onLock
         {!isFile && (
           <button
             type="button"
-            onClick={onCopy}
+            onClick={() => copyToClipboard(content)}
             disabled={copied}
             style={{
               padding: "12px 24px",
@@ -212,7 +213,7 @@ function UnlockedContent({ content, isDecoy, copied, downloading, onCopy, onLock
               }
             }}
           >
-            {copied ? "✓ Copied!" : "📋 Copy Content"}
+            {copied ? "✓ Copied! (Auto-clears in 60s)" : "📋 Copy Content"}
           </button>
         )}
         <button
@@ -253,10 +254,18 @@ export default function ViewVault() {
   const [isDecoy, setIsDecoy] = useState(false);
   const [error, setError] = useState("");
   const [isBlurred, setIsBlurred] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
   const [progress, setProgress] = useState(0);
+
+  const handleLock = () => {
+    setContent("");
+    setPassphrase("");
+    setIsDecoy(false);
+  };
+
+  useAutoLock(content ? handleLock : () => {});
+  usePanicKey(content ? handleLock : () => {});
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -365,25 +374,12 @@ export default function ViewVault() {
     }
   };
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(content);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1000);
-    } catch {
-      setError("Failed to copy to clipboard");
-    }
-  };
 
-  const handleLock = () => {
-    setContent("");
-    setPassphrase("");
-    setIsDecoy(false);
-  };
 
   return (
     <>
       {loading && <LoadingOverlay step={loadingStep} progress={progress} />}
+      {content && <SecurityStatus />}
       <div
         style={{
           minHeight: "100vh",
@@ -432,9 +428,7 @@ export default function ViewVault() {
           <UnlockedContent
             content={content}
             isDecoy={isDecoy}
-            copied={copied}
             downloading={downloading}
-            onCopy={handleCopy}
             onLock={handleLock}
           />
         ) : (
