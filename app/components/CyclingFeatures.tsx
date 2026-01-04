@@ -6,6 +6,9 @@ import { useState, useEffect } from 'react';
 const FEATURES = [
   'XChaCha20-Poly1305 Encryption',
   'Plausible Deniability - Hidden layers',
+  'Auto-Lock - 5min inactivity timeout',
+  'Panic Key - Double ESC emergency lock',
+  'Secure Clipboard - 60s auto-clear',
   'Duress Mode - Decoy content protection',
   'SHA-256 Hashing - Cryptographic integrity',
   'Commitment Scheme - Tamper detection',
