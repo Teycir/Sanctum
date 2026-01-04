@@ -78,7 +78,7 @@ export const validateVaultForm = (data: VaultFormData): string | null => {
   if (passphraseError) return passphraseError;
 
   if (decoyContent.trim() && !decoyPassphrase) {
-    return "As you entered decoy content, decoy password is required";
+    return "Decoy password is required when decoy content is provided";
   }
 
   if (decoyPassphrase) {

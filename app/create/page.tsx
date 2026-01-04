@@ -49,7 +49,9 @@ export default function CreateVault() {
     limit: number;
     available: number;
   } | null>(null);
-  const [vaultServiceRef, setVaultServiceRef] = useState<{ stop: () => Promise<void> } | null>(null);
+  const [vaultServiceRef, setVaultServiceRef] = useState<{
+    stop: () => Promise<void>;
+  } | null>(null);
 
   useEffect(() => {
     return () => {
@@ -86,8 +88,9 @@ export default function CreateVault() {
         setHasStoredJWT(true);
         validateJWT(jwt);
       }
-      
-      const { loadFilebaseCredentials } = await import("@/lib/storage/filebase-credentials");
+
+      const { loadFilebaseCredentials } =
+        await import("@/lib/storage/filebase-credentials");
       const credentials = await loadFilebaseCredentials();
       if (credentials) {
         setFilebaseAccessKey(credentials.accessKey);
@@ -136,12 +139,19 @@ export default function CreateVault() {
     }
   }, [pinataJWT, hasStoredJWT]);
 
-  const saveFilebaseCredentials = async (accessKey: string, secretKey: string) => {
+  const saveFilebaseCredentials = async (
+    accessKey: string,
+    secretKey: string,
+  ) => {
     if (!accessKey.trim() || !secretKey.trim()) return;
-    
+
     try {
-      const { saveFilebaseCredentials } = await import("@/lib/storage/filebase-credentials");
-      await saveFilebaseCredentials({ accessKey: accessKey.trim(), secretKey: secretKey.trim() });
+      const { saveFilebaseCredentials } =
+        await import("@/lib/storage/filebase-credentials");
+      await saveFilebaseCredentials({
+        accessKey: accessKey.trim(),
+        secretKey: secretKey.trim(),
+      });
       setHasStoredFilebase(true);
     } catch {
       // Ignore save errors
@@ -149,8 +159,15 @@ export default function CreateVault() {
   };
 
   useEffect(() => {
-    if (!hasStoredFilebase && filebaseAccessKey.trim() && filebaseSecretKey.trim()) {
-      const timer = setTimeout(() => saveFilebaseCredentials(filebaseAccessKey, filebaseSecretKey), 1000);
+    if (
+      !hasStoredFilebase &&
+      filebaseAccessKey.trim() &&
+      filebaseSecretKey.trim()
+    ) {
+      const timer = setTimeout(
+        () => saveFilebaseCredentials(filebaseAccessKey, filebaseSecretKey),
+        1000,
+      );
       return () => clearTimeout(timer);
     }
   }, [filebaseAccessKey, filebaseSecretKey, hasStoredFilebase]);
@@ -237,20 +254,38 @@ export default function CreateVault() {
       ? ""
       : sanitizeInput(hiddenContent.trim());
     const sanitizedPassphrase = sanitizeInput(passphrase.trim());
-    const sanitizedDuress = sanitizeInput(decoyPassphrase.trim());
+    const sanitizedDecoyPassphrase = sanitizeInput(decoyPassphrase.trim());
 
     // Only validate text content if no files
     if (!decoyFile && !hiddenFile) {
-      const validationError = validateVaultForm({
-        decoyContent: sanitizedDecoy,
-        hiddenContent: sanitizedHidden,
-        passphrase: sanitizedPassphrase,
-        decoyPassphrase: sanitizedDuress,
-      });
+      // Skip validation if both decoy content and password are empty (hidden-only vault)
+      const hasDecoyContent = sanitizedDecoy.trim().length > 0;
+      const hasDecoyPassword = sanitizedDecoyPassphrase.length > 0;
 
-      if (validationError) {
-        setError(validationError);
-        return;
+      if (hasDecoyContent || hasDecoyPassword) {
+        const validationError = validateVaultForm({
+          decoyContent: sanitizedDecoy,
+          hiddenContent: sanitizedHidden,
+          passphrase: sanitizedPassphrase,
+          decoyPassphrase: sanitizedDecoyPassphrase,
+        });
+
+        if (validationError) {
+          setError(validationError);
+          return;
+        }
+      } else {
+        // Hidden-only vault - just validate hidden password
+        const { validatePassword } =
+          await import("@/lib/validation/vault-form");
+        const passphraseError = validatePassword(
+          sanitizedPassphrase,
+          "Hidden password",
+        );
+        if (passphraseError) {
+          setError(passphraseError);
+          return;
+        }
       }
     } else {
       // Validate passwords only
@@ -267,13 +302,16 @@ export default function CreateVault() {
         setError(passphraseError);
         return;
       }
-      if (sanitizedDuress) {
-        const decoyError = validatePassword(sanitizedDuress, "Decoy password");
+      if (sanitizedDecoyPassphrase) {
+        const decoyError = validatePassword(
+          sanitizedDecoyPassphrase,
+          "Decoy password",
+        );
         if (decoyError) {
           setError(decoyError);
           return;
         }
-        if (sanitizedPassphrase === sanitizedDuress) {
+        if (sanitizedPassphrase === sanitizedDecoyPassphrase) {
           setError("Hidden password must be different from decoy password");
           return;
         }
@@ -416,7 +454,7 @@ export default function CreateVault() {
         decoyContent: decoyData,
         hiddenContent: hiddenData,
         passphrase: sanitizedPassphrase,
-        decoyPassphrase: sanitizedDuress,
+        decoyPassphrase: sanitizedDecoyPassphrase || undefined,
         argonProfile: ARGON2_PROFILES.desktop,
         decoyFilename: decoyFile?.name,
         hiddenFilename: hiddenFile?.name,
@@ -428,7 +466,9 @@ export default function CreateVault() {
               }
             : {
                 provider: "filebase",
-                filebaseToken: btoa(`${filebaseAccessKey.trim()}:${filebaseSecretKey.trim()}`),
+                filebaseToken: btoa(
+                  `${filebaseAccessKey.trim()}:${filebaseSecretKey.trim()}`,
+                ),
               },
       });
 
@@ -439,18 +479,18 @@ export default function CreateVault() {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setResult(vaultResult);
-      
+
       // Generate QR code
       try {
         const qr = await generateVaultQR(vaultResult.vaultURL, {
-          errorCorrectionLevel: 'H',
+          errorCorrectionLevel: "H",
           width: 300,
         });
         setQrCode(qr);
       } catch {
         // QR generation failed, continue without it
       }
-      
+
       vaultService.stop().catch((stopError) => {
         console.error("Failed to stop vault service:", stopError);
       });
@@ -469,7 +509,7 @@ export default function CreateVault() {
     <>
       {loading && <LoadingOverlay step={loadingStep} progress={progress} />}
 
-      <div className={`${styles.container} ${isBlurred ? styles.blurred : ''}`}>
+      <div className={`${styles.container} ${isBlurred ? styles.blurred : ""}`}>
         <div className={styles.content}>
           <h1 className={styles.title}>Create Vault</h1>
 
@@ -487,14 +527,23 @@ export default function CreateVault() {
                 const warning = getStorageWarning();
                 return (
                   warning && (
-                    <div className={warning.level === "critical" ? styles.warningCritical : styles.warningNormal}>
+                    <div
+                      className={
+                        warning.level === "critical"
+                          ? styles.warningCritical
+                          : styles.warningNormal
+                      }
+                    >
                       {warning.level === "critical" ? "🚨" : "⚠️"}{" "}
                       {warning.message}
                     </div>
                   )
                 );
               })()}
-              <CollapsiblePanel title="🎭 Decoy Content (Optional)" defaultOpen={false}>
+              <CollapsiblePanel
+                title="🎭 Decoy Content (Optional)"
+                defaultOpen={false}
+              >
                 <p style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>
                   💡 Choose either text OR file (.zip/.rar only) • Max: 25MB
                 </p>
@@ -524,13 +573,18 @@ export default function CreateVault() {
                       e.target.value = "";
                       return;
                     }
-                    if (!file.name.toLowerCase().endsWith(".zip") && !file.name.toLowerCase().endsWith(".rar")) {
+                    if (
+                      !file.name.toLowerCase().endsWith(".zip") &&
+                      !file.name.toLowerCase().endsWith(".rar")
+                    ) {
                       setError("Only .zip and .rar files are allowed");
                       e.target.value = "";
                       return;
                     }
                     if (file.size > MAX_FILE_SIZE) {
-                      setError(`File too large. Maximum size is 25MB (${(file.size / 1024 / 1024).toFixed(2)}MB provided)`);
+                      setError(
+                        `File too large. Maximum size is 25MB (${(file.size / 1024 / 1024).toFixed(2)}MB provided)`,
+                      );
                       e.target.value = "";
                       return;
                     }
@@ -540,20 +594,28 @@ export default function CreateVault() {
                   className="custom-file-input"
                   id="decoy-file-input"
                 />
-                <label 
-                  htmlFor="decoy-file-input" 
+                <label
+                  htmlFor="decoy-file-input"
                   className="custom-file-button"
                   style={{
                     opacity: decoyContent.trim() ? 0.5 : 1,
-                    cursor: decoyContent.trim() ? 'not-allowed' : 'pointer'
+                    cursor: decoyContent.trim() ? "not-allowed" : "pointer",
                   }}
                 >
                   📁 Choose File (.zip/.rar)
                 </label>
                 {decoyFile && (
-                  <div style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 8 }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
                     <span style={{ color: "#4ade80" }}>
-                      ✓ {decoyFile.name} ({(decoyFile.size / 1024 / 1024).toFixed(2)} MB)
+                      ✓ {decoyFile.name} (
+                      {(decoyFile.size / 1024 / 1024).toFixed(2)} MB)
                     </span>
                     <button
                       type="button"
@@ -573,8 +635,17 @@ export default function CreateVault() {
                   </div>
                 )}
                 <div>
-                  <label htmlFor="decoy-password" style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
-                    Decoy Password {(decoyContent.trim() || decoyFile) && "(Required)"}
+                  <label
+                    htmlFor="decoy-password"
+                    style={{
+                      display: "block",
+                      marginBottom: 6,
+                      fontSize: 13,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Decoy Password{" "}
+                    {(decoyContent.trim() || decoyFile) && "(Required)"}
                   </label>
                   <input
                     id="decoy-password"
@@ -584,10 +655,19 @@ export default function CreateVault() {
                     placeholder="Password to reveal decoy content..."
                     className="form-input"
                   />
+                  {(decoyContent.trim() || decoyFile) && (
+                    <p className={styles.passwordHint}>
+                      Password must be 12+ characters with uppercase, lowercase,
+                      number, and special character
+                    </p>
+                  )}
                 </div>
               </CollapsiblePanel>
 
-              <CollapsiblePanel title="🔒 Hidden Content (Required)" defaultOpen={true}>
+              <CollapsiblePanel
+                title="🔒 Hidden Content (Required)"
+                defaultOpen={true}
+              >
                 <p style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>
                   💡 Choose either text OR file (.zip/.rar only) • Max: 25MB
                 </p>
@@ -628,13 +708,18 @@ export default function CreateVault() {
                       e.target.value = "";
                       return;
                     }
-                    if (!file.name.toLowerCase().endsWith(".zip") && !file.name.toLowerCase().endsWith(".rar")) {
+                    if (
+                      !file.name.toLowerCase().endsWith(".zip") &&
+                      !file.name.toLowerCase().endsWith(".rar")
+                    ) {
                       setError("Only .zip and .rar files are allowed");
                       e.target.value = "";
                       return;
                     }
                     if (file.size > MAX_FILE_SIZE) {
-                      setError(`File too large. Maximum size is 25MB (${(file.size / 1024 / 1024).toFixed(2)}MB provided)`);
+                      setError(
+                        `File too large. Maximum size is 25MB (${(file.size / 1024 / 1024).toFixed(2)}MB provided)`,
+                      );
                       e.target.value = "";
                       return;
                     }
@@ -644,20 +729,28 @@ export default function CreateVault() {
                   className="custom-file-input"
                   id="hidden-file-input"
                 />
-                <label 
-                  htmlFor="hidden-file-input" 
+                <label
+                  htmlFor="hidden-file-input"
                   className="custom-file-button"
                   style={{
                     opacity: hiddenContent.trim() ? 0.5 : 1,
-                    cursor: hiddenContent.trim() ? 'not-allowed' : 'pointer'
+                    cursor: hiddenContent.trim() ? "not-allowed" : "pointer",
                   }}
                 >
                   📁 Choose File (.zip/.rar)
                 </label>
                 {hiddenFile && (
-                  <div style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 8 }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
                     <span style={{ color: "#4ade80" }}>
-                      ✓ {hiddenFile.name} ({(hiddenFile.size / 1024 / 1024).toFixed(2)} MB)
+                      ✓ {hiddenFile.name} (
+                      {(hiddenFile.size / 1024 / 1024).toFixed(2)} MB)
                     </span>
                     <button
                       type="button"
@@ -677,7 +770,15 @@ export default function CreateVault() {
                   </div>
                 )}
                 <div>
-                  <label htmlFor="hidden-password" style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
+                  <label
+                    htmlFor="hidden-password"
+                    style={{
+                      display: "block",
+                      marginBottom: 6,
+                      fontSize: 13,
+                      fontWeight: 600,
+                    }}
+                  >
                     Hidden Password (Required)
                   </label>
                   <input
@@ -688,8 +789,9 @@ export default function CreateVault() {
                     placeholder="Enter a strong password..."
                     className="form-input"
                   />
-                  <p style={{ marginTop: 6, fontSize: 11, lineHeight: 1.4, textAlign: "center", opacity: 0.7 }}>
-                    Both passwords must be 12+ characters with uppercase, lowercase, number, and special character
+                  <p className={styles.passwordHint}>
+                    Password must be 12+ characters with uppercase, lowercase,
+                    number, and special character
                   </p>
                 </div>
               </CollapsiblePanel>
@@ -864,10 +966,7 @@ export default function CreateVault() {
                       placeholder="ex: iUOYzd0UghnCWvFjntDGqKXn3fsIhUoN0l7GbLX3..."
                       className="provider-input"
                     />
-                    <label
-                      htmlFor="filebase-bucket"
-                      className="provider-label"
-                    >
+                    <label htmlFor="filebase-bucket" className="provider-label">
                       Bucket Name
                     </label>
                     <input
@@ -1126,11 +1225,13 @@ export default function CreateVault() {
                       const passwords = decoyPassphrase
                         ? `Decoy Password: ${decoyPassphrase}\nHidden Password: ${passphrase}`
                         : `Hidden Password: ${passphrase}`;
-                      const blob = new Blob([passwords], { type: 'text/plain' });
+                      const blob = new Blob([passwords], {
+                        type: "text/plain",
+                      });
                       const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
+                      const a = document.createElement("a");
                       a.href = url;
-                      a.download = 'vault-passwords.txt';
+                      a.download = "vault-passwords.txt";
                       a.click();
                       URL.revokeObjectURL(url);
                     }}
@@ -1145,10 +1246,12 @@ export default function CreateVault() {
                       transition: "background 0.2s",
                     }}
                     onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "rgba(255, 193, 7, 0.3)")
+                      (e.currentTarget.style.background =
+                        "rgba(255, 193, 7, 0.3)")
                     }
                     onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "rgba(255, 193, 7, 0.1)")
+                      (e.currentTarget.style.background =
+                        "rgba(255, 193, 7, 0.1)")
                     }
                   >
                     🔑 Download Passwords
@@ -1156,12 +1259,12 @@ export default function CreateVault() {
                   <button
                     type="button"
                     onClick={() => {
-                      const content = `SANCTUM VAULT DETAILS\n${'='.repeat(50)}\n\nVault URL:\n${result.vaultURL}\n\nDecoy CID:\n${result.decoyCID}\n\nHidden CID:\n${result.hiddenCID}\n\nPASSWORDS:\n${decoyPassphrase ? `Decoy Password: ${decoyPassphrase}\n` : ''}Hidden Password: ${passphrase}\n\n${'='.repeat(50)}\nCreated: ${new Date().toISOString()}\n`;
-                      const blob = new Blob([content], { type: 'text/plain' });
+                      const content = `SANCTUM VAULT DETAILS\n${"=".repeat(50)}\n\nVault URL:\n${result.vaultURL}\n\nDecoy CID:\n${result.decoyCID}\n\nHidden CID:\n${result.hiddenCID}\n\nPASSWORDS:\n${decoyPassphrase ? `Decoy Password: ${decoyPassphrase}\n` : ""}Hidden Password: ${passphrase}\n\n${"=".repeat(50)}\nCreated: ${new Date().toISOString()}\n`;
+                      const blob = new Blob([content], { type: "text/plain" });
                       const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
+                      const a = document.createElement("a");
                       a.href = url;
-                      a.download = 'vault-complete.txt';
+                      a.download = "vault-complete.txt";
                       a.click();
                       URL.revokeObjectURL(url);
                     }}
@@ -1176,10 +1279,12 @@ export default function CreateVault() {
                       transition: "background 0.2s",
                     }}
                     onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "rgba(13, 71, 161, 0.5)")
+                      (e.currentTarget.style.background =
+                        "rgba(13, 71, 161, 0.5)")
                     }
                     onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "rgba(13, 71, 161, 0.2)")
+                      (e.currentTarget.style.background =
+                        "rgba(13, 71, 161, 0.2)")
                     }
                   >
                     ⬇️ Download All
@@ -1187,7 +1292,12 @@ export default function CreateVault() {
                 </div>
               </div>
               <div
-                style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
               >
                 <button
                   type="button"

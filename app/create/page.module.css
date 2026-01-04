@@ -120,3 +120,11 @@
   word-break: break-all;
   margin-bottom: 16px;
 }
+
+.passwordHint {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: center;
+  opacity: 0.7;
+}
