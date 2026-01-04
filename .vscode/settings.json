@@ -1,0 +1,13 @@
+{
+  "css.lint.validProperties": [],
+  "css.validate": false,
+  "html.validate.styles": false,
+  "webhint.enable": false,
+  "edge-devtools.webhint": false,
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}
