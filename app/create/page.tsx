@@ -7,6 +7,7 @@ import { SecurityStatus } from "../components/SecurityStatus";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { sanitizeInput, validateVaultForm } from "@/lib/validation/vault-form";
 import { generateVaultQR } from "@/lib/shared/qrcode";
+import { useSecureClipboard } from "@/lib/hooks/useSecureClipboard";
 import styles from "./page.module.css";
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
@@ -19,6 +20,7 @@ interface VaultResult {
 
 export default function CreateVault() {
   const router = useRouter();
+  const { copied, copyToClipboard } = useSecureClipboard();
   const [decoyContent, setDecoyContent] = useState("");
   const [decoyFile, setDecoyFile] = useState<File | null>(null);
   const [hiddenContent, setHiddenContent] = useState("");
@@ -41,7 +43,6 @@ export default function CreateVault() {
   const [result, setResult] = useState<VaultResult>();
   const [error, setError] = useState("");
   const [isBlurred, setIsBlurred] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [copiedDecoy, setCopiedDecoy] = useState(false);
   const [copiedHidden, setCopiedHidden] = useState(false);
   const [qrCode, setQrCode] = useState<string>();
@@ -1093,34 +1094,34 @@ export default function CreateVault() {
                   type="button"
                   onClick={async () => {
                     try {
-                      await navigator.clipboard.writeText(result.vaultURL);
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 1000);
+                      await copyToClipboard(result.vaultURL);
                     } catch {
                       setError("Failed to copy to clipboard");
                     }
                   }}
                   style={{
                     padding: "8px 16px",
-                    background: "rgba(13, 71, 161, 0.2)",
+                    background: copied ? "rgba(0, 255, 0, 0.3)" : "rgba(13, 71, 161, 0.2)",
                     color: "#fff",
-                    border: "1px solid rgba(13, 71, 161, 0.4)",
+                    border: `1px solid ${copied ? "rgba(0, 255, 0, 0.5)" : "rgba(13, 71, 161, 0.4)"}`,
                     borderRadius: 6,
                     fontSize: 13,
-                    cursor: "pointer",
+                    cursor: copied ? "default" : "pointer",
                     marginBottom: 16,
-                    transition: "background 0.2s",
+                    transition: "all 0.2s",
                   }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background =
-                      "rgba(13, 71, 161, 0.5)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background =
-                      "rgba(13, 71, 161, 0.2)")
-                  }
+                  onMouseEnter={(e) => {
+                    if (!copied) {
+                      e.currentTarget.style.background = "rgba(13, 71, 161, 0.5)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!copied) {
+                      e.currentTarget.style.background = "rgba(13, 71, 161, 0.2)";
+                    }
+                  }}
                 >
-                  {copied ? "✓ Copied!" : "Copy URL"}
+                  {copied ? "✓ Copied! (Auto-clears in 60s)" : "Copy URL"}
                 </button>
                 <div
                   style={{

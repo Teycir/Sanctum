@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
 import { LoadingOverlay } from "../components/LoadingOverlay";
 import { SecurityStatus } from "../components/SecurityStatus";
-import { useAutoLock, usePanicKey, useSecureClipboard } from "@/lib/security";
+import { useSecureClipboard } from "@/lib/hooks/useSecureClipboard";
 
 const INACTIVITY_TIMEOUT_MS = 60000;
 
@@ -257,6 +257,8 @@ export default function ViewVault() {
   const [downloading, setDownloading] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
   const [progress, setProgress] = useState(0);
+  const [validating, setValidating] = useState(true);
+  const [vaultExists, setVaultExists] = useState(true);
 
   const handleLock = () => {
     setContent("");
@@ -264,8 +266,116 @@ export default function ViewVault() {
     setIsDecoy(false);
   };
 
-  useAutoLock(content ? handleLock : () => {});
-  usePanicKey(content ? handleLock : () => {});
+  const renderContent = () => {
+    if (content) {
+      return (
+        <UnlockedContent
+          content={content}
+          isDecoy={isDecoy}
+          downloading={downloading}
+          onLock={handleLock}
+        />
+      );
+    }
+
+    if (validating) {
+      return (
+        <div style={{ textAlign: "center", padding: 40 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+          <div style={{ fontSize: 16, opacity: 0.8 }}>Validating vault...</div>
+        </div>
+      );
+    }
+
+    if (vaultExists) {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div>
+            <input
+              type="password"
+              value={passphrase}
+              onChange={(e) => setPassphrase(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+              placeholder="Enter password to unlock..."
+              style={{
+                width: "100%",
+                padding: 12,
+                background: "rgba(255, 255, 255, 0.05)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                borderRadius: 8,
+                color: "#fff",
+                fontSize: 14,
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {error && (
+            <div
+              style={{
+                padding: 12,
+                background: "rgba(255, 0, 0, 0.1)",
+                border: "1px solid rgba(255, 0, 0, 0.3)",
+                borderRadius: 8,
+                color: "#ff6b6b",
+                fontSize: 14,
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <button
+              type="button"
+              onClick={handleUnlock}
+              disabled={loading}
+              className="start-btn"
+              style={{
+                width: "50%",
+                padding: "14px 12px",
+                opacity: loading ? 0.5 : 1,
+                cursor: loading ? "not-allowed" : "pointer",
+                boxSizing: "border-box",
+              }}
+            >
+              {loading ? "Unlocking..." : "Unlock"}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ textAlign: "center" }}>
+        <div
+          style={{
+            padding: 24,
+            background: "rgba(255, 0, 0, 0.1)",
+            border: "1px solid rgba(255, 0, 0, 0.3)",
+            borderRadius: 12,
+            marginBottom: 20,
+          }}
+        >
+          <div style={{ fontSize: 48, marginBottom: 16 }}>❌</div>
+          <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>
+            Vault Not Found
+          </div>
+          <div style={{ fontSize: 14, opacity: 0.8, lineHeight: 1.6 }}>
+            {error || "This vault doesn't exist or has been deleted."}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="start-btn"
+          style={{ padding: "12px 24px" }}
+        >
+          Go Home
+        </button>
+      </div>
+    );
+  };
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -281,6 +391,40 @@ export default function ViewVault() {
       clearTimeout(timeout);
       events.forEach((e) => globalThis.window.removeEventListener(e, resetTimer));
     };
+  }, []);
+
+  useEffect(() => {
+    const validateVault = async () => {
+      if (globalThis.window === undefined) return;
+      
+      const hash = globalThis.window.location.hash.slice(1);
+      if (!hash) {
+        setError("Invalid vault URL: missing vault ID");
+        setVaultExists(false);
+        setValidating(false);
+        return;
+      }
+
+      try {
+        const { validateVaultExists } = await import("@/lib/validation/vault-exists");
+        const vaultURL = `${globalThis.window.location.origin}/vault#${hash}`;
+        const result = await validateVaultExists(vaultURL);
+        
+        if (!result.exists) {
+          setError(result.error || "Vault not found");
+          setVaultExists(false);
+        } else {
+          setVaultExists(true);
+        }
+      } catch {
+        // If validation fails, allow user to try anyway
+        setVaultExists(true);
+      } finally {
+        setValidating(false);
+      }
+    };
+
+    validateVault();
   }, []);
 
   const handleUnlock = async () => {
@@ -424,69 +568,7 @@ export default function ViewVault() {
           Unlock Vault
         </h1>
 
-        {content ? (
-          <UnlockedContent
-            content={content}
-            isDecoy={isDecoy}
-            downloading={downloading}
-            onLock={handleLock}
-          />
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div>
-              <input
-                type="password"
-                value={passphrase}
-                onChange={(e) => setPassphrase(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-                placeholder="Enter password to unlock..."
-                style={{
-                  width: "100%",
-                  padding: 12,
-                  background: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  borderRadius: 8,
-                  color: "#fff",
-                  fontSize: 14,
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
-
-            {error && (
-              <div
-                style={{
-                  padding: 12,
-                  background: "rgba(255, 0, 0, 0.1)",
-                  border: "1px solid rgba(255, 0, 0, 0.3)",
-                  borderRadius: 8,
-                  color: "#ff6b6b",
-                  fontSize: 14,
-                }}
-              >
-                {error}
-              </div>
-            )}
-
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <button
-                type="button"
-                onClick={handleUnlock}
-                disabled={loading}
-                className="start-btn"
-                style={{
-                  width: "50%",
-                  padding: "14px 12px",
-                  opacity: loading ? 0.5 : 1,
-                  cursor: loading ? "not-allowed" : "pointer",
-                  boxSizing: "border-box",
-                }}
-              >
-                {loading ? "Unlocking..." : "Unlock"}
-              </button>
-            </div>
-          </div>
-        )}
+        {renderContent()}
       </div>
       </div>
     </>
