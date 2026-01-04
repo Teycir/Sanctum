@@ -19,7 +19,7 @@ import {
 import type { LayerContent } from "../duress/layers";
 
 export interface CreateVaultParams {
-  readonly decoyContent: Uint8Array;
+  readonly decoyContent?: Uint8Array;
   readonly hiddenContent: Uint8Array;
   readonly passphrase: string;
   readonly decoyPassphrase?: string;
@@ -64,10 +64,15 @@ export class VaultService {
    * @throws Error if validation fails, encryption fails, or upload fails
    */
   async createVault(params: CreateVaultParams): Promise<CreateVaultResult> {
-    const validated = CreateVaultParamsSchema.parse(params);
+    const result = CreateVaultParamsSchema.safeParse(params);
+    if (!result.success) {
+      const firstError = result.error.issues[0];
+      throw new Error(firstError.message);
+    }
+    const validated = result.data;
 
     const content: LayerContent = {
-      decoy: validated.decoyContent,
+      decoy: validated.decoyContent || new Uint8Array(0),
       hidden: validated.hiddenContent,
     };
 
@@ -114,7 +119,12 @@ export class VaultService {
    * @throws Error if URL invalid, download fails, or decryption fails
    */
   async unlockVault(params: UnlockVaultParams): Promise<UnlockVaultResult> {
-    const validated = UnlockVaultParamsSchema.parse(params);
+    const result = UnlockVaultParamsSchema.safeParse(params);
+    if (!result.success) {
+      const firstError = result.error.issues[0];
+      throw new Error(firstError.message);
+    }
+    const validated = result.data;
 
     const hash = validated.vaultURL.split("#")[1];
     if (!hash) {

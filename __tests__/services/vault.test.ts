@@ -20,9 +20,9 @@ vi.mock("../../lib/storage/vault", async () => {
       const hiddenBlob = mockStorage.get(stored.hiddenCID);
       if (!decoyBlob || !hiddenBlob) throw new Error("CID not found");
       return { decoyBlob, hiddenBlob, salt: stored.salt };
-    }
+    },
   };
-}));
+});
 
 vi.mock("../../lib/workers/crypto", () => ({
   CryptoWorker: class MockCryptoWorker {
@@ -90,7 +90,7 @@ describe("services/vault", () => {
         passphrase: "decoy-pass-12345",
       });
 
-      expect(unlocked.isDecoy).toBe(false);
+      expect(unlocked.isDecoy).toBe(true);
       expect(unlocked.content).toEqual(decoy);
     });
 

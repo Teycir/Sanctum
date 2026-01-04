@@ -91,6 +91,23 @@ describe('hidden/vault', () => {
       expect(unlocked.isDecoy).toBe(true);
     });
 
+    it('should create hidden-only vault without decoy passphrase', () => {
+      const decoy = new Uint8Array(0);
+      const hidden = new TextEncoder().encode('secret content');
+
+      const result = createHiddenVault({
+        content: { decoy, hidden },
+        passphrase: 'master-pass-12345',
+        // No decoyPassphrase provided
+        argonProfile: ARGON2_PROFILES.mobile
+      });
+
+      // Should unlock hidden layer with master passphrase
+      const unlocked = unlockHiddenVault(result, 'master-pass-12345');
+      expect(unlocked.content).toEqual(hidden);
+      expect(unlocked.isDecoy).toBe(false);
+    });
+
     it('should unlock decoy with duress passphrase', () => {
       const decoy = new TextEncoder().encode('innocent content');
       const hidden = new TextEncoder().encode('secret content');

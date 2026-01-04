@@ -267,10 +267,6 @@ export default function CreateVault() {
         setError(passphraseError);
         return;
       }
-      if ((decoyContent.trim() || decoyFile) && !sanitizedDuress) {
-        setError("Decoy password is required when decoy content is provided");
-        return;
-      }
       if (sanitizedDuress) {
         const decoyError = validatePassword(sanitizedDuress, "Decoy password");
         if (decoyError) {
@@ -578,7 +574,7 @@ export default function CreateVault() {
                 )}
                 <div>
                   <label htmlFor="decoy-password" style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
-                    Decoy Password
+                    Decoy Password {(decoyContent.trim() || decoyFile) && "(Required)"}
                   </label>
                   <input
                     id="decoy-password"
@@ -588,11 +584,6 @@ export default function CreateVault() {
                     placeholder="Password to reveal decoy content..."
                     className="form-input"
                   />
-                  {(decoyContent.trim() || decoyFile) && (
-                    <p style={{ marginTop: 6, fontSize: 11, lineHeight: 1.4, color: "#fbbf24", opacity: 0.9 }}>
-                      ⚠️ Decoy password is required when decoy content is provided
-                    </p>
-                  )}
                 </div>
               </CollapsiblePanel>
 

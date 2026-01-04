@@ -17,14 +17,17 @@ export const StoredVaultSchema = z.object({
 });
 
 export const CreateVaultParamsSchema = z.object({
-  decoyContent: z.instanceof(Uint8Array),
+  decoyContent: z.instanceof(Uint8Array).optional(),
   hiddenContent: z.instanceof(Uint8Array),
   passphrase: z.string().min(8, 'Passphrase must be at least 8 characters'),
   decoyPassphrase: z.string().min(8, 'Decoy passphrase must be at least 8 characters').optional(),
   argonProfile: z.custom<Argon2Profile>().optional(),
   decoyFilename: z.string().optional(),
   hiddenFilename: z.string().optional()
-});
+}).refine(
+  (data) => !data.decoyContent || data.decoyPassphrase,
+  { message: 'Decoy passphrase required when decoy content is provided', path: ['decoyPassphrase'] }
+);
 
 export const UnlockVaultParamsSchema = z.object({
   vaultURL: z.string().min(1, 'Vault URL required').refine(

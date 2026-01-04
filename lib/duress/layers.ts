@@ -73,7 +73,7 @@ export function createHiddenVault(
   // Use empty string as decoy passphrase if not provided (for empty decoy)
   const decoyPass = params.decoyPassphrase || '';
   
-  // Encrypt decoy with duress passphrase
+  // Encrypt decoy with duress passphrase (or empty string for no decoy)
   const decoyEncrypted = encrypt({
     plaintext: params.content.decoy,
     passphrase: decoyPass,
