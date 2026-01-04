@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { SECURITY } from '../crypto/constants';
 
 export interface SecureClipboardConfig {
   readonly autoClearDelayMs: number;
@@ -6,8 +7,8 @@ export interface SecureClipboardConfig {
 }
 
 const DEFAULT_CONFIG: SecureClipboardConfig = {
-  autoClearDelayMs: 60 * 1000, // 60 seconds
-  copiedStateResetMs: 2000,
+  autoClearDelayMs: SECURITY.clipboardAutoClear,
+  copiedStateResetMs: SECURITY.clipboardCopiedStateReset,
 };
 
 export interface SecureClipboardResult {
@@ -47,8 +48,11 @@ export function useSecureClipboard(
       setTimeout(async () => {
         try {
           await navigator.clipboard.writeText('');
-        } catch {
-          // Ignore errors on clear
+        } catch (error) {
+          if (error instanceof DOMException && error.name === 'NotAllowedError') {
+            return; // User denied clipboard permission
+          }
+          throw error;
         }
       }, autoClearDelayMs);
 

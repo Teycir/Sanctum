@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from "react";
+import { SECURITY } from "../crypto/constants";
 
 export interface AutoLockConfig {
   readonly timeoutMs: number;
@@ -6,7 +7,7 @@ export interface AutoLockConfig {
 }
 
 const DEFAULT_CONFIG: AutoLockConfig = {
-  timeoutMs: 5 * 60 * 1000, // 5 minutes
+  timeoutMs: SECURITY.autoLockTimeout,
   events: ["mousedown", "keydown", "scroll", "touchstart"],
 };
 

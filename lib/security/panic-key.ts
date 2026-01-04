@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from 'react';
+import { SECURITY } from '../crypto/constants';
 
 export interface PanicKeyConfig {
   readonly key: string;
@@ -9,7 +10,7 @@ export interface PanicKeyConfig {
 
 const DEFAULT_CONFIG: PanicKeyConfig = {
   key: 'Escape',
-  doublePressDelayMs: 500,
+  doublePressDelayMs: SECURITY.panicKeyDoublePress,
 };
 
 /**

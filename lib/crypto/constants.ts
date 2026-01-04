@@ -77,6 +77,17 @@ export const TIMING = {
 } as const;
 
 // ============================================================================
+// CONSTANTS - SECURITY
+// ============================================================================
+
+export const SECURITY = {
+  autoLockTimeout: 5 * 60 * 1000, // 5 minutes
+  clipboardAutoClear: 60 * 1000, // 60 seconds
+  clipboardCopiedStateReset: 2000, // 2 seconds
+  panicKeyDoublePress: 500, // 500ms
+} as const;
+
+// ============================================================================
 // CONSTANTS - VAULT MODES
 // ============================================================================
 

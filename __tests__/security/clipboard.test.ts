@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useSecureClipboard } from '@/lib/security/clipboard';
 
 describe('useSecureClipboard', () => {
@@ -9,7 +9,11 @@ describe('useSecureClipboard', () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
-    Object.assign(navigator, { clipboard: mockClipboard });
+    Object.defineProperty(navigator, 'clipboard', {
+      value: mockClipboard,
+      writable: true,
+      configurable: true,
+    });
     mockClipboard.writeText.mockResolvedValue(undefined);
   });
 
@@ -36,13 +40,11 @@ describe('useSecureClipboard', () => {
       await result.current.copyToClipboard('secret data');
     });
 
-    act(() => {
-      vi.advanceTimersByTime(60000);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60000);
     });
 
-    await waitFor(() => {
-      expect(mockClipboard.writeText).toHaveBeenCalledWith('');
-    });
+    expect(mockClipboard.writeText).toHaveBeenCalledWith('');
   });
 
   it('should reset copied state after delay', async () => {
@@ -54,13 +56,11 @@ describe('useSecureClipboard', () => {
 
     expect(result.current.copied).toBe(true);
 
-    act(() => {
-      vi.advanceTimersByTime(2000);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000);
     });
 
-    await waitFor(() => {
-      expect(result.current.copied).toBe(false);
-    });
+    expect(result.current.copied).toBe(false);
   });
 
   it('should use custom auto-clear delay', async () => {
@@ -72,17 +72,19 @@ describe('useSecureClipboard', () => {
       await result.current.copyToClipboard('secret data');
     });
 
-    act(() => {
-      vi.advanceTimersByTime(30000);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30000);
     });
 
-    await waitFor(() => {
-      expect(mockClipboard.writeText).toHaveBeenCalledWith('');
-    });
+    expect(mockClipboard.writeText).toHaveBeenCalledWith('');
   });
 
   it('should throw error if clipboard API unavailable', async () => {
-    Object.assign(navigator, { clipboard: undefined });
+    Object.defineProperty(navigator, 'clipboard', {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
     const { result } = renderHook(() => useSecureClipboard());
 
     await expect(
