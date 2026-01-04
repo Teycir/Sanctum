@@ -121,10 +121,94 @@
   margin-bottom: 16px;
 }
 
-.passwordHint {
-  margin-top: 6px;
-  font-size: 11px;
-  line-height: 1.4;
-  text-align: center;
-  opacity: 0.7;
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+  
+  .content {
+    max-width: 100%;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+  
+  .backButton {
+    font-size: 20px;
+  }
+  
+  .form {
+    gap: 14px;
+  }
+  
+  .textarea {
+    min-height: 70px;
+    font-size: 12px;
+  }
+  
+  .warning,
+  .error {
+    font-size: 12px;
+    padding: 10px;
+  }
+  
+  .buttonPrimary {
+    padding: 12px 10px;
+  }
+  
+  .codeBlock {
+    font-size: 10px;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .title {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .backButton {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+  
+  .form {
+    gap: 12px;
+  }
+  
+  .textarea {
+    min-height: 60px;
+    font-size: 11px;
+    padding: 8px;
+  }
+  
+  .warning,
+  .error {
+    font-size: 11px;
+    padding: 8px;
+  }
+  
+  .buttonPrimary {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+  
+  .successContainer {
+    padding: 15px;
+  }
+  
+  .codeBlock {
+    font-size: 9px;
+    padding: 8px;
+  }
+  
+  .passwordHint {
+    font-size: 10px;
+  }
 }

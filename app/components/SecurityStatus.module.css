@@ -1,15 +1,14 @@
 .container {
   position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 20px;
+  top: 20px;
+  left: 20px;
+  padding: 8px 16px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 10px;
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
   opacity: 0.5;
   transition: all 0.3s ease;
@@ -25,7 +24,7 @@
 
 .separator {
   opacity: 0.2;
-  font-size: 14px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.3);
 }
 
@@ -34,9 +33,10 @@
   cursor: help;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   color: rgba(255, 255, 255, 0.7);
   transition: color 0.2s;
+  white-space: nowrap;
 }
 
 .feature:hover {
@@ -46,14 +46,13 @@
 .feature::after {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: calc(100% + 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 8px 12px;
+  top: calc(100% + 8px);
+  left: 0;
+  padding: 6px 10px;
   background: rgba(0, 0, 0, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 10px;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
@@ -65,4 +64,45 @@
 
 .feature:hover::after {
   opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .container {
+    top: 10px;
+    left: 10px;
+    padding: 6px 12px;
+    font-size: 9px;
+    gap: 8px;
+  }
+  
+  .separator {
+    font-size: 10px;
+  }
+  
+  .feature {
+    gap: 4px;
+  }
+  
+  .feature::after {
+    font-size: 9px;
+    padding: 5px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    top: 8px;
+    left: 8px;
+    padding: 5px 10px;
+    font-size: 8px;
+    gap: 6px;
+  }
+  
+  .separator {
+    display: none;
+  }
+  
+  .feature {
+    gap: 3px;
+  }
 }
