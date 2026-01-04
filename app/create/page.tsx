@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LoadingOverlay } from "../components/LoadingOverlay";
+import { SecurityStatus } from "../components/SecurityStatus";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { sanitizeInput, validateVaultForm } from "@/lib/validation/vault-form";
 import { generateVaultQR } from "@/lib/shared/qrcode";
@@ -508,7 +509,7 @@ export default function CreateVault() {
   return (
     <>
       {loading && <LoadingOverlay step={loadingStep} progress={progress} />}
-
+      <SecurityStatus />
       <div className={`${styles.container} ${isBlurred ? styles.blurred : ""}`}>
         <div className={styles.content}>
           <h1 className={styles.title}>Create Vault</h1>

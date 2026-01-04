@@ -379,7 +379,7 @@ export default function ViewVault() {
   return (
     <>
       {loading && <LoadingOverlay step={loadingStep} progress={progress} />}
-      {content && <SecurityStatus />}
+      <SecurityStatus />
       <div
         style={{
           minHeight: "100vh",

@@ -33,6 +33,9 @@ export function usePanicKey(
 
   const handlePanic = useCallback(() => {
     onPanic();
+    if (globalThis.window !== undefined) {
+      globalThis.window.close();
+    }
   }, [onPanic]);
 
   useEffect(() => {
