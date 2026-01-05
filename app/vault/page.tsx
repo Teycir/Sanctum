@@ -45,6 +45,8 @@ interface UnlockedContentProps {
   readonly isDecoy: boolean;
   readonly downloading: boolean;
   readonly onLock: () => void;
+  readonly expiresAt: number | null;
+  readonly daysUntilExpiry: number | null;
 }
 
 function UnlockedContent({
@@ -52,6 +54,8 @@ function UnlockedContent({
   isDecoy,
   downloading,
   onLock,
+  expiresAt,
+  daysUntilExpiry,
 }: UnlockedContentProps) {
   const { copied, copyToClipboard } = useSecureClipboard();
   const isFile =
@@ -123,6 +127,61 @@ function UnlockedContent({
           <span style={{ fontSize: 20 }}>✓</span>
           <span>Content Unlocked{isDecoy ? " (Decoy Layer)" : ""}</span>
         </div>
+
+        {expiresAt && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9, duration: 0.5 }}
+            style={{
+              fontSize: 12,
+              marginBottom: 12,
+              padding: "8px 14px",
+              background: daysUntilExpiry !== null && daysUntilExpiry < 7
+                ? "linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.1))"
+                : "linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))",
+              border: daysUntilExpiry !== null && daysUntilExpiry < 7
+                ? "1px solid rgba(255, 193, 7, 0.4)"
+                : "1px solid rgba(255, 255, 255, 0.15)",
+              borderRadius: 8,
+              textAlign: "center",
+              boxShadow: daysUntilExpiry !== null && daysUntilExpiry < 7
+                ? "0 0 20px rgba(255, 193, 7, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+                : "0 0 15px rgba(0, 255, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            {daysUntilExpiry !== null && daysUntilExpiry <= 0 ? (
+              <motion.span
+                animate={{ opacity: [0.7, 1, 0.7] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                style={{ color: "rgba(255, 193, 7, 1)", fontWeight: 600 }}
+              >
+                ⚠️ Expires today
+              </motion.span>
+            ) : daysUntilExpiry === 1 ? (
+              <motion.span
+                animate={{ opacity: [0.7, 1, 0.7] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                style={{ color: "rgba(255, 193, 7, 1)", fontWeight: 600 }}
+              >
+                ⚠️ Expires tomorrow
+              </motion.span>
+            ) : daysUntilExpiry !== null && daysUntilExpiry < 7 ? (
+              <span style={{ color: "rgba(255, 193, 7, 1)", fontWeight: 600 }}>
+                ⚠️ Expires in {daysUntilExpiry} days
+              </span>
+            ) : (
+              <span style={{ opacity: 0.85, fontWeight: 500 }}>
+                🗓️ Expires {new Date(expiresAt).toLocaleDateString(undefined, { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })}
+              </span>
+            )}
+          </motion.div>
+        )}
 
         {isFile ? (
           <motion.div
@@ -308,6 +367,8 @@ export default function ViewVault() {
           isDecoy={isDecoy}
           downloading={downloading}
           onLock={handleLock}
+          expiresAt={expiryInfo?.expiresAt || null}
+          daysUntilExpiry={expiryInfo?.daysUntilExpiry || null}
         />
       );
     }
