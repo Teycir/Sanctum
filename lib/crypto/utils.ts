@@ -106,7 +106,12 @@ export function detectArgonProfile(): Argon2ProfileName {
  * @param data Data to wipe
  */
 export function wipeMemory(data: Uint8Array): void {
-  crypto.getRandomValues(data);
+  // crypto.getRandomValues has 65KB limit, wipe in chunks
+  const chunkSize = 65536;
+  for (let i = 0; i < data.length; i += chunkSize) {
+    const chunk = data.subarray(i, Math.min(i + chunkSize, data.length));
+    crypto.getRandomValues(chunk);
+  }
   data.fill(0);
 }
 

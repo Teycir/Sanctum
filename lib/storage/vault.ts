@@ -47,12 +47,15 @@ export async function uploadVault(
  * Download hidden vault from IPFS gateway with public gateway fallback
  * @param stored Stored vault metadata
  * @returns Hidden vault result
+ * @throws Error if content not found on any gateway
  */
 export async function downloadVault(
   stored: StoredVault,
 ): Promise<HiddenVaultResult> {
   const { PinataClient } = await import("./pinata");
   const { FilebaseClient } = await import("./filebase");
+
+  const errors: string[] = [];
 
   // Try Pinata first (public gateway, no auth needed)
   try {
@@ -61,18 +64,26 @@ export async function downloadVault(
     const hiddenBlob = await pinata.download(stored.hiddenCID);
     return { decoyBlob, hiddenBlob, salt: stored.salt };
   } catch (error) {
-    if (
-      error instanceof TypeError ||
-      (error instanceof Error && error.message.includes("network"))
-    ) {
-      console.warn("Pinata download failed, trying Filebase fallback:", error);
-      const filebase = new FilebaseClient("");
-      const decoyBlob = await filebase.download(stored.decoyCID);
-      const hiddenBlob = await filebase.download(stored.hiddenCID);
-      return { decoyBlob, hiddenBlob, salt: stored.salt };
-    }
-    throw error;
+    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    errors.push(`Pinata: ${errorMsg}`);
+    console.warn("Pinata download failed, trying Filebase fallback:", error);
   }
+
+  // Try Filebase fallback
+  try {
+    const filebase = new FilebaseClient("");
+    const decoyBlob = await filebase.download(stored.decoyCID);
+    const hiddenBlob = await filebase.download(stored.hiddenCID);
+    return { decoyBlob, hiddenBlob, salt: stored.salt };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    errors.push(`Filebase: ${errorMsg}`);
+  }
+
+  // All gateways failed
+  throw new Error(
+    `Vault content not found on IPFS. The files may have been deleted from storage providers. Tried: ${errors.join(", ")}`
+  );
 }
 
 /**

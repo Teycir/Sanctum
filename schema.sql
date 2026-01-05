@@ -8,10 +8,12 @@ CREATE TABLE IF NOT EXISTS vault_keys (
   encrypted_hidden_cid TEXT NOT NULL,      -- Encrypted CID for hidden layer
   salt TEXT NOT NULL,                      -- Salt for Argon2id
   nonce TEXT NOT NULL,                     -- Combined nonces for CID encryption (48 bytes)
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER                       -- Unix timestamp when vault expires (NULL = never)
 );
 
 CREATE INDEX idx_created_at ON vault_keys(created_at);
+CREATE INDEX idx_expires_at ON vault_keys(expires_at);
 
 -- Access logging for rate limiting and honeypot detection
 -- WARNING: Logs IP addresses - consider privacy implications

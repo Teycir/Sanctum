@@ -37,6 +37,7 @@ export interface CreateVaultParams {
   readonly ipfsCredentials?: UploadCredentials;
   readonly decoyFilename?: string;
   readonly hiddenFilename?: string;
+  readonly expiryDays?: 7 | 30 | 90 | 180 | 365; // Vault expiry in days
 }
 
 export interface CreateVaultResult {
@@ -54,6 +55,8 @@ export interface UnlockVaultResult {
   readonly content: Uint8Array;
   readonly isDecoy: boolean;
   readonly filename?: string;
+  readonly expiresAt?: number | null; // Unix timestamp when vault expires
+  readonly daysUntilExpiry?: number | null; // Days remaining until expiry
 }
 
 // ============================================================================
@@ -102,6 +105,13 @@ export class VaultService {
     const { keyA, keyB, masterKey } = await generateSplitKeys();
     const vaultId = crypto.randomUUID();
     
+    // Calculate expiry timestamp with 5-second buffer for mobile lag
+    // This ensures vaults don't expire prematurely due to clock drift or processing delays
+    const MOBILE_LAG_BUFFER_MS = 5000; // 5 seconds
+    const expiresAt = params.expiryDays 
+      ? Date.now() + (params.expiryDays * 24 * 60 * 60 * 1000) + MOBILE_LAG_BUFFER_MS
+      : null;
+    
     // Encrypt KeyB with server-side secret (server will do this)
     // Client only sends KeyB, server encrypts it with VAULT_ENCRYPTION_SECRET
     
@@ -129,6 +139,7 @@ export class VaultService {
         encryptedHiddenCID: base64UrlEncode(encryptedHiddenCID),
         salt: base64UrlEncode(vault.salt),
         nonce: base64UrlEncode(combinedNonces),
+        expiresAt,
       }),
     });
     
@@ -197,7 +208,7 @@ export class VaultService {
     if (!fetchResponse.ok) {
       throw new Error('Vault not found');
     }
-    const { keyB: keyBEncoded, encryptedDecoyCID, encryptedHiddenCID, nonce } = await fetchResponse.json();
+    const { keyB: keyBEncoded, encryptedDecoyCID, encryptedHiddenCID, nonce, expiresAt } = await fetchResponse.json();
     
     // Decode KeyB (already decrypted by server)
     const keyB = base64UrlDecode(keyBEncoded);
@@ -235,7 +246,14 @@ export class VaultService {
     );
     const filename = isDecoy ? stored.decoyFilename : stored.hiddenFilename;
 
-    return { content, isDecoy, filename };
+    // Calculate days until expiry
+    let daysUntilExpiry: number | null = null;
+    if (expiresAt) {
+      const msUntilExpiry = expiresAt - Date.now();
+      daysUntilExpiry = Math.ceil(msUntilExpiry / (24 * 60 * 60 * 1000));
+    }
+
+    return { content, isDecoy, filename, expiresAt, daysUntilExpiry };
   }
 
   /**

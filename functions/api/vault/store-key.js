@@ -18,7 +18,7 @@ export async function onRequestPost(context) {
     }
 
     const body = await request.json();
-    const { vaultId, keyB, encryptedDecoyCID, encryptedHiddenCID, salt, nonce } = body;
+    const { vaultId, keyB, encryptedDecoyCID, encryptedHiddenCID, salt, nonce, expiresAt } = body;
 
     if (!vaultId || !keyB || !encryptedDecoyCID || !encryptedHiddenCID || !salt || !nonce) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
@@ -72,9 +72,9 @@ export async function onRequestPost(context) {
 
     await env.DB
       .prepare(
-        'INSERT INTO vault_keys (vault_id, encrypted_key_b, encrypted_decoy_cid, encrypted_hidden_cid, salt, nonce, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO vault_keys (vault_id, encrypted_key_b, encrypted_decoy_cid, encrypted_hidden_cid, salt, nonce, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
       )
-      .bind(vaultId, encryptedKeyBBase64, encryptedDecoyCID, encryptedHiddenCID, salt, nonce, Date.now())
+      .bind(vaultId, encryptedKeyBBase64, encryptedDecoyCID, encryptedHiddenCID, salt, nonce, Date.now(), expiresAt || null)
       .run();
 
     return new Response(JSON.stringify({ success: true }), {

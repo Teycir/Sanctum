@@ -12,7 +12,6 @@ export function useSecurity() {
       document.body.innerHTML = '';
       document.body.style.cssText = 'margin:0;padding:0;background:#000;display:flex;align-items:center;justify-content:center;height:100vh;color:#fff;font-family:system-ui';
       document.body.innerHTML = '<div style="text-align:center"><h1>🔒</h1><p>Session Locked</p></div>';
-      window.history.replaceState(null, '', 'data:text/html,<html><body style="background:#000"></body></html>');
       setTimeout(() => window.location.reload(), 100);
     };
 

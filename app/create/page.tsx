@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { LoadingOverlay } from "../components/LoadingOverlay";
 import { SecurityStatus } from "../components/SecurityStatus";
@@ -32,12 +32,11 @@ export default function CreateVault() {
   const [filebaseAccessKey, setFilebaseAccessKey] = useState("");
   const [filebaseSecretKey, setFilebaseSecretKey] = useState("");
   const [filebaseBucket, setFilebaseBucket] = useState("sanctum-vaults");
-  const [provider, setProvider] = useState<"pinata" | "filebase">("pinata");
+  const [provider, setProvider] = useState("pinata");
+  const [expiryDays, setExpiryDays] = useState<7 | 30 | 90 | 180 | 365>(30);
   const [hasStoredJWT, setHasStoredJWT] = useState(false);
   const [hasStoredFilebase, setHasStoredFilebase] = useState(false);
-  const [jwtStatus, setJwtStatus] = useState<
-    "validating" | "valid" | "invalid" | null
-  >(null);
+  const [jwtStatus, setJwtStatus] = useState<"validating" | "valid" | "invalid" | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
   const [progress, setProgress] = useState(0);
@@ -103,7 +102,7 @@ export default function CreateVault() {
     })();
   }, []);
 
-  const validateJWT = async (jwt: string) => {
+  const validateJWT = useCallback(async (jwt: string) => {
     if (!jwt.trim()) return;
 
     setJwtStatus("validating");
@@ -133,14 +132,14 @@ export default function CreateVault() {
     } catch {
       setJwtStatus("invalid");
     }
-  };
+  }, [hasStoredJWT]);
 
   useEffect(() => {
     if (!hasStoredJWT && pinataJWT.trim()) {
       const timer = setTimeout(() => validateJWT(pinataJWT), 500);
       return () => clearTimeout(timer);
     }
-  }, [pinataJWT, hasStoredJWT]);
+  }, [pinataJWT, hasStoredJWT, validateJWT]);
 
   const saveFilebaseCredentials = async (
     accessKey: string,
@@ -461,6 +460,7 @@ export default function CreateVault() {
         argonProfile: ARGON2_PROFILES.desktop,
         decoyFilename: decoyFile?.name,
         hiddenFilename: hiddenFile?.name,
+        expiryDays,
         ipfsCredentials:
           provider === "pinata"
             ? {
@@ -802,6 +802,105 @@ export default function CreateVault() {
 
               <div
                 style={{
+                  marginTop: 16,
+                  padding: 16,
+                  background: "rgba(255, 193, 7, 0.08)",
+                  borderRadius: 8,
+                  border: "1px solid rgba(255, 193, 7, 0.25)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 12,
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>⏱️</span>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#ffc107",
+                    }}
+                  >
+                    Vault Expiry
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {[7, 30, 90, 180, 365].map((days) => {
+                    if (
+                      days !== 7 &&
+                      days !== 30 &&
+                      days !== 90 &&
+                      days !== 180 &&
+                      days !== 365
+                    ) {
+                      return null;
+                    }
+                    return (
+                      <button
+                        key={days}
+                        type="button"
+                        onClick={() => setExpiryDays(days)}
+                        style={{
+                          flex:
+                            days === 365 ? "1 1 100%" : "1 1 calc(50% - 4px)",
+                          minWidth: 100,
+                          padding: 10,
+                          background:
+                            expiryDays === days
+                              ? "rgba(255, 193, 7, 0.25)"
+                              : "rgba(255, 255, 255, 0.05)",
+                          border: `1.5px solid ${expiryDays === days ? "rgba(255, 193, 7, 0.6)" : "rgba(255, 255, 255, 0.15)"}`,
+                          borderRadius: 6,
+                          color: "#fff",
+                          fontSize: 13,
+                          cursor: "pointer",
+                          fontWeight: expiryDays === days ? 600 : 400,
+                          transition: "all 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (expiryDays !== days) {
+                            e.currentTarget.style.background =
+                              "rgba(255, 255, 255, 0.08)";
+                            e.currentTarget.style.borderColor =
+                              "rgba(255, 255, 255, 0.25)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (expiryDays !== days) {
+                            e.currentTarget.style.background =
+                              "rgba(255, 255, 255, 0.05)";
+                            e.currentTarget.style.borderColor =
+                              "rgba(255, 255, 255, 0.15)";
+                          }
+                        }}
+                      >
+                        {days === 7 && "1 Week"}
+                        {days === 30 && "1 Month"}
+                        {days === 90 && "3 Months"}
+                        {days === 180 && "6 Months"}
+                        {days === 365 && "12 Months"}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p
+                  style={{
+                    fontSize: 11,
+                    opacity: 0.7,
+                    marginTop: 10,
+                    lineHeight: 1.4,
+                  }}
+                >
+                  ⚠️ Vault will be automatically deleted after expiry date
+                </p>
+              </div>
+
+              <div
+                style={{
                   marginTop: 8,
                   padding: 12,
                   background: "rgba(13, 71, 161, 0.1)",
@@ -1103,7 +1202,9 @@ export default function CreateVault() {
                   }}
                   style={{
                     padding: "8px 16px",
-                    background: copied ? "rgba(0, 255, 0, 0.3)" : "rgba(13, 71, 161, 0.2)",
+                    background: copied
+                      ? "rgba(0, 255, 0, 0.3)"
+                      : "rgba(13, 71, 161, 0.2)",
                     color: "#fff",
                     border: `1px solid ${copied ? "rgba(0, 255, 0, 0.5)" : "rgba(13, 71, 161, 0.4)"}`,
                     borderRadius: 6,
@@ -1114,12 +1215,14 @@ export default function CreateVault() {
                   }}
                   onMouseEnter={(e) => {
                     if (!copied) {
-                      e.currentTarget.style.background = "rgba(13, 71, 161, 0.5)";
+                      e.currentTarget.style.background =
+                        "rgba(13, 71, 161, 0.5)";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!copied) {
-                      e.currentTarget.style.background = "rgba(13, 71, 161, 0.2)";
+                      e.currentTarget.style.background =
+                        "rgba(13, 71, 161, 0.2)";
                     }
                   }}
                 >

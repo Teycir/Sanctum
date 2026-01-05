@@ -19,8 +19,16 @@ export async function onRequestPost(context) {
       });
     }
 
+    // Clean up expired vaults before querying (lazy deletion)
+    // Add 1-second grace period to account for mobile lag and clock drift
+    const GRACE_PERIOD_MS = 1000;
+    await env.DB
+      .prepare('DELETE FROM vault_keys WHERE expires_at IS NOT NULL AND expires_at < ?')
+      .bind(Date.now() - GRACE_PERIOD_MS)
+      .run();
+
     const result = await env.DB
-      .prepare('SELECT encrypted_key_b, encrypted_decoy_cid, encrypted_hidden_cid, nonce FROM vault_keys WHERE vault_id = ?')
+      .prepare('SELECT encrypted_key_b, encrypted_decoy_cid, encrypted_hidden_cid, nonce, expires_at FROM vault_keys WHERE vault_id = ?')
       .bind(vaultId)
       .first();
 
@@ -69,7 +77,8 @@ export async function onRequestPost(context) {
       keyB: keyBBase64,
       encryptedDecoyCID: result.encrypted_decoy_cid,
       encryptedHiddenCID: result.encrypted_hidden_cid,
-      nonce: result.nonce
+      nonce: result.nonce,
+      expiresAt: result.expires_at
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

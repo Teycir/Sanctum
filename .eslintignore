@@ -1,0 +1,7 @@
+.history
+.next
+out
+node_modules
+dist
+build
+coverage

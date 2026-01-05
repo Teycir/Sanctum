@@ -289,6 +289,10 @@ export default function ViewVault() {
   const [progress, setProgress] = useState(0);
   const [validating, setValidating] = useState(true);
   const [vaultExists, setVaultExists] = useState(true);
+  const [expiryInfo, setExpiryInfo] = useState<{
+    expiresAt: number | null;
+    daysUntilExpiry: number | null;
+  } | null>(null);
 
   const handleLock = () => {
     setContent("");
@@ -320,6 +324,27 @@ export default function ViewVault() {
     if (vaultExists) {
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {expiryInfo && expiryInfo.daysUntilExpiry !== null && expiryInfo.daysUntilExpiry < 3 && (
+            <div
+              style={{
+                padding: 10,
+                background: "rgba(255, 193, 7, 0.05)",
+                border: "1px solid rgba(255, 193, 7, 0.15)",
+                borderRadius: 8,
+                fontSize: 12,
+                color: "rgba(255, 193, 7, 0.7)",
+                textAlign: "center",
+              }}
+            >
+              {expiryInfo.daysUntilExpiry === 0 ? (
+                <>Vault expires today</>
+              ) : expiryInfo.daysUntilExpiry === 1 ? (
+                <>Vault expires tomorrow</>
+              ) : (
+                <>Vault expires in {expiryInfo.daysUntilExpiry} days</>
+              )}
+            </div>
+          )}
           <div>
             <input
               type="password"
@@ -522,10 +547,24 @@ export default function ViewVault() {
       }
 
       setIsDecoy(result.isDecoy);
+      setExpiryInfo({
+        expiresAt: result.expiresAt || null,
+        daysUntilExpiry: result.daysUntilExpiry || null,
+      });
       triggerConfetti();
     } catch (err) {
       clearInterval(progressInterval);
-      setError(err instanceof Error ? err.message : "Failed to unlock vault");
+      const errorMessage = err instanceof Error ? err.message : "Failed to unlock vault";
+      
+      // Check if it's a content deletion error
+      if (errorMessage.includes("not found on IPFS") || errorMessage.includes("deleted from storage")) {
+        setError(
+          "⚠️ Vault content has been deleted from IPFS storage providers. The encrypted files are no longer available for download."
+        );
+        setVaultExists(false);
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       await vaultService.stop();
       setLoading(false);
