@@ -1,17 +1,16 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import { ExtensionWarning } from './components/ExtensionWarning';
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
-
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: 'Sanctum - Client-Side Encrypted Vault',
-  description: 'Zero-trust, client-side encrypted vault system with XChaCha20-Poly1305',
-  manifest: '/manifest.json',
+  title: "Sanctum - Client-Side Encrypted Vault",
+  description:
+    "Zero-trust, client-side encrypted vault system with XChaCha20-Poly1305",
+  manifest: "/manifest.json",
   icons: {
-    icon: '/favicon.svg',
+    icon: "/favicon.svg",
   },
 };
 
@@ -22,8 +21,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${inter.variable} antialiased`} suppressHydrationWarning>
-        <ExtensionWarning />
+      <body
+        className={`${inter.variable} antialiased`}
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>

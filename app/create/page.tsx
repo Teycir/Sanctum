@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { LoadingOverlay } from "../components/LoadingOverlay";
 import { SecurityStatus } from "../components/SecurityStatus";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
+import { ExtensionWarning } from "../components/ExtensionWarning";
 import { sanitizeInput, validateVaultForm } from "@/lib/validation/vault-form";
 import { generateVaultQR } from "@/lib/shared/qrcode";
 import { useSecureClipboard } from "@/lib/hooks/useSecureClipboard";
@@ -511,6 +512,7 @@ export default function CreateVault() {
     <>
       {loading && <LoadingOverlay step={loadingStep} progress={progress} />}
       <SecurityStatus />
+      <ExtensionWarning />
       <div className={`${styles.container} ${isBlurred ? styles.blurred : ""}`}>
         <div className={styles.content}>
           <h1 className={styles.title}>Create Vault</h1>
