@@ -9,6 +9,7 @@ import { encrypt, decrypt } from "../crypto/core";
 import { assembleBlob } from "../crypto/padding";
 import { selectVaultSize, wipeMemory, encodeText } from "../crypto/utils";
 import type { Argon2Profile } from "../crypto/constants";
+import { constantTimeSelect } from "./timing";
 
 export interface LayerContent {
   readonly decoy: Uint8Array;
@@ -26,7 +27,6 @@ export interface HiddenVaultResult {
   readonly decoyBlob: Uint8Array;
   readonly hiddenBlob: Uint8Array;
   readonly salt: Uint8Array;
-  readonly hasDecoy: boolean; // Flag to indicate if decoy layer exists
 }
 
 // ============================================================================
@@ -68,14 +68,12 @@ export function createHiddenVault(
 ): HiddenVaultResult {
   // Only require decoyPassphrase if decoy content is not empty
   if (params.content.decoy.length > 0 && !params.decoyPassphrase) {
-    throw new Error(
-      "Decoy passphrase is required when decoy content is provided",
-    );
+    throw new Error('Decoy passphrase is required when decoy content is provided');
   }
-
+  
   // Use empty string as decoy passphrase if not provided (for empty decoy)
-  const decoyPass = params.decoyPassphrase || "";
-
+  const decoyPass = params.decoyPassphrase || '';
+  
   // Encrypt decoy with duress passphrase (or empty string for no decoy)
   const decoyEncrypted = encrypt({
     plaintext: params.content.decoy,
@@ -84,11 +82,7 @@ export function createHiddenVault(
   });
 
   const salt: Uint8Array = decoyEncrypted.salt;
-  const hiddenPassphrase: string = deriveLayerPassphrase(
-    params.passphrase,
-    1,
-    salt,
-  );
+  const hiddenPassphrase: string = deriveLayerPassphrase(params.passphrase, 1, salt);
 
   // Encrypt hidden layer with same salt as decoy
   const hiddenEncrypted = encrypt(
@@ -113,7 +107,6 @@ export function createHiddenVault(
     decoyBlob,
     hiddenBlob,
     salt,
-    hasDecoy: params.content.decoy.length > 0 || !!params.decoyPassphrase,
   };
 }
 
@@ -123,33 +116,74 @@ export interface UnlockResult {
 }
 
 /**
- * Unlock hidden vault layer (parallel decryption)
+ * Unlock hidden vault layer with constant-time execution
  * @param result Hidden vault result
- * @param passphrase User passphrase
+ * @param passphrase User passphrase (empty for decoy)
  * @returns Decrypted layer content with isDecoy flag
  * @throws Error if decryption fails
  */
-export async function unlockHiddenVault(
+export function unlockHiddenVault(
   result: HiddenVaultResult,
   passphrase: string,
-): Promise<UnlockResult> {
-  const hiddenPassphrase = deriveLayerPassphrase(passphrase, 1, result.salt);
-
-  const attempts: Promise<UnlockResult>[] = [
-    Promise.resolve().then((): UnlockResult => {
-      const content = decrypt({ blob: result.hiddenBlob, passphrase: hiddenPassphrase });
-      return { content, isDecoy: false };
-    }),
-  ];
-
-  if (result.hasDecoy) {
-    attempts.push(
-      Promise.resolve().then((): UnlockResult => {
-        const content = decrypt({ blob: result.decoyBlob, passphrase });
-        return { content, isDecoy: true };
-      })
-    );
+): UnlockResult {
+  const hiddenPassphrase: string = deriveLayerPassphrase(passphrase, 1, result.salt);
+  
+  // Always attempt both decryptions to prevent timing attacks
+  const decryptionResults = constantTimeSelect(
+    true,
+    () => {
+      let decoyContent: Uint8Array | null = null;
+      let hiddenContent: Uint8Array | null = null;
+      let decoySuccess = false;
+      let hiddenSuccess = false;
+      
+      try {
+        decoyContent = decrypt({ blob: result.decoyBlob, passphrase });
+        decoySuccess = true;
+      } catch {
+        decoySuccess = false;
+      }
+      
+      try {
+        hiddenContent = decrypt({ blob: result.hiddenBlob, passphrase: hiddenPassphrase });
+        hiddenSuccess = true;
+      } catch {
+        hiddenSuccess = false;
+      }
+      
+      return { decoyContent, hiddenContent, decoySuccess, hiddenSuccess };
+    },
+    () => {
+      let decoyContent: Uint8Array | null = null;
+      let hiddenContent: Uint8Array | null = null;
+      let decoySuccess = false;
+      let hiddenSuccess = false;
+      
+      try {
+        hiddenContent = decrypt({ blob: result.hiddenBlob, passphrase: hiddenPassphrase });
+        hiddenSuccess = true;
+      } catch {
+        hiddenSuccess = false;
+      }
+      
+      try {
+        decoyContent = decrypt({ blob: result.decoyBlob, passphrase });
+        decoySuccess = true;
+      } catch {
+        decoySuccess = false;
+      }
+      
+      return { decoyContent, hiddenContent, decoySuccess, hiddenSuccess };
+    }
+  );
+  
+  // Return result based on which succeeded
+  if (decryptionResults.decoySuccess) {
+    return { content: decryptionResults.decoyContent!, isDecoy: true };
   }
-
-  return await Promise.any(attempts);
+  if (decryptionResults.hiddenSuccess) {
+    return { content: decryptionResults.hiddenContent!, isDecoy: false };
+  }
+  
+  throw new Error('Invalid passphrase');
 }
