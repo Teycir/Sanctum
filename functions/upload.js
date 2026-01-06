@@ -17,6 +17,12 @@ const uploadHandler = {
 
     try {
       const contentType = request.headers.get('content-type') || '';
+      const contentLength = parseInt(request.headers.get('content-length') || '0');
+      const MAX_SIZE = 26 * 1024 * 1024; // 26MB (25MB + overhead)
+      
+      if (contentLength > MAX_SIZE) {
+        return new Response('File too large', { status: 413 });
+      }
       
       // Binary upload (efficient)
       if (contentType.includes('application/octet-stream')) {
@@ -26,13 +32,33 @@ const uploadHandler = {
         const secretKey = request.headers.get('x-filebase-secret-key');
         const bucket = request.headers.get('x-filebase-bucket') || 'sanctum-vaults';
         
-        const data = await request.arrayBuffer();
+        // Stream directly to avoid memory exhaustion
+        const chunks = [];
+        const reader = request.body.getReader();
+        let totalSize = 0;
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          totalSize += value.length;
+          if (totalSize > MAX_SIZE) {
+            return new Response('File too large', { status: 413 });
+          }
+          chunks.push(value);
+        }
+        
+        const data = new Uint8Array(totalSize);
+        let offset = 0;
+        for (const chunk of chunks) {
+          data.set(chunk, offset);
+          offset += chunk.length;
+        }
         
         let result;
         if (provider === 'pinata') {
-          result = await uploadToPinata(new Uint8Array(data), jwt);
+          result = await uploadToPinata(data, jwt);
         } else if (provider === 'filebase') {
-          result = await uploadToFilebase(new Uint8Array(data), { accessKey, secretKey, bucket });
+          result = await uploadToFilebase(data, { accessKey, secretKey, bucket });
         } else {
           return new Response('Invalid provider', { status: 400 });
         }

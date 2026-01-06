@@ -26,7 +26,7 @@ describe('hidden/vault', () => {
   });
 
   describe('createHiddenVault/unlockHiddenVault', () => {
-    it('should create and unlock decoy layer', () => {
+    it('should create and unlock decoy layer', async () => {
       const decoy = new TextEncoder().encode('innocent content');
       const hidden = new TextEncoder().encode('secret content');
 
@@ -37,12 +37,12 @@ describe('hidden/vault', () => {
         argonProfile: ARGON2_PROFILES.mobile
       });
 
-      const unlocked = unlockHiddenVault(result, 'decoy-pass-12345');
+      const unlocked = await unlockHiddenVault(result, 'decoy-pass-12345');
       expect(unlocked.content).toEqual(decoy);
       expect(unlocked.isDecoy).toBe(true);
     });
 
-    it('should create and unlock hidden layer', () => {
+    it('should create and unlock hidden layer', async () => {
       const decoy = new TextEncoder().encode('innocent content');
       const hidden = new TextEncoder().encode('secret content');
 
@@ -53,12 +53,12 @@ describe('hidden/vault', () => {
         argonProfile: ARGON2_PROFILES.mobile
       });
 
-      const unlocked = unlockHiddenVault(result, 'master-pass-12345');
+      const unlocked = await unlockHiddenVault(result, 'master-pass-12345');
       expect(unlocked.content).toEqual(hidden);
       expect(unlocked.isDecoy).toBe(false);
     });
 
-    it('should fail with wrong passphrase', () => {
+    it('should fail with wrong passphrase', async () => {
       const decoy = new TextEncoder().encode('innocent content');
       const hidden = new TextEncoder().encode('secret content');
 
@@ -69,12 +69,12 @@ describe('hidden/vault', () => {
         argonProfile: ARGON2_PROFILES.mobile
       });
 
-      expect(() => {
-        unlockHiddenVault(result, 'wrong-pass-12345');
-      }).toThrow();
+      await expect(async () => {
+        await unlockHiddenVault(result, 'wrong-pass-12345');
+      }).rejects.toThrow();
     });
 
-    it('should handle empty decoy content', () => {
+    it('should handle empty decoy content', async () => {
       const decoy = new Uint8Array(0);
       const hidden = new TextEncoder().encode('secret content');
       const decoyPassphrase = 'decoy-pass-12345';
@@ -86,12 +86,12 @@ describe('hidden/vault', () => {
         argonProfile: ARGON2_PROFILES.mobile
       });
 
-      const unlocked = unlockHiddenVault(result, decoyPassphrase);
+      const unlocked = await unlockHiddenVault(result, decoyPassphrase);
       expect(unlocked.content.length).toBe(0);
       expect(unlocked.isDecoy).toBe(true);
     });
 
-    it('should create hidden-only vault without decoy passphrase', () => {
+    it('should create hidden-only vault without decoy passphrase', async () => {
       const decoy = new Uint8Array(0);
       const hidden = new TextEncoder().encode('secret content');
 
@@ -103,12 +103,12 @@ describe('hidden/vault', () => {
       });
 
       // Should unlock hidden layer with master passphrase
-      const unlocked = unlockHiddenVault(result, 'master-pass-12345');
+      const unlocked = await unlockHiddenVault(result, 'master-pass-12345');
       expect(unlocked.content).toEqual(hidden);
       expect(unlocked.isDecoy).toBe(false);
     });
 
-    it('should unlock decoy with duress passphrase', () => {
+    it('should unlock decoy with duress passphrase', async () => {
       const decoy = new TextEncoder().encode('innocent content');
       const hidden = new TextEncoder().encode('secret content');
 
@@ -119,12 +119,12 @@ describe('hidden/vault', () => {
         argonProfile: ARGON2_PROFILES.mobile
       });
 
-      const unlocked = unlockHiddenVault(result, 'duress-pass-12345');
+      const unlocked = await unlockHiddenVault(result, 'duress-pass-12345');
       expect(unlocked.content).toEqual(decoy);
       expect(unlocked.isDecoy).toBe(true);
     });
 
-    it('should unlock hidden with real passphrase when duress set', () => {
+    it('should unlock hidden with real passphrase when duress set', async () => {
       const decoy = new TextEncoder().encode('innocent content');
       const hidden = new TextEncoder().encode('secret content');
 
@@ -135,7 +135,7 @@ describe('hidden/vault', () => {
         argonProfile: ARGON2_PROFILES.mobile
       });
 
-      const unlocked = unlockHiddenVault(result, 'real-pass-12345');
+      const unlocked = await unlockHiddenVault(result, 'real-pass-12345');
       expect(unlocked.content).toEqual(hidden);
       expect(unlocked.isDecoy).toBe(false);
     });
