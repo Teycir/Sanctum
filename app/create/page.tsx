@@ -407,7 +407,7 @@ export default function CreateVault() {
       { progress: 10, step: "Deriving keys...", delay: 0 },
       { progress: 30, step: "Encrypting decoy layer...", delay: 800 },
       { progress: 50, step: "Encrypting hidden layer...", delay: 1600 },
-      { progress: 85, step: "Uploading to IPFS...", delay: 2400 },
+      { progress: 85, step: "Uploading to IPFS (may take up to 10 minutes)...", delay: 2400 },
     ];
 
     const progressInterval = setInterval(() => {
