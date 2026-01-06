@@ -5,18 +5,9 @@
 ![Storage](https://img.shields.io/badge/Storage-IPFS-neon_green?style=for-the-badge)
 ![Hosting](https://img.shields.io/badge/Hosting-Cloudflare%20Pages-neon_green?style=for-the-badge)
 
-```
-    ╔═══════════════════════════════╗
-    ║         S A N C T U M         ║
-    ║   ┌─────────────────────┐     ║
-    ║   │  ╔═══════════════╗  │     ║
-    ║   │  ║   🔒 LOCKED   ║  │     ║
-    ║   │  ╚═══════════════╝  │     ║
-    ║   │         ║ ║         │     ║
-    ║   └─────────────────────┘     ║
-    ╚═══════════════════════════════╝
-     Plausible Deniability Vault
-```
+<a href="https://sanctumvault.online">
+  <img src="public/sanctum_ascii.svg" alt="Sanctum Vault Animation">
+</a>
 
 **Cryptographically sound plausible deniability for high-risk users.**
 

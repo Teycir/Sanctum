@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 180" width="800" height="180">
+  <style>
+    @font-face {
+      font-family: 'Courier New';
+      src: local('Courier New');
+    }
+    .ascii-text {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      fill: #ffffff;
+      font-weight: bold;
+      white-space: pre;
+      text-anchor: middle;
+    }
+    .scanline {
+      fill: url(#grad);
+      animation: scan 3s linear infinite;
+      opacity: 0.2;
+    }
+    @keyframes scan {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+    @keyframes glow {
+        0%, 100% {
+            filter: drop-shadow(0 0 3px #0d47a1);
+        }
+        50% {
+            filter: drop-shadow(0 0 8px #0d47a1);
+        }
+    }
+    .container {
+        animation: glow 3s ease-in-out infinite;
+    }
+  </style>
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0d47a1" stop-opacity="0" />
+      <stop offset="50%" stop-color="#0d47a1" stop-opacity="1" />
+      <stop offset="100%" stop-color="#0d47a1" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="#0a0e27" />
+  <g class="container">
+    <text x="400" y="35" class="ascii-text"> ███████╗ █████╗ ███╗   ██╗ ██████╗████████╗██╗   ██╗███╗   ███╗</text>
+    <text x="400" y="52" class="ascii-text"> ██╔════╝██╔══██╗████╗  ██║██╔════╝╚══██╔══╝██║   ██║████╗ ████║</text>
+    <text x="400" y="69" class="ascii-text"> ███████╗███████║██╔██╗ ██║██║        ██║   ██║   ██║██╔████╔██║</text>
+    <text x="400" y="86" class="ascii-text"> ╚════██║██╔══██║██║╚██╗██║██║        ██║   ██║   ██║██║╚██╔╝██║</text>
+    <text x="400" y="103" class="ascii-text"> ███████║██║  ██║██║ ╚████║╚██████╗   ██║   ╚██████╔╝██║ ╚═╝ ██║</text>
+    <text x="400" y="120" class="ascii-text"> ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝     ╚═╝</text>
+    <text x="400" y="145" class="ascii-text" style="font-size: 11px; opacity: 0.8;">           🔒 Plausible Deniability Vault 🔒</text>
+  </g>
+  <rect width="100%" height="20" class="scanline" />
+</svg>
