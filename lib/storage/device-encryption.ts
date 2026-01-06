@@ -5,6 +5,7 @@
 import { sha256 } from '@noble/hashes/sha2';
 
 const DEVICE_KEY_SALT = 'sanctum_device_salt';
+const DEFAULT_PIN = 'sanctum_default'; // Default PIN for automatic encryption
 let cachedKey: CryptoKey | null = null;
 let cachedPin: string | null = null;
 
@@ -21,20 +22,22 @@ async function getDeviceKey(pin: string): Promise<CryptoKey> {
   let salt = localStorage.getItem(DEVICE_KEY_SALT);
   if (!salt) {
     const saltBytes = crypto.getRandomValues(new Uint8Array(16));
-    salt = btoa(String.fromCharCode(...saltBytes));
+    salt = btoa(String.fromCodePoint(...saltBytes));
     localStorage.setItem(DEVICE_KEY_SALT, salt);
   }
 
-  const saltBytes = Uint8Array.from(atob(salt), c => c.charCodeAt(0));
+  const saltBytes = Uint8Array.from(atob(salt), c => c.codePointAt(0)!);
   const pinBytes = new TextEncoder().encode(pin);
   const combined = new Uint8Array(saltBytes.length + pinBytes.length);
   combined.set(saltBytes, 0);
   combined.set(pinBytes, saltBytes.length);
 
   const keyMaterial = sha256(combined);
+  // Create new Uint8Array with ArrayBuffer to satisfy TypeScript
+  const keyBuffer = new Uint8Array(keyMaterial);
   const key = await crypto.subtle.importKey(
     'raw',
-    keyMaterial,
+    keyBuffer,
     { name: 'AES-GCM', length: 256 },
     false, // Non-extractable
     ['encrypt', 'decrypt']
@@ -56,10 +59,10 @@ export function clearDeviceKey(): void {
 /**
  * Encrypt data with device key
  * @param data Data to encrypt
- * @param pin User PIN
+ * @param pin User PIN (optional, uses default if not provided)
  * @returns Encrypted data (IV + ciphertext)
  */
-export async function encryptWithDeviceKey(data: string, pin: string): Promise<string> {
+export async function encryptWithDeviceKey(data: string, pin: string = DEFAULT_PIN): Promise<string> {
   const key = await getDeviceKey(pin);
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encoded = new TextEncoder().encode(data);
@@ -74,19 +77,19 @@ export async function encryptWithDeviceKey(data: string, pin: string): Promise<s
   combined.set(iv, 0);
   combined.set(new Uint8Array(encrypted), iv.length);
   
-  return btoa(String.fromCharCode(...combined));
+  return btoa(String.fromCodePoint(...combined));
 }
 
 /**
  * Decrypt data with device key
  * @param encrypted Encrypted data (base64)
- * @param pin User PIN
+ * @param pin User PIN (optional, uses default if not provided)
  * @returns Decrypted data or null on error
  */
-export async function decryptWithDeviceKey(encrypted: string, pin: string): Promise<string | null> {
+export async function decryptWithDeviceKey(encrypted: string, pin: string = DEFAULT_PIN): Promise<string | null> {
   try {
     const key = await getDeviceKey(pin);
-    const combined = Uint8Array.from(atob(encrypted), c => c.charCodeAt(0));
+    const combined = Uint8Array.from(atob(encrypted), c => c.codePointAt(0)!);
     const iv = combined.slice(0, 12);
     const ciphertext = combined.slice(12);
     
