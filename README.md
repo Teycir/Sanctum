@@ -44,7 +44,7 @@
 
 ### Key Features
 
-- 🎭 **Plausible Deniability** - Hidden layers indistinguishable from decoy content
+-🎭 **Plausible Deniability** - Hidden layers indistinguishable from decoy content
 - 🌐 **Decentralized Storage** - Data pinned on IPFS via free services (Pinata/Filebase)
 - 🔑 **XChaCha20-Poly1305** - Military-grade encryption with split-key architecture
 - 🚫 **Zero Server Trust** - All crypto operations in browser, keys never touch server
@@ -121,7 +121,7 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 - **Hosting**: Cloudflare Pages (static site, free tier)
 - **Database**: Cloudflare D1 (split-key storage)
 - **Cryptography**: @noble/ciphers + @noble/hashes (XChaCha20-Poly1305, Argon2id)
-- **Storage**: IPFS via Pinata (primary) with public gateway fallback
+- **Storage**: IPFS via Pinata/Filebase with public gateway fallback
 - **State**: RAM-only (Web Workers, no persistence)
   - Keys never written to disk
   - Auto-wiped on browser close
@@ -138,19 +138,20 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 │  │   Web Worker (RAM-only)     │   │
 │  │   • Argon2id key derivation │   │
 │  │   • XChaCha20 encryption    │   │
-│  │   • 3-layer encryption      │   │
+│  │   • Split-key architecture │   │
 │  │   • Auto-clear on idle      │   │
 │  └─────────────────────────────┘   │
 └──────────────┬──────────────────────┘
                │
                ├──────────► Cloudflare D1
-               │            • Encrypted Key A
+               │            • Encrypted KeyB
                │            • Encrypted CIDs
-               │            • Access logs
+               │            • Vault metadata
                │
-               └──────────► IPFS Pinata
-                            • Encrypted blobs
-                            • Public gateways
+               ├──────────► IPFS (Pinata/Filebase)
+               │            • Encrypted blobs
+               │            • Public gateways
+               │            • Decentralized storage
 ```
 
 **Critical**: All encryption client-side. Server only stores encrypted fragments.
@@ -178,7 +179,7 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 
 ### "What if they compromise Cloudflare Workers?"
 
-**⚠️ LIMITED IMPACT.** Attacker gets encrypted metadata only. Cannot get: Passphrases, decrypted content, or Key B (in URL).
+**⚠️ LIMITED IMPACT.** Attacker gets encrypted metadata only. Cannot get: Passphrases, decrypted content, or KeyA (in URL).
 
 ### "What if I lose the vault link?"
 
