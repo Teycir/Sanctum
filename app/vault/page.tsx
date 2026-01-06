@@ -66,6 +66,48 @@ function UnlockedContent({
     content.endsWith(".tar") ||
     content.endsWith(".gz");
 
+  const getExpiryMessage = () => {
+    if (daysUntilExpiry !== null && daysUntilExpiry <= 0) {
+      return (
+        <motion.span
+          animate={{ opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          style={{ color: "rgba(255, 193, 7, 1)", fontWeight: 600 }}
+        >
+          ⚠️ Expires today
+        </motion.span>
+      );
+    }
+    if (daysUntilExpiry === 1) {
+      return (
+        <motion.span
+          animate={{ opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          style={{ color: "rgba(255, 193, 7, 1)", fontWeight: 600 }}
+        >
+          ⚠️ Expires tomorrow
+        </motion.span>
+      );
+    }
+    if (daysUntilExpiry !== null && daysUntilExpiry < 7) {
+      return (
+        <span style={{ color: "rgba(255, 193, 7, 1)", fontWeight: 600 }}>
+          ⚠️ Expires in {daysUntilExpiry} days
+        </span>
+      );
+    }
+    return (
+      <span style={{ opacity: 0.85, fontWeight: 500 }}>
+        🗓️ Expires{" "}
+        {new Date(expiresAt!).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })}
+      </span>
+    );
+  };
+
   return (
     <div style={{ position: "relative" }}>
       <motion.div
@@ -137,49 +179,24 @@ function UnlockedContent({
               fontSize: 12,
               marginBottom: 12,
               padding: "8px 14px",
-              background: daysUntilExpiry !== null && daysUntilExpiry < 7
-                ? "linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.1))"
-                : "linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))",
-              border: daysUntilExpiry !== null && daysUntilExpiry < 7
-                ? "1px solid rgba(255, 193, 7, 0.4)"
-                : "1px solid rgba(255, 255, 255, 0.15)",
+              background:
+                daysUntilExpiry !== null && daysUntilExpiry < 7
+                  ? "linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.1))"
+                  : "linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))",
+              border:
+                daysUntilExpiry !== null && daysUntilExpiry < 7
+                  ? "1px solid rgba(255, 193, 7, 0.4)"
+                  : "1px solid rgba(255, 255, 255, 0.15)",
               borderRadius: 8,
               textAlign: "center",
-              boxShadow: daysUntilExpiry !== null && daysUntilExpiry < 7
-                ? "0 0 20px rgba(255, 193, 7, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
-                : "0 0 15px rgba(0, 255, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
+              boxShadow:
+                daysUntilExpiry !== null && daysUntilExpiry < 7
+                  ? "0 0 20px rgba(255, 193, 7, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+                  : "0 0 15px rgba(0, 255, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
               backdropFilter: "blur(10px)",
             }}
           >
-            {daysUntilExpiry !== null && daysUntilExpiry <= 0 ? (
-              <motion.span
-                animate={{ opacity: [0.7, 1, 0.7] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                style={{ color: "rgba(255, 193, 7, 1)", fontWeight: 600 }}
-              >
-                ⚠️ Expires today
-              </motion.span>
-            ) : daysUntilExpiry === 1 ? (
-              <motion.span
-                animate={{ opacity: [0.7, 1, 0.7] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                style={{ color: "rgba(255, 193, 7, 1)", fontWeight: 600 }}
-              >
-                ⚠️ Expires tomorrow
-              </motion.span>
-            ) : daysUntilExpiry !== null && daysUntilExpiry < 7 ? (
-              <span style={{ color: "rgba(255, 193, 7, 1)", fontWeight: 600 }}>
-                ⚠️ Expires in {daysUntilExpiry} days
-              </span>
-            ) : (
-              <span style={{ opacity: 0.85, fontWeight: 500 }}>
-                🗓️ Expires {new Date(expiresAt).toLocaleDateString(undefined, { 
-                  month: 'short', 
-                  day: 'numeric', 
-                  year: 'numeric' 
-                })}
-              </span>
-            )}
+            {getExpiryMessage()}
           </motion.div>
         )}
 
@@ -385,27 +402,27 @@ export default function ViewVault() {
     if (vaultExists) {
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          {expiryInfo && expiryInfo.daysUntilExpiry !== null && expiryInfo.daysUntilExpiry < 3 && (
-            <div
-              style={{
-                padding: 10,
-                background: "rgba(255, 193, 7, 0.05)",
-                border: "1px solid rgba(255, 193, 7, 0.15)",
-                borderRadius: 8,
-                fontSize: 12,
-                color: "rgba(255, 193, 7, 0.7)",
-                textAlign: "center",
-              }}
-            >
-              {expiryInfo.daysUntilExpiry === 0 ? (
-                <>Vault expires today</>
-              ) : expiryInfo.daysUntilExpiry === 1 ? (
-                <>Vault expires tomorrow</>
-              ) : (
-                <>Vault expires in {expiryInfo.daysUntilExpiry} days</>
-              )}
-            </div>
-          )}
+          {expiryInfo &&
+            expiryInfo.daysUntilExpiry !== null &&
+            expiryInfo.daysUntilExpiry < 3 && (
+              <div
+                style={{
+                  padding: 10,
+                  background: "rgba(255, 193, 7, 0.05)",
+                  border: "1px solid rgba(255, 193, 7, 0.15)",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  color: "rgba(255, 193, 7, 0.7)",
+                  textAlign: "center",
+                }}
+              >
+                {expiryInfo.daysUntilExpiry === 0 && <>Vault expires today</>}
+                {expiryInfo.daysUntilExpiry === 1 && <>Vault expires tomorrow</>}
+                {expiryInfo.daysUntilExpiry !== null && expiryInfo.daysUntilExpiry > 1 && (
+                  <>Vault expires in {expiryInfo.daysUntilExpiry} days</>
+                )}
+              </div>
+            )}
           <div>
             <input
               type="password"
@@ -615,12 +632,16 @@ export default function ViewVault() {
       triggerConfetti();
     } catch (err) {
       clearInterval(progressInterval);
-      const errorMessage = err instanceof Error ? err.message : "Failed to unlock vault";
-      
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to unlock vault";
+
       // Check if it's a content deletion error
-      if (errorMessage.includes("not found on IPFS") || errorMessage.includes("deleted from storage")) {
+      if (
+        errorMessage.includes("not found on IPFS") ||
+        errorMessage.includes("deleted from storage")
+      ) {
         setError(
-          "⚠️ Vault content has been deleted from IPFS storage providers. The encrypted files are no longer available for download."
+          "⚠️ Vault content has been deleted from IPFS storage providers. The encrypted files are no longer available for download.",
         );
         setVaultExists(false);
       } else {
