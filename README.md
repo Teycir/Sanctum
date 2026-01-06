@@ -5,7 +5,18 @@
 ![Storage](https://img.shields.io/badge/Storage-IPFS-neon_green?style=for-the-badge)
 ![Hosting](https://img.shields.io/badge/Hosting-Cloudflare%20Pages-neon_green?style=for-the-badge)
 
-# Sanctum
+```
+    ╔═══════════════════════════════╗
+    ║         S A N C T U M         ║
+    ║   ┌─────────────────────┐     ║
+    ║   │  ╔═══════════════╗  │     ║
+    ║   │  ║   🔒 LOCKED   ║  │     ║
+    ║   │  ╚═══════════════╝  │     ║
+    ║   │         ║ ║         │     ║
+    ║   └─────────────────────┘     ║
+    ╚═══════════════════════════════╝
+     Plausible Deniability Vault
+```
 
 **Cryptographically sound plausible deniability for high-risk users.**
 
