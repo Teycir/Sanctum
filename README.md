@@ -9,7 +9,7 @@
   <img src="public/sanctum_ascii.svg" alt="Sanctum Vault Animation">
 </a>
 
-**Cryptographically sound plausible deniability for high-risk users.**
+**Zero-trust encrypted vault system for high-risk users.**
 
 ### _"What cannot be proven to exist cannot be coerced."_
 
