@@ -1,6 +1,10 @@
 'use client';
 
 export function LockOverlay() {
+  const handleReload = () => {
+    window.location.reload();
+  };
+
   return (
     <div
       style={{
@@ -19,8 +23,24 @@ export function LockOverlay() {
         <h1 style={{ fontSize: 64, margin: 0 }}>🔒</h1>
         <p style={{ fontSize: 18, marginTop: 16 }}>Session Locked</p>
         <p style={{ fontSize: 14, opacity: 0.6, marginTop: 8 }}>
-          Reload to unlock
+          All sensitive data cleared from memory
         </p>
+        <button
+          onClick={handleReload}
+          style={{
+            marginTop: 24,
+            padding: '12px 24px',
+            background: 'rgba(13, 71, 161, 0.3)',
+            color: '#fff',
+            border: '1px solid rgba(13, 71, 161, 0.5)',
+            borderRadius: 8,
+            fontSize: 14,
+            fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >
+          Reload Page
+        </button>
       </div>
     </div>
   );

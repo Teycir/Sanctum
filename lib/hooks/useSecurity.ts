@@ -13,7 +13,8 @@ export function useSecurity() {
 
     const lockScreen = () => {
       setIsLocked(true);
-      setTimeout(() => window.location.reload(), 100);
+      sessionStorage.clear();
+      localStorage.clear();
     };
 
     const resetInactivityTimer = () => {
