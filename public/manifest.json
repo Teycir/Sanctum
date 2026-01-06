@@ -1,16 +1,18 @@
 {
-  "name": "Sanctum Vault",
+  "name": "Sanctum Vault - Zero-Trust Encrypted Storage",
   "short_name": "Sanctum",
-  "description": "Cryptographically sound plausible deniability for high-risk users",
+  "description": "Military-grade encrypted vault with plausible deniability for activists, journalists & whistleblowers. XChaCha20-Poly1305, IPFS, 100% free.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#10b981",
+  "background_color": "#0a0e27",
+  "theme_color": "#0d47a1",
+  "categories": ["security", "privacy", "encryption"],
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }

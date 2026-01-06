@@ -60,7 +60,7 @@
 
 ### For Users
 
-1. Visit [sanctum-vault.pages.dev](https://sanctum-vault.pages.dev)
+1. Visit [sanctumvault.online](https://sanctumvault.online)
 2. Configure Pinata or Filebase (free IPFS providers)
 3. Create your vault with optional decoy content
 4. Set passphrase for hidden layer
