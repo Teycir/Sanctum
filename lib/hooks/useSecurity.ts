@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 const ESC_DOUBLE_PRESS_WINDOW = 500; // 500ms window for double press
@@ -6,12 +6,13 @@ const ESC_DOUBLE_PRESS_WINDOW = 500; // 500ms window for double press
 export function useSecurity() {
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastEscPressRef = useRef<number>(0);
+  const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const lockScreen = () => {
-      document.body.innerHTML = '';
-      document.body.style.cssText = 'margin:0;padding:0;background:#000;display:flex;align-items:center;justify-content:center;height:100vh;color:#fff;font-family:system-ui';
-      document.body.innerHTML = '<div style="text-align:center"><h1>🔒</h1><p>Session Locked</p></div>';
+      setIsLocked(true);
       setTimeout(() => window.location.reload(), 100);
     };
 
@@ -63,4 +64,6 @@ export function useSecurity() {
       window.removeEventListener('touchend', handleActivity);
     };
   }, []);
+
+  return isLocked;
 }

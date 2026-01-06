@@ -5,8 +5,6 @@
 import {
   uploadVault,
   downloadVault,
-  serializeVaultMetadata,
-  deserializeVaultMetadata,
 } from "../storage/vault";
 import type { UploadCredentials } from "../storage/uploader";
 import { CryptoWorker } from "../workers/crypto";
@@ -20,10 +18,6 @@ import type { LayerContent } from "../duress/layers";
 import {
   generateSplitKeys,
   deriveMasterKey,
-  encryptKeyB,
-  decryptKeyB,
-  serializeKeyB,
-  deserializeKeyB,
 } from "../crypto/split-key";
 import { xchacha20poly1305 } from '@noble/ciphers/chacha';
 import { randomBytes } from '@noble/hashes/utils';
