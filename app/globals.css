@@ -112,6 +112,7 @@
     overflow-x: hidden;
     max-width: 100vw;
     min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   body::before {

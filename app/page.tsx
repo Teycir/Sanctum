@@ -10,7 +10,7 @@ import { SecurityStatus } from './components/SecurityStatus';
 export default function Home() {
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px 20px', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px 40px', position: 'relative' }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 8, zIndex: 10 }}>
         <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.7)', fontWeight: 500 }}>
           🔒 Client-Side Crypto - Browser encryption
@@ -29,7 +29,7 @@ export default function Home() {
           Source Code
         </a>
       </div>
-      <div style={{ textAlign: 'center', maxWidth: '90%', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}>
+      <div style={{ textAlign: 'center', maxWidth: '90%', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', paddingBottom: '60px' }}>
         <SecurityStatus />
         <VaultIcon />
         <h1 style={{ fontSize: 'clamp(32px, 8vw, 48px)', marginBottom: 12, fontWeight: 700 }} className="glow-text pulse-glow">
@@ -52,11 +52,11 @@ export default function Home() {
         </div>
         <CyclingFeatures />
       </div>
-      <footer style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px 20px', fontSize: 12, color: 'rgba(255, 255, 255, 0.6)', paddingTop: 10, marginTop: 20 }}>
+      <footer style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px 20px', fontSize: 'clamp(11px, 2.5vw, 12px)', color: 'rgba(255, 255, 255, 0.6)', padding: '12px 20px', background: 'linear-gradient(to top, rgba(10, 14, 39, 0.95), transparent)', backdropFilter: 'blur(10px)', zIndex: 100 }}>
         <a href="/faq.html" style={{ color: 'rgba(255, 255, 255, 0.6)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}>FAQ</a>
-        <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>•</span>
+        <span style={{ color: 'rgba(255, 255, 255, 0.3)', userSelect: 'none' }}>•</span>
         <a href="/how-to-use.html" style={{ color: 'rgba(255, 255, 255, 0.6)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}>How to Use</a>
-        <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>•</span>
+        <span style={{ color: 'rgba(255, 255, 255, 0.3)', userSelect: 'none' }}>•</span>
         <a href="https://teycirbensoltane.tn" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255, 255, 255, 0.6)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}>Made by Teycir</a>
       </footer>
     </div>
