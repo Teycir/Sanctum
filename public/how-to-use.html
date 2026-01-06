@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How to Use - Sanctum</title>
+  <style>
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      25% { background-position: 100% 50%; }
+      50% { background-position: 50% 100%; }
+      75% { background-position: 0% 50%; }
+    }
+    @keyframes haze {
+      0%, 100% { opacity: 0.3; transform: scale(1) translate(0, 0) rotate(0deg); }
+      25% { opacity: 0.5; transform: scale(1.2) translate(10%, -10%) rotate(5deg); }
+      50% { opacity: 0.4; transform: scale(0.9) translate(-10%, 10%) rotate(-5deg); }
+      75% { opacity: 0.5; transform: scale(1.1) translate(5%, -5%) rotate(3deg); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% {
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(200, 150, 255, 0.3);
+      }
+      50% {
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(200, 150, 255, 0.5), 0 0 30px rgba(200, 150, 255, 0.3);
+      }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1520 20%, #0f0f1a 40%, #1a1a2e 60%, #0d0d15 80%, #000 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 25s ease-in-out infinite;
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at 15% 20%, rgba(13, 71, 161, 0.15) 0%, transparent 50%),
+                  radial-gradient(ellipse at 85% 80%, rgba(0, 119, 182, 0.12) 0%, transparent 50%),
+                  radial-gradient(circle at 50% 50%, rgba(70, 130, 180, 0.08) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 40%, rgba(13, 71, 161, 0.15) 0%, transparent 30%),
+                  radial-gradient(circle at 70% 60%, rgba(65, 105, 225, 0.12) 0%, transparent 35%),
+                  radial-gradient(circle at 50% 80%, rgba(0, 119, 182, 0.1) 0%, transparent 40%);
+      filter: blur(100px);
+      animation: haze 35s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    h1 {
+      font-size: clamp(32px, 8vw, 48px);
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 40px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(200, 150, 255, 0.3);
+      animation: pulse-glow 8s ease-in-out infinite;
+    }
+    h2 {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 30px 0 15px;
+      color: #fff;
+    }
+    .step {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    .step:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .step-number {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      background: linear-gradient(135deg, #0d47a1, #1976d2);
+      border-radius: 50%;
+      text-align: center;
+      line-height: 30px;
+      font-weight: 700;
+      margin-right: 10px;
+    }
+    .step-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .step-content {
+      font-size: 14px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.8);
+      margin-left: 40px;
+    }
+    .warning {
+      background: rgba(255, 193, 7, 0.1);
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .warning strong {
+      color: #ffc107;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 30px;
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    .back-link:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+    ul {
+      margin-left: 40px;
+      margin-top: 10px;
+    }
+    li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.8);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← Back to Home</a>
+    <h1 id="title">How to Use Sanctum</h1>
+    
+    <h2>Creating a Vault</h2>
+    
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">1</span>
+        Configure IPFS Provider
+      </div>
+      <div class="step-content">
+        Choose between Pinata or Filebase (both free). Enter your API credentials:
+        <ul>
+          <li><strong>Pinata:</strong> JWT token from pinata.cloud</li>
+          <li><strong>Filebase:</strong> Access Key + Secret Key from filebase.com</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">2</span>
+        Choose Vault Mode
+      </div>
+      <div class="step-content">
+        <ul>
+          <li><strong>Simple Vault:</strong> Basic encrypted storage without deniability</li>
+          <li><strong>Duress Hidden:</strong> Two layers (decoy + hidden) for plausible deniability</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">3</span>
+        Add Content
+      </div>
+      <div class="step-content">
+        <ul>
+          <li><strong>Decoy Layer:</strong> Innocent content shown without passphrase (optional but recommended)</li>
+          <li><strong>Hidden Layer:</strong> Your real secrets (text or .zip/.rar file up to 25MB)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">4</span>
+        Set Passphrase
+      </div>
+      <div class="step-content">
+        Create a strong passphrase for the hidden layer. Use 6+ Diceware words or a memorable phrase. Never store digitally.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">5</span>
+        Create & Save Link
+      </div>
+      <div class="step-content">
+        Click "Create Vault" and save the generated link. This link + passphrase = access to hidden layer.
+      </div>
+    </div>
+
+    <div class="warning">
+      <strong>⚠️ Critical:</strong> If you lose the vault link, your data is lost forever. Save it in a password manager or print the QR code.
+    </div>
+
+    <h2>Unlocking a Vault</h2>
+
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">1</span>
+        Open Vault Link
+      </div>
+      <div class="step-content">
+        Navigate to your saved vault link in a browser.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">2</span>
+        Enter Passphrase
+      </div>
+      <div class="step-content">
+        <ul>
+          <li><strong>No passphrase:</strong> Shows decoy layer</li>
+          <li><strong>Correct passphrase:</strong> Shows hidden layer</li>
+          <li><strong>Wrong passphrase:</strong> Shows decoy layer (by design)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">
+        <span class="step-number">3</span>
+        Access Content
+      </div>
+      <div class="step-content">
+        Download files or copy text. Clipboard auto-clears after 60 seconds for security.
+      </div>
+    </div>
+
+    <h2>Security Features</h2>
+
+    <div class="step">
+      <div class="step-title">Auto-Lock</div>
+      <div class="step-content">
+        Vault automatically locks after 5 minutes of inactivity. Re-enter passphrase to unlock.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">Panic Key</div>
+      <div class="step-content">
+        Double-press <strong>Escape</strong> to instantly lock the vault. Use in emergency situations.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">Secure Clipboard</div>
+      <div class="step-content">
+        Copied content automatically clears from clipboard after 60 seconds to prevent data leakage.
+      </div>
+    </div>
+
+    <h2>Best Practices</h2>
+
+    <div class="step">
+      <div class="step-content">
+        <ul>
+          <li><strong>Fund decoy wallet</strong> with realistic amounts ($50-500)</li>
+          <li><strong>Memorize passphrases</strong> - never store digitally</li>
+          <li><strong>Use Tor Browser</strong> for maximum anonymity</li>
+          <li><strong>Clear browser data</strong> after each use</li>
+          <li><strong>Test decoy layer</strong> before relying on it</li>
+          <li><strong>Never reveal</strong> you have hidden layers</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <script>
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;:,.<>?';
+    const title = document.getElementById('title');
+    const text = 'How to Use Sanctum';
+    let iteration = 0;
+    const maxIterations = 20;
+    const speed = 75;
+    
+    const interval = setInterval(() => {
+      title.textContent = text.split('').map((char, index) => {
+        if (char === ' ') return ' ';
+        if (iteration >= maxIterations) return char;
+        if (Math.random() < 0.1 * iteration) return char;
+        return chars[Math.floor(Math.random() * chars.length)];
+      }).join('');
+      
+      if (iteration >= maxIterations) {
+        title.textContent = text;
+        clearInterval(interval);
+      }
+      iteration++;
+    }, speed);
+  </script>
+</body>
+</html>

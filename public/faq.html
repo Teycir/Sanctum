@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ - Sanctum</title>
+  <style>
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      25% { background-position: 100% 50%; }
+      50% { background-position: 50% 100%; }
+      75% { background-position: 0% 50%; }
+    }
+    @keyframes haze {
+      0%, 100% { opacity: 0.3; transform: scale(1) translate(0, 0) rotate(0deg); }
+      25% { opacity: 0.5; transform: scale(1.2) translate(10%, -10%) rotate(5deg); }
+      50% { opacity: 0.4; transform: scale(0.9) translate(-10%, 10%) rotate(-5deg); }
+      75% { opacity: 0.5; transform: scale(1.1) translate(5%, -5%) rotate(3deg); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% {
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(200, 150, 255, 0.3);
+      }
+      50% {
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(200, 150, 255, 0.5), 0 0 30px rgba(200, 150, 255, 0.3);
+      }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1520 20%, #0f0f1a 40%, #1a1a2e 60%, #0d0d15 80%, #000 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 25s ease-in-out infinite;
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at 15% 20%, rgba(13, 71, 161, 0.15) 0%, transparent 50%),
+                  radial-gradient(ellipse at 85% 80%, rgba(0, 119, 182, 0.12) 0%, transparent 50%),
+                  radial-gradient(circle at 50% 50%, rgba(70, 130, 180, 0.08) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 40%, rgba(13, 71, 161, 0.15) 0%, transparent 30%),
+                  radial-gradient(circle at 70% 60%, rgba(65, 105, 225, 0.12) 0%, transparent 35%),
+                  radial-gradient(circle at 50% 80%, rgba(0, 119, 182, 0.1) 0%, transparent 40%);
+      filter: blur(100px);
+      animation: haze 35s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    h1 {
+      font-size: clamp(32px, 8vw, 48px);
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 40px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(200, 150, 255, 0.3);
+      animation: pulse-glow 8s ease-in-out infinite;
+    }
+    .faq-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    .faq-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .faq-question {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    .faq-answer {
+      font-size: 14px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 30px;
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    .back-link:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← Back to Home</a>
+    <h1 id="title">FAQ</h1>
+    
+    <div class="faq-item">
+      <div class="faq-question">What is Sanctum?</div>
+      <div class="faq-answer">Sanctum is a zero-trust, client-side encrypted vault system providing cryptographically sound plausible deniability through passphrase-derived hidden layers with decentralized IPFS storage.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">How does plausible deniability work?</div>
+      <div class="faq-answer">Sanctum creates two layers: a decoy layer (visible without passphrase) and a hidden layer (revealed with correct passphrase). The hidden layer is cryptographically indistinguishable from the decoy, making it impossible to prove its existence.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">Is my data safe?</div>
+      <div class="faq-answer">Yes. All encryption happens client-side in your browser using XChaCha20-Poly1305 with Argon2id key derivation. Your keys never touch our servers. Data is stored encrypted on IPFS.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">Why do I see 2 files on IPFS even with empty decoy?</div>
+      <div class="faq-answer">This is a security feature. Duress vaults always upload 2 encrypted blobs (decoy + hidden) to prevent metadata analysis. Even empty blobs are indistinguishable from real data, maintaining plausible deniability.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">What if I lose the vault link?</div>
+      <div class="faq-answer">Your data is lost forever. There is no recovery mechanism by design. Always save your vault links securely in a password manager or print QR codes.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">Can I delete a vault?</div>
+      <div class="faq-answer">Yes. Vaults auto-destroy based on your chosen duration (1 week, 1 month, 3 months, 6 months, or 12 months). You can also manually delete files from Pinata or Filebase dashboards using the CID (shown after vault creation). Without the vault link, the encrypted data remains inaccessible anyway.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">What are the file size limits?</div>
+      <div class="faq-answer">Maximum 25 MB per file. Supported formats: .zip and .rar archives.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">Is Sanctum free?</div>
+      <div class="faq-answer">Yes, 100% free. We use free tiers from Pinata (1GB) and Filebase (5GB) for IPFS storage. No credit card required.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">What is the panic key?</div>
+      <div class="faq-answer">Double-press Escape to instantly lock your vault. Combined with auto-lock after 5 minutes of inactivity, this protects against physical access threats.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">Can authorities force me to reveal my passphrase?</div>
+      <div class="faq-answer">Reveal the decoy layer. They cannot prove hidden layers exist. However, consult legal counsel for your jurisdiction's laws on encryption and self-incrimination.</div>
+    </div>
+  </div>
+  <script>
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;:,.<>?';
+    const title = document.getElementById('title');
+    const text = 'FAQ';
+    let iteration = 0;
+    const maxIterations = 20;
+    const speed = 75;
+    
+    const interval = setInterval(() => {
+      title.textContent = text.split('').map((char, index) => {
+        if (char === ' ') return ' ';
+        if (iteration >= maxIterations) return char;
+        if (Math.random() < 0.1 * iteration) return char;
+        return chars[Math.floor(Math.random() * chars.length)];
+      }).join('');
+      
+      if (iteration >= maxIterations) {
+        title.textContent = text;
+        clearInterval(interval);
+      }
+      iteration++;
+    }, speed);
+  </script>
+</body>
+</html>

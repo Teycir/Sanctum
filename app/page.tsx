@@ -10,13 +10,12 @@ import { SecurityStatus } from './components/SecurityStatus';
 export default function Home() {
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20, position: 'relative' }}>
-      <SecurityStatus />
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px 20px', position: 'relative' }}>
       <a
         href="https://github.com/Teycir/Sanctum#readme"
         target="_blank"
         rel="noopener noreferrer"
-        style={{ position: 'absolute', top: 12, right: 12, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 10px', background: 'rgba(255, 255, 255, 0.1)', color: '#fff', textDecoration: 'none', borderRadius: 10, fontSize: 10, fontWeight: 600, border: '1px solid rgba(255, 255, 255, 0.2)', transition: 'transform 0.2s, background 0.2s', zIndex: 10, whiteSpace: 'nowrap' }}
+        style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 10px', background: 'rgba(255, 255, 255, 0.1)', color: '#fff', textDecoration: 'none', borderRadius: 10, fontSize: 10, fontWeight: 600, border: '1px solid rgba(255, 255, 255, 0.2)', transition: 'transform 0.2s, background 0.2s', zIndex: 10, whiteSpace: 'nowrap' }}
         onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'; }}
         onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; }}
       >
@@ -25,9 +24,10 @@ export default function Home() {
         </svg>
         Documentation
       </a>
-      <div style={{ textAlign: 'center', maxWidth: '90%' }}>
+      <div style={{ textAlign: 'center', maxWidth: '90%', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}>
+        <SecurityStatus />
         <VaultIcon />
-        <h1 style={{ fontSize: 'clamp(32px, 8vw, 48px)', marginBottom: 16, fontWeight: 700 }} className="glow-text pulse-glow">
+        <h1 style={{ fontSize: 'clamp(32px, 8vw, 48px)', marginBottom: 12, fontWeight: 700 }} className="glow-text pulse-glow">
           <DecryptedText
             text="Sanctum"
             animateOn="view"
@@ -38,7 +38,7 @@ export default function Home() {
           />
         </h1>
         <AnimatedTagline text="Plausible deniability zero trust vault" />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', marginBottom: 32 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', marginBottom: 20 }}>
           <Link href="/create" prefetch={true} style={{ textDecoration: 'none' }}>
             <button className="start-btn">
               Create Vault
@@ -47,6 +47,13 @@ export default function Home() {
         </div>
         <CyclingFeatures />
       </div>
+      <footer style={{ display: 'flex', gap: 20, fontSize: 12, color: 'rgba(255, 255, 255, 0.6)', paddingTop: 10 }}>
+        <a href="/faq.html" style={{ color: 'rgba(255, 255, 255, 0.6)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}>FAQ</a>
+        <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>•</span>
+        <a href="/how-to-use.html" style={{ color: 'rgba(255, 255, 255, 0.6)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}>How to Use</a>
+        <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>•</span>
+        <a href="https://teycirbensoltane.tn" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255, 255, 255, 0.6)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}>Made by Teycir</a>
+      </footer>
     </div>
   );
 }
