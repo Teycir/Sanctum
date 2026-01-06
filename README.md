@@ -5,7 +5,7 @@
 ![Storage](https://img.shields.io/badge/Storage-IPFS-neon_green?style=for-the-badge)
 ![Hosting](https://img.shields.io/badge/Hosting-Cloudflare%20Pages-neon_green?style=for-the-badge)
 
-# 🎭 Sanctum
+# <img src="./public/assets/vault.svg" width="32" height="32" alt="Sanctum" /> Sanctum
 
 **Cryptographically sound plausible deniability for high-risk users.**
 
