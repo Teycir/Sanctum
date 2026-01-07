@@ -11,7 +11,7 @@
 
 **Zero-trust encrypted vault system for high-risk users.**
 
-### _"What cannot be proven to exist cannot be coerced."_
+### _"Deny everything."_
 
 [Create a Vault](#-quick-start) · [View Architecture](#️-architecture) · [Report Bug](https://github.com/teycir/Sanctum/issues)
 
