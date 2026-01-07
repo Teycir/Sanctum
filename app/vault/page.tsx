@@ -168,7 +168,7 @@ function UnlockedContent({
           }}
         >
           <span style={{ fontSize: 20 }}>✓</span>
-          <span>Content Unlocked{isDecoy ? " (Decoy Layer)" : ""}</span>
+          <span>Content Unlocked</span>
         </div>
 
         {expiresAt && (
