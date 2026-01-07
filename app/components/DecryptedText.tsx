@@ -1,18 +1,17 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTextScramble } from '@/lib/ui/hooks';
 
 interface DecryptedTextProps {
-  text: string;
-  speed?: number;
-  maxIterations?: number;
-  useOriginalCharsOnly?: boolean;
-  characters?: string;
-  className?: string;
-  encryptedClassName?: string;
-  animateOn?: 'view' | 'hover';
+  readonly text: string;
+  readonly speed?: number;
+  readonly maxIterations?: number;
+  readonly useOriginalCharsOnly?: boolean;
+  readonly characters?: string;
+  readonly className?: string;
+  readonly encryptedClassName?: string;
+  readonly animateOn?: 'view' | 'hover';
 }
 
 export default function DecryptedText({
@@ -25,7 +24,6 @@ export default function DecryptedText({
   encryptedClassName = '',
   animateOn = 'hover',
 }: DecryptedTextProps) {
-  const [isHovering, setIsHovering] = useState(false);
   const { displayText, scramble } = useTextScramble(text, {
     speed,
     maxIterations,
@@ -36,15 +34,12 @@ export default function DecryptedText({
 
   const handleMouseEnter = () => {
     if (animateOn === 'hover') {
-      setIsHovering(true);
       scramble();
     }
   };
 
   const handleMouseLeave = () => {
-    if (animateOn === 'hover') {
-      setIsHovering(false);
-    }
+    // No-op
   };
 
   return (

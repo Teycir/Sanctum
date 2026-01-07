@@ -622,6 +622,7 @@ Business Source License 1.1 - see [LICENSE](./LICENSE) for details.
 - **Cloudflare Pages** - Free static site hosting
 - **Pinata** - Free IPFS pinning service
 - **VeraCrypt** - Inspiration for plausible deniability
+- **3D Tubes Cursor Effect** - [soju22's CodePen](https://codepen.io/soju22/pen/qEbdVjK) (CC BY-NC-SA 4.0)
 
 ## 🔗 Links
 

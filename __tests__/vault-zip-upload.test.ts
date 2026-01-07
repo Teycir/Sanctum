@@ -4,10 +4,17 @@ import { ARGON2_PROFILES } from '../lib/crypto/constants';
 import JSZip from 'jszip';
 
 const mockStorage = new Map<string, Uint8Array>();
-const mockVaultKeys = new Map<string, any>();
+interface MockVaultKey {
+  keyB: string;
+  encryptedDecoyCID: string;
+  encryptedHiddenCID: string;
+  nonce: string;
+}
+
+const mockVaultKeys = new Map<string, MockVaultKey>();
 
 // Mock fetch for API calls
-global.fetch = vi.fn((url: string | URL, options?: any) => {
+global.fetch = vi.fn((url: string | URL, options?: RequestInit) => {
   const urlStr = typeof url === 'string' ? url : url.toString();
   
   if (urlStr.includes('/api/vault/store-key') && options?.method === 'POST') {
@@ -38,20 +45,20 @@ global.fetch = vi.fn((url: string | URL, options?: any) => {
     } as Response);
   }
   return Promise.reject(new Error('Unknown URL'));
-}) as any;
+}) as unknown as typeof fetch;
 
 vi.mock('../lib/storage/vault', async () => {
-  const actual = await vi.importActual('../lib/storage/vault');
+  const actual = await vi.importActual<typeof import('../lib/storage/vault')>('../lib/storage/vault');
   return {
     ...actual,
-    uploadVault: async (vault: any, credentials: any) => {
+    uploadVault: async (vault: { decoyBlob: Uint8Array; hiddenBlob: Uint8Array; salt: Uint8Array }) => {
       const decoyCID = `decoy-${Math.random().toString(36).slice(2)}`;
       const hiddenCID = `hidden-${Math.random().toString(36).slice(2)}`;
       mockStorage.set(decoyCID, vault.decoyBlob);
       mockStorage.set(hiddenCID, vault.hiddenBlob);
       return { decoyCID, hiddenCID, salt: vault.salt };
     },
-    downloadVault: async (stored: any) => {
+    downloadVault: async (stored: { decoyCID: string; hiddenCID: string; salt: Uint8Array }) => {
       const decoyBlob = mockStorage.get(stored.decoyCID);
       const hiddenBlob = mockStorage.get(stored.hiddenCID);
       if (!decoyBlob || !hiddenBlob) throw new Error('CID not found');
@@ -256,7 +263,6 @@ describe('Vault Zip File Upload/Download', () => {
       }
     });
 
-    const url = new URL(result.vaultURL);
     const unlockedData = await vaultService.unlockVault({
       vaultURL: result.vaultURL,
       passphrase: 'TestPassword123!'
@@ -308,7 +314,6 @@ describe('Vault Zip File Upload/Download', () => {
       }
     });
 
-    const url = new URL(result.vaultURL);
     const unlockedData = await vaultService.unlockVault({
       vaultURL: result.vaultURL,
       passphrase: 'TestPassword123!'

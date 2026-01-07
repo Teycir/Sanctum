@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { encrypt, decrypt, generateSyntheticNonce } from '../../lib/crypto/core';
 import { deriveKeys } from '../../lib/crypto/kdf';
 import { assembleBlob } from '../../lib/crypto/padding';
-import { ARGON2_PROFILES, BLOB_SIZES } from '../../lib/crypto/constants';
+import { ARGON2_PROFILES } from '../../lib/crypto/constants';
 import { selectVaultSize } from '../../lib/crypto/utils';
 
 describe('crypto/core', () => {

@@ -22,8 +22,8 @@ describe('Upload Performance Benchmark', () => {
   it('OLD: Sequential uploads', async () => {
     const start = Date.now();
     
-    const decoyCID = await mockUpload(decoyBlob, UPLOAD_DELAY);
-    const hiddenCID = await mockUpload(hiddenBlob, UPLOAD_DELAY);
+    await mockUpload(decoyBlob, UPLOAD_DELAY);
+    await mockUpload(hiddenBlob, UPLOAD_DELAY);
     
     const elapsed = Date.now() - start;
     
@@ -35,7 +35,7 @@ describe('Upload Performance Benchmark', () => {
   it('NEW: Parallel uploads', async () => {
     const start = Date.now();
     
-    const [decoyCID, hiddenCID] = await Promise.all([
+    await Promise.all([
       mockUpload(decoyBlob, UPLOAD_DELAY),
       mockUpload(hiddenBlob, UPLOAD_DELAY)
     ]);

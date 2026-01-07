@@ -2,8 +2,6 @@
 // FILEBASE QUOTA CHECKER
 // ============================================================================
 
-import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
-
 export interface StorageQuota {
   readonly used: number;
   readonly limit: number;
@@ -14,11 +12,7 @@ export interface StorageQuota {
 const FILEBASE_FREE_TIER = 5 * 1024 * 1024 * 1024; // 5 GB
 const SAFETY_BUFFER = 0.05; // 5% buffer
 
-export async function checkFilebaseQuota(
-  accessKey: string,
-  secretKey: string,
-  bucket: string
-): Promise<StorageQuota> {
+export async function checkFilebaseQuota(): Promise<StorageQuota> {
   // Skip quota check to avoid CORS issues
   // Return default quota assuming free tier
   return {

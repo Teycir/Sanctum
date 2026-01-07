@@ -26,7 +26,7 @@ export async function validateVaultExists(vaultURL: string): Promise<{ exists: b
 
     const data = await response.json();
     return { exists: data.exists };
-  } catch (error) {
+  } catch {
     return { exists: false, error: 'Invalid vault URL format' };
   }
 }

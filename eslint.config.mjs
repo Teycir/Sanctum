@@ -12,6 +12,7 @@ const compat = new FlatCompat({
 const eslintConfig = [
     {
         ignores: [
+            ".history/*",
             ".next/*",
             "out/*",
             "playwright-report/*",

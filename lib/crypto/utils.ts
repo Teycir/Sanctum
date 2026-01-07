@@ -2,7 +2,7 @@
 // TYPES & INTERFACES
 // ============================================================================
 
-import { BLOB_SIZES, SIZE_CLASSES, Argon2ProfileName, ARGON2_PROFILES } from './constants';
+import { BLOB_SIZES, SIZE_CLASSES, Argon2ProfileName } from './constants';
 
 // ============================================================================
 // PURE FUNCTIONS - Exported
@@ -83,7 +83,7 @@ export function selectVaultSize(contentLength: number): number {
     if (required <= size) return size;
   }
   
-  return SIZE_CLASSES[SIZE_CLASSES.length - 1];
+  return SIZE_CLASSES.at(-1)!;
 }
 
 /**

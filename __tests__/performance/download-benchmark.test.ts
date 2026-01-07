@@ -14,10 +14,9 @@ describe('Download Performance Benchmark', () => {
   it('OLD: Sequential gateway attempts', async () => {
     const start = Date.now();
     
-    let result: Uint8Array | null = null;
     for (const gateway of gateways) {
       try {
-        result = await mockGatewayFetch(gateway, GATEWAY_DELAY);
+        await mockGatewayFetch(gateway, GATEWAY_DELAY);
         break;
       } catch {}
     }
@@ -31,7 +30,7 @@ describe('Download Performance Benchmark', () => {
   it('NEW: Parallel gateway race', async () => {
     const start = Date.now();
     
-    const result = await Promise.race(
+    await Promise.race(
       gateways.map(gateway => mockGatewayFetch(gateway, GATEWAY_DELAY))
     );
     

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { TubesCursor } from "./components/TubesCursor";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -107,6 +108,7 @@ export default function RootLayout({
         className={`${inter.variable} antialiased`}
         suppressHydrationWarning
       >
+        <TubesCursor />
         {children}
       </body>
     </html>

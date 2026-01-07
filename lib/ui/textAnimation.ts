@@ -37,7 +37,7 @@ export class TextScrambler {
     this.intervalId = setInterval(() => {
       const displayText = text
         .split('')
-        .map((char, index) => {
+        .map((char) => {
           if (char === ' ') return ' ';
           if (iteration >= this.config.maxIterations) return char;
           if (Math.random() < 0.1 * iteration) return char;

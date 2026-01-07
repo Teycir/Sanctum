@@ -52,7 +52,7 @@ export function decodeVaultState(hash: string): VaultState {
       mode: data.m,
       metadata: data.d
     };
-  } catch (error) {
+  } catch {
     throw new Error('Invalid vault state');
   }
 }

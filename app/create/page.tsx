@@ -82,27 +82,6 @@ export default function CreateVault() {
     };
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      const { loadJWT } = await import("@/lib/storage/jwt");
-      const jwt = await loadJWT();
-      if (jwt) {
-        setPinataJWT(jwt);
-        setHasStoredJWT(true);
-        validateJWT(jwt);
-      }
-
-      const { loadFilebaseCredentials } =
-        await import("@/lib/storage/filebase-credentials");
-      const credentials = await loadFilebaseCredentials();
-      if (credentials) {
-        setFilebaseAccessKey(credentials.accessKey);
-        setFilebaseSecretKey(credentials.secretKey);
-        setHasStoredFilebase(true);
-      }
-    })();
-  }, []);
-
   const validateJWT = useCallback(async (jwt: string) => {
     if (!jwt.trim()) return;
 
@@ -134,6 +113,27 @@ export default function CreateVault() {
       setJwtStatus("invalid");
     }
   }, [hasStoredJWT]);
+
+  useEffect(() => {
+    (async () => {
+      const { loadJWT } = await import("@/lib/storage/jwt");
+      const jwt = await loadJWT();
+      if (jwt) {
+        setPinataJWT(jwt);
+        setHasStoredJWT(true);
+        await validateJWT(jwt);
+      }
+
+      const { loadFilebaseCredentials } =
+        await import("@/lib/storage/filebase-credentials");
+      const credentials = await loadFilebaseCredentials();
+      if (credentials) {
+        setFilebaseAccessKey(credentials.accessKey);
+        setFilebaseSecretKey(credentials.secretKey);
+        setHasStoredFilebase(true);
+      }
+    })();
+  }, [validateJWT]);
 
   useEffect(() => {
     if (!hasStoredJWT && pinataJWT.trim()) {
@@ -194,11 +194,7 @@ export default function CreateVault() {
         try {
           const { checkFilebaseQuota } =
             await import("@/lib/storage/filebase-quota");
-          const quota = await checkFilebaseQuota(
-            filebaseAccessKey.trim(),
-            filebaseSecretKey.trim(),
-            filebaseBucket.trim(),
-          );
+          const quota = await checkFilebaseQuota();
           setStorageQuota(quota);
         } catch {
           setStorageQuota(null);
@@ -376,11 +372,7 @@ export default function CreateVault() {
           decoyFile || undefined,
           hiddenFile || undefined,
         );
-        const quota = await checkFilebaseQuota(
-          filebaseAccessKey.trim(),
-          filebaseSecretKey.trim(),
-          filebaseBucket.trim(),
-        );
+        const quota = await checkFilebaseQuota();
         const quotaError = validateFilebaseSpace(totalSize, quota);
 
         if (quotaError) {
