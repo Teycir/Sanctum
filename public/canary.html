@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warrant Canary - Sanctum</title>
+    <link rel="stylesheet" href="/loader.css">
     <style>
+        :root {
+            --radius: 10.2px;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -118,9 +122,8 @@
 
         .card {
             background: rgba(255, 255, 255, 0.08);
-            border: 1px solid;
-            border-image: linear-gradient(135deg, rgba(65, 105, 225, 0.3), rgba(255, 255, 255, 0.1)) 1;
-            border-radius: 12px;
+            border: 1px solid rgba(65, 105, 225, 0.3);
+            border-radius: var(--radius);
             padding: 24px;
             margin-bottom: 20px;
             backdrop-filter: blur(20px);
@@ -197,7 +200,7 @@
         .verify-box {
             background: rgba(255, 193, 7, 0.1);
             border: 2px solid rgba(255, 193, 7, 0.4);
-            border-radius: 8px;
+            border-radius: var(--radius);
             padding: 20px;
             margin-top: 16px;
         }
@@ -220,7 +223,7 @@
             border: 2px solid #ffc107;
             color: #ffc107;
             padding: 12px 24px;
-            border-radius: 8px;
+            border-radius: var(--radius);
             font-size: 14px;
             font-weight: 700;
             cursor: pointer;
@@ -323,9 +326,16 @@
     </style>
 </head>
 <body>
+    <div class="page-loader">
+        <div class="lock-icon">🔒</div>
+        <div class="loader-text">Initializing Sanctum...</div>
+        <div class="loader-bar">
+            <div class="loader-progress"></div>
+        </div>
+    </div>
     <div class="container">
         <div class="header">
-            <h1 class="title" id="title">WARRANT CANARY</h1>
+            <h1 class="title text-pressure" id="title" style="cursor: default; user-select: none;">WARRANT CANARY</h1>
             <p class="subtitle">Live Transparency Status</p>
         </div>
 
@@ -409,6 +419,7 @@
             <a href="/" class="back-btn" title="Back to Sanctum">←</a>
         </div>
     </div>
+    <script src="/footer.js"></script>
 
     <script>
         // Update timestamps
@@ -440,6 +451,8 @@
 
         animateTitle();
     </script>
+    <script src="/loader.js"></script>
     <script src="/eye-candy.js"></script>
+    <script src="/text-animations.js"></script>
 </body>
 </html>

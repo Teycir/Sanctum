@@ -62,6 +62,11 @@ export default function CreateVault() {
   const [threeJsLoaded, setThreeJsLoaded] = useState(false);
 
   useEffect(() => {
+    const timer = setTimeout(() => setThreeJsLoaded(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     return () => {
       if (vaultServiceRef) {
         vaultServiceRef.stop().catch(console.error);
@@ -512,7 +517,7 @@ export default function CreateVault() {
 
   return (
     <>
-      <EyeCandy onLoad={() => setThreeJsLoaded(true)} />
+      <EyeCandy />
       {!threeJsLoaded && (
         <div className={`${styles.loader} ${threeJsLoaded ? styles.hidden : ""}`}>
           <div className={styles.lockIcon}>🔒</div>
@@ -825,7 +830,7 @@ export default function CreateVault() {
                 defaultOpen={false}
               >
                 <p style={{ fontSize: 13, color: "rgba(255, 193, 7, 0.9)", fontWeight: 600, marginBottom: 12 }}>
-                  ⚠️ Shows "vault deleted" message when entered under duress
+                  ⚠️ Shows &quot;vault deleted&quot; message when entered under duress
                 </p>
                 <div>
                   <label
@@ -844,7 +849,7 @@ export default function CreateVault() {
                     type="password"
                     value={panicPassphrase}
                     onChange={(e) => setPanicPassphrase(e.target.value)}
-                    placeholder="Emergency password to show 'vault deleted'..."
+                    placeholder="Emergency password to show &apos;vault deleted&apos;..."
                     className="form-input"
                   />
                   <p className={styles.passwordHint}>

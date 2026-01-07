@@ -137,19 +137,23 @@
 
 .warning {
   padding: 12px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: 13px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .warningCritical {
-  background: rgba(255, 0, 0, 0.1);
-  border: 1px solid rgba(255, 0, 0, 0.3);
+  background: rgba(255, 0, 0, 0.08);
+  border: 1px solid;
+  border-image: linear-gradient(135deg, rgba(255, 0, 0, 0.3), rgba(255, 0, 0, 0.1)) 1;
   color: #ff6b6b;
 }
 
 .warningNormal {
-  background: rgba(255, 193, 7, 0.1);
-  border: 1px solid rgba(255, 193, 7, 0.3);
+  background: rgba(255, 193, 7, 0.08);
+  border: 1px solid;
+  border-image: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(255, 193, 7, 0.1)) 1;
   color: #fbbf24;
 }
 
@@ -158,12 +162,15 @@
   min-height: 80px;
   padding: 10px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
+  border: 1px solid;
+  border-image: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1)) 1;
+  border-radius: var(--radius);
   color: #fff;
   font-size: 13px;
   resize: vertical;
   box-sizing: border-box;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .textarea:disabled {
@@ -172,11 +179,14 @@
 
 .error {
   padding: 12px;
-  background: rgba(255, 0, 0, 0.1);
-  border: 1px solid rgba(255, 0, 0, 0.3);
-  border-radius: 8px;
+  background: rgba(255, 0, 0, 0.08);
+  border: 1px solid;
+  border-image: linear-gradient(135deg, rgba(255, 0, 0, 0.3), rgba(255, 0, 0, 0.1)) 1;
+  border-radius: var(--radius);
   color: #ff6b6b;
   font-size: 14px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .buttonPrimary {
@@ -186,25 +196,28 @@
 
 .successContainer {
   padding: 18px;
-  background: rgba(0, 255, 0, 0.1);
-  border: 1px solid rgba(0, 255, 0, 0.3);
-  border-radius: 8px;
+  background: rgba(0, 255, 0, 0.08);
+  border: 1px solid;
+  border-image: linear-gradient(135deg, rgba(0, 255, 0, 0.3), rgba(0, 255, 0, 0.1)) 1;
+  border-radius: var(--radius);
   margin-bottom: 20px;
   text-align: center;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 255, 0, 0.1);
 }
 
 .qrCode {
   width: min(180px, 90vw);
   height: min(180px, 90vw);
   border: 2px solid rgba(0, 255, 0, 0.3);
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 
 .codeBlock {
   display: block;
   padding: 12px;
   background: rgba(0, 0, 0, 0.3);
-  border-radius: 6px;
+  border-radius: var(--radius);
   font-size: 11px;
   word-break: break-all;
   margin-bottom: 16px;

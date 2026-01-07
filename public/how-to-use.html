@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>How to Use - Sanctum</title>
+  <link rel="stylesheet" href="/loader.css">
   <style>
+    :root {
+      --radius: 10.2px;
+    }
     @keyframes gradientShift {
       0%, 100% { background-position: 0% 50%; }
       25% { background-position: 100% 50%; }
@@ -86,9 +90,8 @@
     }
     .step {
       background: rgba(255, 255, 255, 0.08);
-      border: 1px solid;
-      border-image: linear-gradient(135deg, rgba(65, 105, 225, 0.3), rgba(255, 255, 255, 0.1)) 1;
-      border-radius: 10px;
+      border: 1px solid rgba(65, 105, 225, 0.3);
+      border-radius: var(--radius);
       padding: 20px;
       margin-bottom: 20px;
       transition: all 0.3s ease;
@@ -97,7 +100,7 @@
     }
     .step:hover {
       background: rgba(255, 255, 255, 0.12);
-      border-image: linear-gradient(135deg, rgba(65, 105, 225, 0.5), rgba(255, 255, 255, 0.2)) 1;
+      border: 1px solid rgba(65, 105, 225, 0.5);
       box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 0 50px rgba(65, 105, 225, 0.3);
       transform: translateY(-2px);
     }
@@ -125,9 +128,8 @@
     }
     .warning {
       background: rgba(255, 193, 7, 0.15);
-      border: 1px solid;
-      border-image: linear-gradient(135deg, rgba(255, 193, 7, 0.5), rgba(255, 193, 7, 0.2)) 1;
-      border-radius: 8px;
+      border: 1px solid rgba(255, 193, 7, 0.5);
+      border-radius: var(--radius);
       padding: 15px;
       margin: 20px 0;
       font-size: 14px;
@@ -181,9 +183,16 @@
   </style>
 </head>
 <body>
+  <div class="page-loader">
+    <div class="lock-icon">🔒</div>
+    <div class="loader-text">Initializing Sanctum...</div>
+    <div class="loader-bar">
+      <div class="loader-progress"></div>
+    </div>
+  </div>
   <div class="container">
     <a href="/" class="back-link" title="Back to Sanctum">←</a>
-    <h1 id="title">How to Use Sanctum</h1>
+    <h1 id="title" class="text-pressure" style="cursor: default; user-select: none;">How to Use Sanctum</h1>
     
     <h2>Real-World Use Cases</h2>
     
@@ -371,6 +380,7 @@
       </div>
     </div>
   </div>
+  <script src="/footer.js"></script>
   <script>
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;:,.<>?';
     const title = document.getElementById('title');
@@ -394,6 +404,8 @@
       iteration++;
     }, speed);
   </script>
+  <script src="/loader.js"></script>
   <script src="/eye-candy.js"></script>
+  <script src="/text-animations.js"></script>
 </body>
 </html>

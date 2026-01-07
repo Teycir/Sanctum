@@ -153,7 +153,7 @@ function UnlockedContent({
           padding: 24,
           background: "rgba(0, 255, 0, 0.1)",
           border: "1px solid rgba(0, 255, 0, 0.3)",
-          borderRadius: 12,
+          borderRadius: "var(--radius)",
           marginBottom: 24,
         }}
       >
@@ -188,7 +188,7 @@ function UnlockedContent({
                 daysUntilExpiry !== null && daysUntilExpiry < 7
                   ? "1px solid rgba(255, 193, 7, 0.4)"
                   : "1px solid rgba(255, 255, 255, 0.15)",
-              borderRadius: 8,
+              borderRadius: "var(--radius)",
               textAlign: "center",
               boxShadow:
                 daysUntilExpiry !== null && daysUntilExpiry < 7
@@ -209,7 +209,7 @@ function UnlockedContent({
             style={{
               padding: 32,
               background: "rgba(0, 0, 0, 0.3)",
-              borderRadius: 8,
+              borderRadius: "var(--radius)",
               textAlign: "center",
             }}
           >
@@ -263,7 +263,7 @@ function UnlockedContent({
             style={{
               padding: 16,
               background: "rgba(0, 0, 0, 0.3)",
-              borderRadius: 8,
+              borderRadius: "var(--radius)",
               fontSize: 14,
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
@@ -301,7 +301,7 @@ function UnlockedContent({
                 : "rgba(13, 71, 161, 0.3)",
               color: "#fff",
               border: `1px solid ${copied ? "rgba(0, 255, 0, 0.5)" : "rgba(13, 71, 161, 0.5)"}`,
-              borderRadius: 8,
+              borderRadius: "var(--radius)",
               fontSize: 14,
               fontWeight: 500,
               cursor: copied ? "default" : "pointer",
@@ -331,7 +331,7 @@ function UnlockedContent({
             background: "rgba(255, 255, 255, 0.1)",
             color: "#fff",
             border: "1px solid rgba(255, 255, 255, 0.2)",
-            borderRadius: 8,
+            borderRadius: "var(--radius)",
             fontSize: 14,
             fontWeight: 500,
             cursor: "pointer",
@@ -411,7 +411,7 @@ export default function ViewVault() {
                   padding: 10,
                   background: "rgba(255, 193, 7, 0.05)",
                   border: "1px solid rgba(255, 193, 7, 0.15)",
-                  borderRadius: 8,
+                  borderRadius: "var(--radius)",
                   fontSize: 12,
                   color: "rgba(255, 193, 7, 0.7)",
                   textAlign: "center",
@@ -436,7 +436,7 @@ export default function ViewVault() {
                 padding: 12,
                 background: "rgba(255, 255, 255, 0.05)",
                 border: "1px solid rgba(255, 255, 255, 0.2)",
-                borderRadius: 8,
+                borderRadius: "var(--radius)",
                 color: "#fff",
                 fontSize: 14,
                 boxSizing: "border-box",
@@ -450,7 +450,7 @@ export default function ViewVault() {
                 padding: 12,
                 background: "rgba(255, 0, 0, 0.1)",
                 border: "1px solid rgba(255, 0, 0, 0.3)",
-                borderRadius: 8,
+                borderRadius: "var(--radius)",
                 color: "#ff6b6b",
                 fontSize: 14,
               }}
@@ -487,7 +487,7 @@ export default function ViewVault() {
             padding: 24,
             background: "rgba(255, 0, 0, 0.1)",
             border: "1px solid rgba(255, 0, 0, 0.3)",
-            borderRadius: 12,
+            borderRadius: "var(--radius)",
             marginBottom: 20,
           }}
         >

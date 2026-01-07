@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FAQ - Sanctum</title>
+  <link rel="stylesheet" href="/loader.css">
   <style>
+    :root {
+      --radius: 10.2px;
+    }
     @keyframes gradientShift {
       0%, 100% { background-position: 0% 50%; }
       25% { background-position: 100% 50%; }
@@ -80,9 +84,8 @@
     }
     .faq-item {
       background: rgba(255, 255, 255, 0.08);
-      border: 1px solid;
-      border-image: linear-gradient(135deg, rgba(65, 105, 225, 0.3), rgba(255, 255, 255, 0.1)) 1;
-      border-radius: 10px;
+      border: 1px solid rgba(65, 105, 225, 0.3);
+      border-radius: var(--radius);
       padding: 20px;
       margin-bottom: 20px;
       transition: all 0.3s ease;
@@ -91,7 +94,7 @@
     }
     .faq-item:hover {
       background: rgba(255, 255, 255, 0.12);
-      border-image: linear-gradient(135deg, rgba(65, 105, 225, 0.5), rgba(255, 255, 255, 0.2)) 1;
+      border: 1px solid rgba(65, 105, 225, 0.5);
       box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 0 50px rgba(65, 105, 225, 0.3);
       transform: translateY(-2px);
     }
@@ -140,9 +143,16 @@
   </style>
 </head>
 <body>
+  <div class="page-loader">
+    <div class="lock-icon">🔒</div>
+    <div class="loader-text">Initializing Sanctum...</div>
+    <div class="loader-bar">
+      <div class="loader-progress"></div>
+    </div>
+  </div>
   <div class="container">
     <a href="/" class="back-link" title="Back to Sanctum">←</a>
-    <h1 id="title">FAQ</h1>
+    <h1 id="title" class="text-pressure" style="cursor: default; user-select: none;">FAQ</h1>
     
     <div class="faq-item">
       <div class="faq-question">What is Sanctum?</div>
@@ -249,6 +259,7 @@
       <div class="faq-answer"><strong>Threat:</strong> Government compels service to backdoor encryption.<br><strong>Countermeasure:</strong> Warrant canary updated quarterly. If removed/not updated >90 days, assume compromise. Self-host immediately. Client-side encryption prevents server-side backdoors. Open-source code auditable.</div>
     </div>
   </div>
+  <script src="/footer.js"></script>
   <script>
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;:,.<>?';
     const title = document.getElementById('title');
@@ -272,6 +283,8 @@
       iteration++;
     }, speed);
   </script>
+  <script src="/loader.js"></script>
   <script src="/eye-candy.js"></script>
+  <script src="/text-animations.js"></script>
 </body>
 </html>

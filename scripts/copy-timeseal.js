@@ -1,7 +1,8 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const TIMESEAL_PATH = '/home/teycir/Repos/TimeSeal';
 const DURESSVAULT_PATH = process.cwd();
@@ -32,18 +33,18 @@ let skipped = 0;
 for (const { src, dest } of filesToCopy) {
   const srcPath = path.join(TIMESEAL_PATH, src);
   const destPath = path.join(DURESSVAULT_PATH, dest);
-  
+
   if (!fs.existsSync(srcPath)) {
     console.log(`⚠️  Skipped: ${src} (not found)`);
     skipped++;
     continue;
   }
-  
+
   const destDir = path.dirname(destPath);
   if (!fs.existsSync(destDir)) {
     fs.mkdirSync(destDir, { recursive: true });
   }
-  
+
   fs.copyFileSync(srcPath, destPath);
   console.log(`✅ Copied: ${src} → ${dest}`);
   copied++;

@@ -12,11 +12,11 @@ interface MockVaultKey {
 
 const mockVaultKeys = new Map<string, MockVaultKey>();
 
-global.fetch = vi.fn((url: string | URL, options?: RequestInit) => {
+globalThis.fetch = vi.fn((url: string | URL, options?: RequestInit) => {
   const urlStr = typeof url === 'string' ? url : url.toString();
   
   if (urlStr.includes('/api/vault/store-key') && options?.method === 'POST') {
-    const body = JSON.parse(options.body);
+    const body = JSON.parse(options.body as string);
     mockVaultKeys.set(body.vaultId, {
       keyB: body.keyB,
       encryptedDecoyCID: body.encryptedDecoyCID,
@@ -30,7 +30,7 @@ global.fetch = vi.fn((url: string | URL, options?: RequestInit) => {
     } as Response);
   }
   if (urlStr.includes('/api/vault/get-key') && options?.method === 'POST') {
-    const body = JSON.parse(options.body);
+    const body = JSON.parse(options.body as string);
     const stored = mockVaultKeys.get(body.vaultId);
     if (!stored) {
       return Promise.resolve({
@@ -76,7 +76,9 @@ vi.mock("../../lib/workers/crypto", () => ({
       const { unlockHiddenVault } = await import("../../lib/duress/layers");
       return unlockHiddenVault(result, passphrase, vaultId);
     }
-    terminate() {}
+    terminate() {
+      // no-op for mock
+    }
   },
 }));
 
@@ -97,6 +99,7 @@ describe("Panic Passphrase", () => {
         hiddenContent: hidden,
         passphrase: "test-pass-12345",
         // Missing panicPassphrase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any)
     ).rejects.toThrow("Required");
   });

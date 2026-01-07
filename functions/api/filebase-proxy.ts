@@ -1,6 +1,9 @@
 // Cloudflare Worker Proxy for Filebase S3 API
 
-interface Env {}
+interface Env {
+  // Add environment variables here if needed
+  [key: string]: unknown;
+}
 
 export async function onRequest(context: { request: Request; env: Env }) {
   const { request } = context;

@@ -86,7 +86,7 @@
     --destructive-foreground: 0 0% 100%;
 
     /* Spacing */
-    --radius: 0.5rem;
+    --radius: 10.2px;
 
     /* Typography */
     --font-sans: "Inter", system-ui, -apple-system, sans-serif;
@@ -272,7 +272,7 @@
   padding: 10px;
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
+  border-radius: var(--radius);
   color: #fff;
   font-size: 13px;
   box-sizing: border-box;
@@ -291,7 +291,7 @@
   padding: 8px;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: #fff;
   font-size: 12px;
   box-sizing: border-box;
@@ -303,7 +303,7 @@
   padding: 8px;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: #fff;
   font-size: 12px;
   box-sizing: border-box;
@@ -313,7 +313,7 @@
   width: 100%;
   padding: 8px;
   background: rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: #fff;
   font-size: 12px;
   box-sizing: border-box;
@@ -330,7 +330,7 @@
   padding: 8px 16px;
   background: rgba(13, 71, 161, 0.6);
   border: 1px solid rgba(13, 71, 161, 0.6);
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: #fff;
   font-size: 12px;
   cursor: pointer;

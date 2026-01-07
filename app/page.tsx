@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { AnimatedTagline } from './components/AnimatedTagline';
 import { CyclingFeatures } from './components/CyclingFeatures';
@@ -7,14 +8,30 @@ import { VaultIcon } from './components/VaultIcon';
 import { SecurityStatus } from './components/SecurityStatus';
 import { EyeCandy } from './components/EyeCandy';
 import TextPressure from './components/text/text-pressure';
+import styles from './page.module.css';
 
 export default function Home() {
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoaded(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <>
       <EyeCandy />
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px 40px', position: 'relative' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 8, zIndex: 10 }}>
+      {!loaded && (
+        <div className={`${styles.loader} ${loaded ? styles.hidden : ""}`}>
+          <div className={styles.lockIcon}>🔒</div>
+          <div className={styles.loaderText}>Initializing Sanctum...</div>
+          <div className={styles.loaderBar}>
+            <div className={styles.loaderProgress}></div>
+          </div>
+        </div>
+      )}
+      <div className={`${styles.container} ${loaded ? styles.loaded : ""}`}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 4, zIndex: 10 }}>
         <a
           href="https://github.com/Teycir/Sanctum#readme"
           target="_blank"
@@ -29,10 +46,10 @@ export default function Home() {
           Source Code
         </a>
       </div>
-      <div style={{ textAlign: 'center', maxWidth: '90%', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', paddingBottom: '60px' }}>
+      <div style={{ textAlign: 'center', maxWidth: '90%', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', paddingBottom: '10px' }}>
         <SecurityStatus />
         <VaultIcon />
-          <h1 style={{ fontSize: '3rem', fontWeight: 'bold', color: '#fff' }}>
+          <h1 style={{ fontSize: '3rem', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>
             <TextPressure
               text="Sanctum"
               flex={true}
@@ -46,7 +63,7 @@ export default function Home() {
             />
           </h1>
         <AnimatedTagline text="Duress proof." />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', marginBottom: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', marginBottom: 8 }}>
           <Link href="/create" prefetch={true} style={{ textDecoration: 'none' }}>
             <button className="start-btn">
               Create Vault
