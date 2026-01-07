@@ -11,6 +11,46 @@ import { selectVaultSize, wipeMemory, encodeText } from "../crypto/utils";
 import type { Argon2Profile } from "../crypto/constants";
 import { constantTimeSelect } from "./timing";
 
+/**
+ * SECURITY NOTICE: Timing Attack Limitations
+ * 
+ * This implementation provides CRYPTOGRAPHIC plausible deniability but NOT
+ * complete timing-attack resistance due to JavaScript runtime limitations:
+ * 
+ * ✅ PROTECTED AGAINST:
+ * - Cryptographic analysis (encrypted blobs are indistinguishable)
+ * - Static analysis (cannot prove hidden layer exists)
+ * - Metadata analysis (both layers same size, same structure)
+ * 
+ * ⚠️ VULNERABLE TO (in theory):
+ * - High-precision timing measurements (nanosecond-level)
+ * - Memory allocation pattern analysis
+ * - CPU cache timing attacks
+ * - JIT compiler optimization differences
+ * - Garbage collection timing variations
+ * 
+ * WHY JAVASCRIPT CANNOT PROVIDE TRUE CONSTANT-TIME:
+ * 1. No constant-time primitives in JS/WebAssembly
+ * 2. JIT compiler optimizations are unpredictable
+ * 3. Garbage collection introduces timing variations
+ * 4. Browser optimizations vary by implementation
+ * 5. High-resolution timers (performance.now) available to attackers
+ * 
+ * THREAT MODEL:
+ * - ✅ Safe against: Physical coercion, legal demands, forensic analysis
+ * - ✅ Safe against: Cryptographic attacks on encrypted data
+ * - ⚠️ Risky against: Adversary with nanosecond timing measurement + multiple attempts
+ * - ❌ Unsafe against: Side-channel attacks in controlled lab environment
+ * 
+ * RECOMMENDATIONS:
+ * - For maximum security: Use native implementation (Rust/C with constant-time crypto)
+ * - For web: Current implementation is best-effort given platform constraints
+ * - OpSec: Never unlock vault while under active surveillance with timing equipment
+ * - Defense: Use Tor Browser (adds network timing noise) when unlocking
+ * 
+ * See: https://github.com/Teycir/Sanctum/blob/main/docs/security/TIMING-ATTACKS.md
+ */
+
 export interface LayerContent {
   readonly decoy: Uint8Array;
   readonly hidden: Uint8Array;
@@ -117,6 +157,13 @@ export interface UnlockResult {
 
 /**
  * Unlock hidden vault layer with constant-time execution
+ * 
+ * SECURITY NOTE: This attempts constant-time execution but JavaScript runtime
+ * limitations mean true constant-time is impossible. See file header for details.
+ * 
+ * The function always attempts BOTH decryptions to minimize timing differences,
+ * but JIT optimization, GC, and browser variations can still leak timing info.
+ * 
  * @param result Hidden vault result
  * @param passphrase User passphrase (empty for decoy)
  * @returns Decrypted layer content with isDecoy flag

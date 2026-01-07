@@ -300,7 +300,6 @@ See [RAM-ONLY-STORAGE.md](./docs/security/RAM-ONLY-STORAGE.md) for technical det
 
 - **Plausible Deniability** - No metadata reveals hidden layers
 - **Split-Key Architecture** - KeyA (URL) + KeyB (encrypted in DB with HKDF)
-- **Timing Attack Prevention** - Constant-time decryption prevents layer detection
 - **CID Encryption** - IPFS CIDs encrypted with master key (KeyA + KeyB)
 - **Auto-Lock** - Locks vault after 5 minutes of inactivity
 - **Panic Key** - Double-press Escape for instant lockout
@@ -308,6 +307,44 @@ See [RAM-ONLY-STORAGE.md](./docs/security/RAM-ONLY-STORAGE.md) for technical det
 - **Rate Limiting** - 5 attempts/min per vault, 50/hour per fingerprint
 - **CSRF Protection** - Origin/referer validation
 - **Security Headers** - X-Frame-Options, CSP, nosniff
+
+### Timing Attack Limitations
+
+⚠️ **IMPORTANT: JavaScript Runtime Constraints**
+
+Sanctum provides **cryptographic plausible deniability** but has inherent limitations due to JavaScript:
+
+**✅ Protected Against:**
+- Cryptographic analysis (encrypted blobs indistinguishable)
+- Static analysis (cannot prove hidden layer exists)
+- Metadata analysis (both layers same size/structure)
+- Forensic disk analysis (RAM-only storage)
+
+**⚠️ Theoretical Vulnerabilities:**
+- High-precision timing measurements (nanosecond-level)
+- Memory allocation pattern analysis
+- CPU cache timing attacks
+- JIT compiler optimization differences
+- Garbage collection timing variations
+
+**Why JavaScript Cannot Provide True Constant-Time:**
+1. No constant-time primitives in JS/WebAssembly
+2. JIT compiler optimizations are unpredictable
+3. Garbage collection introduces timing variations
+4. Browser optimizations vary by implementation
+5. High-resolution timers available to attackers
+
+**Threat Model:**
+- ✅ Safe: Physical coercion, legal demands, forensic analysis
+- ✅ Safe: Cryptographic attacks on encrypted data
+- ⚠️ Risky: Adversary with nanosecond timing + multiple attempts
+- ❌ Unsafe: Side-channel attacks in controlled lab environment
+
+**Recommendations:**
+- Use Tor Browser (adds network timing noise)
+- Never unlock while under active surveillance
+- For maximum security: Native implementation (Rust/C) required
+- Current implementation: Best-effort given web platform constraints
 
 ### OpSec Best Practices
 

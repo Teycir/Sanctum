@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-01-08
+
+### Added - UI/UX Enhancements
+- **3D Tubes Cursor Effect**: Interactive Three.js-based cursor animation with animated tubes following mouse movement
+  - 14 animated tubes with customizable colors and lighting
+  - Motion parallax and bloom effects for depth
+  - Smooth fade-in transition to prevent loading flash
+  - WebGPU warnings suppressed for cleaner console
+  - Applied to all pages including lock screen overlay
+- **TextPressure Animation**: Mouse proximity-based text animation for all major titles
+  - Dynamic font weight changes based on cursor distance
+  - Mobile touch support with proper event handling
+  - Applied to: Home page "Sanctum", Create page "Create Vault", Unlock page "Unlock Vault"
+  - Graceful fallback on mobile (bold text by default)
+- **Lock Screen Enhancement**: TubesCursor animation continues on lock screen with semi-transparent backdrop
+
+### Changed - IPFS Download Optimization
+- Optimized gateway priority: Pinata gateway first, then ipfs.io (removed unreliable dweb.link)
+- Parallel gateway racing for faster downloads (Promise.race)
+- Fixed gateway URL construction (was causing 404 errors)
+- Added retry logic with exponential backoff (3 attempts per gateway)
+- Updated CSP headers to allow IPFS subdomain gateways
+- Download speeds now match upload speeds
+
+### Security - Timing Attack Documentation
+- **CRITICAL**: Documented timing attack limitations in JavaScript implementation
+- Added comprehensive security notice in `lib/duress/layers.ts`:
+  - Protected: Cryptographic analysis, static analysis, metadata analysis, forensic disk analysis
+  - Vulnerable (theoretical): High-precision timing, memory patterns, CPU cache, JIT optimization, GC timing
+  - Threat model clarification: Safe for physical coercion, risky for lab-controlled timing attacks
+- Updated README.md with timing attack limitations section
+- Recommendations: Use Tor Browser, avoid unlocking under surveillance, native implementation for maximum security
+- Acknowledged JavaScript cannot provide true constant-time execution
+
+### Fixed
+- Fixed TubesCursor component to properly fade in (prevents flash of unstyled canvas)
+- Fixed mobile text animation support (touch events now trigger TextPressure effect)
+- Removed unused `isReady` state variable in TubesCursor
+- Fixed IPFS gateway errors (removed broken `.ipfs.dweb.link/` URLs)
+- Suppressed WebGPU console warnings for cleaner developer experience
+
+### Technical Debt
+- Removed stroke prop from TextPressure (not implemented in component)
+- Cleaned up unused imports and state variables
+- Improved code organization in cursor and text animation components
+
 ## [1.1.0] - 2025-01-07
 
 ### Security
