@@ -28,7 +28,7 @@ export async function onRequestPost(context) {
       .run();
 
     const result = await env.DB
-      .prepare('SELECT encrypted_key_b, encrypted_decoy_cid, encrypted_hidden_cid, nonce, provider, expires_at FROM vault_keys WHERE vault_id = ?')
+      .prepare('SELECT encrypted_key_b, encrypted_decoy_cid, encrypted_hidden_cid, nonce, provider, expires_at, panic_passphrase_hash FROM vault_keys WHERE vault_id = ?')
       .bind(vaultId)
       .first();
 
@@ -79,7 +79,8 @@ export async function onRequestPost(context) {
       encryptedHiddenCID: result.encrypted_hidden_cid,
       nonce: result.nonce,
       provider: result.provider || 'pinata',
-      expiresAt: result.expires_at
+      expiresAt: result.expires_at,
+      panicPassphraseHash: result.panic_passphrase_hash
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

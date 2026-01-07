@@ -7,6 +7,7 @@ interface MockVaultKey {
   encryptedDecoyCID: string;
   encryptedHiddenCID: string;
   nonce: string;
+  panicPassphraseHash?: string;
 }
 
 const mockVaultKeys = new Map<string, MockVaultKey>();
@@ -21,7 +22,8 @@ global.fetch = vi.fn((url: string | URL, options?: RequestInit) => {
       keyB: body.keyB,
       encryptedDecoyCID: body.encryptedDecoyCID,
       encryptedHiddenCID: body.encryptedHiddenCID,
-      nonce: body.nonce
+      nonce: body.nonce,
+      panicPassphraseHash: body.panicPassphraseHash
     });
     return Promise.resolve({
       ok: true,
@@ -62,7 +64,7 @@ vi.mock("../../lib/storage/vault", async () => {
       const hiddenCID = `hidden-${Math.random().toString(36).slice(2)}`;
       mockStorage.set(decoyCID, vault.decoyBlob);
       mockStorage.set(hiddenCID, vault.hiddenBlob);
-      return { decoyCID, hiddenCID, salt: vault.salt };
+      return { decoyCID, hiddenCID, salt: vault.salt, provider: 'pinata' as const };
     },
     downloadVault: async (stored: { decoyCID: string; hiddenCID: string; salt: Uint8Array }) => {
       const decoyBlob = mockStorage.get(stored.decoyCID);
@@ -79,9 +81,9 @@ vi.mock("../../lib/workers/crypto", () => ({
       const { createHiddenVault } = await import("../../lib/duress/layers");
       return createHiddenVault(params);
     }
-    async unlockHiddenVault(result: ReturnType<typeof import("../../lib/duress/layers").createHiddenVault>, passphrase: string) {
+    async unlockHiddenVault(result: ReturnType<typeof import("../../lib/duress/layers").createHiddenVault>, passphrase: string, vaultId?: string) {
       const { unlockHiddenVault } = await import("../../lib/duress/layers");
-      return unlockHiddenVault(result, passphrase);
+      return unlockHiddenVault(result, passphrase, vaultId);
     }
     terminate() {
       /* no-op */
@@ -101,29 +103,12 @@ describe("services/vault", () => {
       const decoy = new TextEncoder().encode("innocent");
       const hidden = new TextEncoder().encode("secret");
 
-      // Mock store-key response
-      (global.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce((url: string, options: RequestInit) => {
-        if (url.includes('/api/vault/store-key')) {
-          const body = JSON.parse(options.body);
-          mockVaultKeys.set(body.vaultId, {
-            keyB: body.keyB,
-            encryptedDecoyCID: body.encryptedDecoyCID,
-            encryptedHiddenCID: body.encryptedHiddenCID,
-            nonce: body.nonce
-          });
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ success: true })
-          });
-        }
-        return (global.fetch as any)(url, options);
-      });
-
       const result = await service.createVault({
         decoyContent: decoy,
         hiddenContent: hidden,
         passphrase: "test-pass-12345",
         decoyPassphrase: "decoy-pass-12345",
+        panicPassphrase: "panic-pass-12345",
         ipfsCredentials: {
           provider: "pinata",
           pinataJWT: "mock-jwt"
@@ -137,7 +122,7 @@ describe("services/vault", () => {
   });
 
   describe("unlockVault", () => {
-    it("should unlock decoy layer with empty passphrase", async () => {
+    it("should unlock decoy layer with decoy passphrase", async () => {
       const decoy = new TextEncoder().encode("innocent");
       const hidden = new TextEncoder().encode("secret");
 
@@ -146,6 +131,7 @@ describe("services/vault", () => {
         hiddenContent: hidden,
         passphrase: "test-pass-12345",
         decoyPassphrase: "decoy-pass-12345",
+        panicPassphrase: "panic-pass-12345",
         ipfsCredentials: {
           provider: "pinata",
           pinataJWT: "mock-jwt"
@@ -170,6 +156,7 @@ describe("services/vault", () => {
         hiddenContent: hidden,
         passphrase: "test-pass-12345",
         decoyPassphrase: "decoy-pass-12345",
+        panicPassphrase: "panic-pass-12345",
         ipfsCredentials: {
           provider: "pinata",
           pinataJWT: "mock-jwt"
@@ -183,6 +170,30 @@ describe("services/vault", () => {
 
       expect(unlocked.isDecoy).toBe(false);
       expect(unlocked.content).toEqual(hidden);
+    }, 10000);
+
+    it("should show 'vault deleted' when panic passphrase entered", async () => {
+      const decoy = new TextEncoder().encode("innocent");
+      const hidden = new TextEncoder().encode("secret");
+
+      const created = await service.createVault({
+        decoyContent: decoy,
+        hiddenContent: hidden,
+        passphrase: "test-pass-12345",
+        decoyPassphrase: "decoy-pass-12345",
+        panicPassphrase: "panic-pass-12345",
+        ipfsCredentials: {
+          provider: "pinata",
+          pinataJWT: "mock-jwt"
+        }
+      });
+
+      await expect(
+        service.unlockVault({
+          vaultURL: created.vaultURL,
+          passphrase: "panic-pass-12345",
+        })
+      ).rejects.toThrow("Vault content has been deleted from storage providers");
     }, 10000);
   });
 });

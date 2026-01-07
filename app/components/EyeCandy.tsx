@@ -2,7 +2,11 @@
 
 import { useEffect } from 'react';
 
-export function EyeCandy() {
+interface EyeCandyProps {
+  onLoad?: () => void;
+}
+
+export function EyeCandy({ onLoad }: EyeCandyProps = {}) {
   useEffect(() => {
     // Particle System
     const canvas = document.createElement('canvas');
@@ -73,6 +77,11 @@ export function EyeCandy() {
     }
 
     animate();
+
+    // Call onLoad after first frame renders
+    if (onLoad) {
+      requestAnimationFrame(() => onLoad());
+    }
 
     const handleResize = () => {
       canvas.width = window.innerWidth;

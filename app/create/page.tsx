@@ -30,6 +30,7 @@ export default function CreateVault() {
   const [hiddenFile, setHiddenFile] = useState<File | null>(null);
   const [passphrase, setPassphrase] = useState("");
   const [decoyPassphrase, setDecoyPassphrase] = useState("");
+  const [panicPassphrase, setPanicPassphrase] = useState("");
   const [pinataJWT, setPinataJWT] = useState("");
   const [filebaseAccessKey, setFilebaseAccessKey] = useState("");
   const [filebaseSecretKey, setFilebaseSecretKey] = useState("");
@@ -58,6 +59,7 @@ export default function CreateVault() {
   const [vaultServiceRef, setVaultServiceRef] = useState<{
     stop: () => Promise<void>;
   } | null>(null);
+  const [threeJsLoaded, setThreeJsLoaded] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -456,6 +458,7 @@ export default function CreateVault() {
         hiddenContent: hiddenData,
         passphrase: sanitizedPassphrase,
         decoyPassphrase: sanitizedDecoyPassphrase || undefined,
+        panicPassphrase: sanitizeInput(panicPassphrase.trim()),
         argonProfile: ARGON2_PROFILES.desktop,
         decoyFilename: decoyFile?.name,
         hiddenFilename: hiddenFile?.name,
@@ -509,11 +512,20 @@ export default function CreateVault() {
 
   return (
     <>
-      <EyeCandy />
+      <EyeCandy onLoad={() => setThreeJsLoaded(true)} />
+      {!threeJsLoaded && (
+        <div className={`${styles.loader} ${threeJsLoaded ? styles.hidden : ""}`}>
+          <div className={styles.lockIcon}>🔒</div>
+          <div className={styles.loaderText}>Initializing Sanctum...</div>
+          <div className={styles.loaderBar}>
+            <div className={styles.loaderProgress}></div>
+          </div>
+        </div>
+      )}
       {loading && <LoadingOverlay step={loadingStep} progress={progress} />}
       <SecurityStatus />
       <ExtensionWarning />
-      <div className={`${styles.container} ${isBlurred ? styles.blurred : ""}`}>
+      <div className={`${styles.container} ${threeJsLoaded ? styles.loaded : ""} ${isBlurred ? styles.blurred : ""}`}>
         <div className={styles.content}>
           <h1 className={styles.title}>
             <TextPressure
@@ -804,6 +816,39 @@ export default function CreateVault() {
                   <p className={styles.passwordHint}>
                     Password must be 12+ characters with uppercase, lowercase,
                     number, and special character
+                  </p>
+                </div>
+              </CollapsiblePanel>
+
+              <CollapsiblePanel
+                title="🚨 Panic Password (Required)"
+                defaultOpen={false}
+              >
+                <p style={{ fontSize: 13, color: "rgba(255, 193, 7, 0.9)", fontWeight: 600, marginBottom: 12 }}>
+                  ⚠️ Shows "vault deleted" message when entered under duress
+                </p>
+                <div>
+                  <label
+                    htmlFor="panic-password"
+                    style={{
+                      display: "block",
+                      marginBottom: 6,
+                      fontSize: 13,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Panic Password (Required)
+                  </label>
+                  <input
+                    id="panic-password"
+                    type="password"
+                    value={panicPassphrase}
+                    onChange={(e) => setPanicPassphrase(e.target.value)}
+                    placeholder="Emergency password to show 'vault deleted'..."
+                    className="form-input"
+                  />
+                  <p className={styles.passwordHint}>
+                    Must be different from hidden and decoy passwords
                   </p>
                 </div>
               </CollapsiblePanel>

@@ -111,6 +111,7 @@ describe('Vault Zip File Upload/Download', () => {
       decoyContent: new TextEncoder().encode(decoyText),
       hiddenContent: testZipData,
       passphrase: 'TestPassword123!',
+      panicPassphrase: 'PanicPass789!',
       decoyPassphrase: 'DecoyPass456!',
       argonProfile: ARGON2_PROFILES.mobile, // Faster for testing
       ipfsCredentials: {
@@ -136,6 +137,7 @@ describe('Vault Zip File Upload/Download', () => {
       decoyContent: new TextEncoder().encode('Decoy content'),
       hiddenContent: testZipData,
       passphrase: 'TestPassword123!',
+      panicPassphrase: 'PanicPass789!',
       decoyPassphrase: 'DecoyPass456!',
       argonProfile: ARGON2_PROFILES.mobile,
       ipfsCredentials: {
@@ -180,6 +182,7 @@ describe('Vault Zip File Upload/Download', () => {
       decoyContent: new TextEncoder().encode(decoyText),
       hiddenContent: testZipData,
       passphrase: 'TestPassword123!',
+      panicPassphrase: 'PanicPass789!',
       decoyPassphrase: 'DecoyPass456!',
       argonProfile: ARGON2_PROFILES.mobile,
       ipfsCredentials: {
@@ -219,6 +222,7 @@ describe('Vault Zip File Upload/Download', () => {
       decoyContent: new TextEncoder().encode('Small decoy'),
       hiddenContent: largeZipData,
       passphrase: 'TestPassword123!',
+      panicPassphrase: 'PanicPass789!',
       decoyPassphrase: 'DecoyPass456!',
       argonProfile: ARGON2_PROFILES.mobile,
       ipfsCredentials: {
@@ -255,6 +259,7 @@ describe('Vault Zip File Upload/Download', () => {
       decoyContent: new TextEncoder().encode('Project backup'),
       hiddenContent: complexZipData,
       passphrase: 'TestPassword123!',
+      panicPassphrase: 'PanicPass789!',
       decoyPassphrase: 'DecoyPass456!',
       argonProfile: ARGON2_PROFILES.mobile,
       ipfsCredentials: {
@@ -306,6 +311,7 @@ describe('Vault Zip File Upload/Download', () => {
       decoyContent: new TextEncoder().encode('File collection'),
       hiddenContent: binaryZipData,
       passphrase: 'TestPassword123!',
+      panicPassphrase: 'PanicPass789!',
       decoyPassphrase: 'DecoyPass456!',
       argonProfile: ARGON2_PROFILES.mobile,
       ipfsCredentials: {

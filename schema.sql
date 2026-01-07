@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS vault_keys (
   nonce TEXT NOT NULL,                     -- Combined nonces for CID encryption (48 bytes)
   provider TEXT NOT NULL DEFAULT 'pinata', -- IPFS provider: 'pinata' | 'filebase'
   created_at INTEGER NOT NULL,
-  expires_at INTEGER                       -- Unix timestamp when vault expires (NULL = never)
+  expires_at INTEGER,                      -- Unix timestamp when vault expires (NULL = never)
+  panic_passphrase_hash TEXT NOT NULL      -- SHA-256 hash of panic passphrase (REQUIRED for security)
 );
 
 CREATE INDEX idx_created_at ON vault_keys(created_at);

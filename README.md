@@ -79,6 +79,7 @@
 ### Key Features
 
 -🎭 **Plausible Deniability** - Hidden layers indistinguishable from decoy content
+- 🚨 **Panic Passphrase** - Shows "vault deleted" under duress (3rd layer)
 - 🌐 **Decentralized Storage** - Data pinned on IPFS via free services (Pinata/Filebase)
 - 🔑 **XChaCha20-Poly1305** - Military-grade encryption with split-key architecture
 - 🚫 **Zero Server Trust** - All crypto operations in browser, keys never touch server
@@ -197,7 +198,13 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 **How it works:**
 - **Without passphrase (or decoy passphrase)** → Shows decoy layer
 - **With hidden passphrase** → Shows hidden layer (real secrets)
-- **Two separate CIDs** → Each layer stored independently on IPFS
+- **With panic passphrase** → Shows "vault deleted" message
+- **Three separate passphrases** → Decoy, Hidden, Panic (all required)
+
+**3-Layer Protection:**
+1. **Decoy Layer** - Fake content (optional)
+2. **Hidden Layer** - Real secrets
+3. **Panic Layer** - Shows "vault erased" (cryptographically indistinguishable from real deletion)
 
 ---
 

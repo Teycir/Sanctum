@@ -27,6 +27,7 @@ export interface CreateVaultParams {
   readonly hiddenContent: Uint8Array;
   readonly passphrase: string;
   readonly decoyPassphrase?: string;
+  readonly panicPassphrase: string; // REQUIRED: Shows "vault erased" message
   readonly argonProfile?: Argon2Profile;
   readonly ipfsCredentials?: UploadCredentials;
   readonly decoyFilename?: string;
@@ -99,6 +100,14 @@ export class VaultService {
     const { keyA, keyB, masterKey } = await generateSplitKeys();
     const vaultId = crypto.randomUUID();
     
+    // Hash panic passphrase (SHA-256) - REQUIRED for security
+    if (!params.panicPassphrase) {
+      throw new Error('Panic passphrase is required');
+    }
+    const { sha256 } = await import('@noble/hashes/sha2');
+    const hash = sha256(new TextEncoder().encode(params.panicPassphrase));
+    const panicPassphraseHash = base64UrlEncode(hash);
+    
     // Calculate expiry timestamp with 5-second buffer for mobile lag
     // This ensures vaults don't expire prematurely due to clock drift or processing delays
     const MOBILE_LAG_BUFFER_MS = 5000; // 5 seconds
@@ -135,6 +144,7 @@ export class VaultService {
         nonce: base64UrlEncode(combinedNonces),
         provider: stored.provider,
         expiresAt,
+        panicPassphraseHash,
       }),
     });
     
@@ -178,7 +188,8 @@ export class VaultService {
       throw new Error(firstError.message);
     }
     const validated = result.data;
-
+    
+    // Check panic passphrase first (before any crypto operations)
     const hash = validated.vaultURL.split("#")[1];
     if (!hash) {
       throw new Error("Invalid vault URL: missing metadata");
@@ -203,7 +214,18 @@ export class VaultService {
     if (!fetchResponse.ok) {
       throw new Error('Vault not found');
     }
-    const { keyB: keyBEncoded, encryptedDecoyCID, encryptedHiddenCID, nonce, provider, expiresAt } = await fetchResponse.json();
+    const { keyB: keyBEncoded, encryptedDecoyCID, encryptedHiddenCID, nonce, provider, expiresAt, panicPassphraseHash } = await fetchResponse.json();
+    
+    // Check if panic passphrase was entered (show same error as deleted vault)
+    if (panicPassphraseHash && validated.passphrase) {
+      const { sha256 } = await import('@noble/hashes/sha2');
+      const enteredHash = sha256(new TextEncoder().encode(validated.passphrase));
+      const enteredHashEncoded = base64UrlEncode(enteredHash);
+      
+      if (enteredHashEncoded === panicPassphraseHash) {
+        throw new Error('Vault content has been deleted from storage providers');
+      }
+    }
     
     // Decode KeyB (already decrypted by server)
     const keyB = base64UrlDecode(keyBEncoded);

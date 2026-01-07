@@ -648,7 +648,7 @@ export default function ViewVault() {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to unlock vault";
 
-      // Check if it's a content deletion error
+      // Check if panic passphrase or content deletion error
       if (
         errorMessage.includes("not found on IPFS") ||
         errorMessage.includes("deleted from storage")

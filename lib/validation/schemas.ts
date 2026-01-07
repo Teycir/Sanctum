@@ -22,12 +22,19 @@ export const CreateVaultParamsSchema = z.object({
   hiddenContent: z.instanceof(Uint8Array),
   passphrase: z.string().min(12, 'Hidden password must be at least 12 characters'),
   decoyPassphrase: z.string().min(12, 'Decoy password must be at least 12 characters').optional(),
+  panicPassphrase: z.string().min(12, 'Panic password must be at least 12 characters'),
   argonProfile: z.custom<Argon2Profile>().optional(),
   decoyFilename: z.string().optional(),
   hiddenFilename: z.string().optional()
 }).refine(
   (data) => !data.decoyContent || (data.decoyContent.length === 0) || data.decoyPassphrase,
   { message: 'Decoy passphrase required when decoy content is provided', path: ['decoyPassphrase'] }
+).refine(
+  (data) => data.panicPassphrase !== data.passphrase,
+  { message: 'Panic passphrase must be different from hidden passphrase', path: ['panicPassphrase'] }
+).refine(
+  (data) => !data.decoyPassphrase || data.panicPassphrase !== data.decoyPassphrase,
+  { message: 'Panic passphrase must be different from decoy passphrase', path: ['panicPassphrase'] }
 );
 
 export const UnlockVaultParamsSchema = z.object({

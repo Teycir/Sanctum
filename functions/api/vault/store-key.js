@@ -18,9 +18,9 @@ export async function onRequestPost(context) {
     }
 
     const body = await request.json();
-    const { vaultId, keyB, encryptedDecoyCID, encryptedHiddenCID, salt, nonce, expiresAt, provider } = body;
+    const { vaultId, keyB, encryptedDecoyCID, encryptedHiddenCID, salt, nonce, expiresAt, provider, panicPassphraseHash } = body;
 
-    if (!vaultId || !keyB || !encryptedDecoyCID || !encryptedHiddenCID || !salt || !nonce) {
+    if (!vaultId || !keyB || !encryptedDecoyCID || !encryptedHiddenCID || !salt || !nonce || !panicPassphraseHash) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -79,9 +79,9 @@ export async function onRequestPost(context) {
 
     await env.DB
       .prepare(
-        'INSERT INTO vault_keys (vault_id, encrypted_key_b, encrypted_decoy_cid, encrypted_hidden_cid, salt, nonce, provider, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO vault_keys (vault_id, encrypted_key_b, encrypted_decoy_cid, encrypted_hidden_cid, salt, nonce, provider, created_at, expires_at, panic_passphrase_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
       )
-      .bind(vaultId, encryptedKeyBBase64, encryptedDecoyCID, encryptedHiddenCID, salt, nonce, provider || 'pinata', Date.now(), expiresAt || null)
+      .bind(vaultId, encryptedKeyBBase64, encryptedDecoyCID, encryptedHiddenCID, salt, nonce, provider || 'pinata', Date.now(), expiresAt || null, panicPassphraseHash)
       .run();
 
     return new Response(JSON.stringify({ success: true }), {

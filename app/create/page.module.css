@@ -5,7 +5,96 @@
   align-items: center;
   justify-content: flex-start;
   padding: 20px;
-  transition: filter 0.3s ease;
+  transition: filter 0.3s ease, opacity 0.8s ease;
+  opacity: 0;
+}
+
+.container.loaded {
+  opacity: 1;
+}
+
+.loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+  z-index: 10000;
+  opacity: 1;
+  transition: opacity 0.8s ease;
+}
+
+.loader.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lockIcon {
+  font-size: 80px;
+  margin-bottom: 30px;
+  animation: lockPulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(65, 105, 225, 0.8));
+}
+
+@keyframes lockPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 30px rgba(65, 105, 225, 0.8));
+  }
+  50% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 50px rgba(65, 105, 225, 1));
+  }
+}
+
+.loaderText {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 20px;
+  animation: textFade 2s ease-in-out infinite;
+}
+
+@keyframes textFade {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.loaderBar {
+  width: 200px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.loaderProgress {
+  height: 100%;
+  background: linear-gradient(90deg, #4169e1, #6495ed, #4169e1);
+  background-size: 200% 100%;
+  animation: progressSlide 1.5s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(65, 105, 225, 0.8);
+}
+
+@keyframes progressSlide {
+  0% {
+    width: 0%;
+    background-position: 0% 50%;
+  }
+  50% {
+    width: 100%;
+    background-position: 100% 50%;
+  }
+  100% {
+    width: 0%;
+    background-position: 0% 50%;
+  }
 }
 
 .container.blurred {
