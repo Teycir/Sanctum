@@ -468,6 +468,15 @@ See [OPSEC.md](./docs/OPSEC.md) for comprehensive guidelines.
 - Test recall after 24 hours
 - Have a trusted contact who knows the passphrase (dead man's switch)
 
+**Anti-Keylogger Protection:**
+- ⭐ **Use Password Manager** (KeePassXC, Bitwarden) - Copy/paste passphrase instead of typing
+  - Keyloggers only see paste event, not individual characters
+  - Software keyloggers cannot capture password manager clipboard
+  - Works with current implementation (no code changes needed)
+- ✅ Use Tails OS for maximum security (clean environment)
+- ✅ Physically inspect USB ports for hardware keyloggers
+- ❌ Never type passphrase on compromised/untrusted devices
+
 #### 3. Decoy Layer Strategy
 
 **Make It Believable:**

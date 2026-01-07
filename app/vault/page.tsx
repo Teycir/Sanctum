@@ -581,6 +581,12 @@ export default function ViewVault() {
 
     try {
       const vaultURL = `${globalThis.window.location.origin}/vault#${hash}`;
+
+      // SECURITY: Add randomized timing delay (500-2000ms) to prevent timing analysis
+      // This makes decoy and hidden unlocks indistinguishable even with source code access
+      const randomDelay = 500 + Math.random() * 1500;
+      await new Promise((resolve) => setTimeout(resolve, randomDelay));
+
       const result = await vaultService.unlockVault({
         vaultURL,
         passphrase: passphrase.trim(),
@@ -630,6 +636,12 @@ export default function ViewVault() {
         expiresAt: result.expiresAt || null,
         daysUntilExpiry: result.daysUntilExpiry || null,
       });
+
+      // SECURITY: Clear vault URL from browser history (forensic resistance)
+      if (globalThis.window?.history) {
+        globalThis.window.history.replaceState(null, "", "/vault");
+      }
+
       triggerConfetti();
     } catch (err) {
       clearInterval(progressInterval);
