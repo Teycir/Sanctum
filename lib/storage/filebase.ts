@@ -249,25 +249,32 @@ export class FilebaseClient {
   async download(cid: string): Promise<Uint8Array> {
     const gateways = [
       `https://ipfs.filebase.io/ipfs/${cid}`,
-      `https://dweb.link/ipfs/${cid}`,
-      `https://ipfs.io/ipfs/${cid}`,
+      `https://ipfs.io/ipfs/${cid}`
     ];
 
-    const errors: string[] = [];
-
-    for (const gateway of gateways) {
-      try {
-        const data = await this.downloadFromGateway(gateway);
-        if (data) return data;
-      } catch (error) {
-        errors.push(
-          `${gateway}: ${error instanceof Error ? error.message : "Unknown error"}`,
-        );
+    try {
+      const result = await Promise.race(
+        gateways.map(gateway => this.downloadFromGateway(gateway))
+      );
+      if (result) return result;
+    } catch {
+      const errors: string[] = [];
+      for (const gateway of gateways) {
+        try {
+          const data = await this.downloadFromGateway(gateway);
+          if (data) return data;
+        } catch (error) {
+          errors.push(
+            `${gateway}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        }
       }
+      throw new Error(
+        `Failed to download from all IPFS gateways:\n${errors.join("\n")}`,
+      );
     }
-    throw new Error(
-      `Failed to download from all IPFS gateways:\n${errors.join("\n")}`,
-    );
+
+    throw new Error('Failed to download from all IPFS gateways');
   }
 
   private async downloadFromGateway(

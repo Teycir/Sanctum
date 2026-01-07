@@ -7,6 +7,7 @@ import { Lock } from "lucide-react";
 import { LoadingOverlay } from "../components/LoadingOverlay";
 import { SecurityStatus } from "../components/SecurityStatus";
 import { useSecureClipboard } from "@/lib/hooks/useSecureClipboard";
+import TextPressure from "../components/text/text-pressure";
 
 const INACTIVITY_TIMEOUT_MS = 60000;
 
@@ -700,7 +701,13 @@ export default function ViewVault() {
               textAlign: "center",
             }}
           >
-            Unlock Vault
+            <TextPressure
+              text="Unlock Vault"
+              flex={true}
+              weight={true}
+              minFontSize={32}
+              className="text-white"
+            />
           </h1>
 
           {renderContent()}

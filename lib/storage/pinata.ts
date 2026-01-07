@@ -71,9 +71,9 @@ export class PinataClient {
     return { used, limit, percentage: (used / limit) * 100 }
   }
 
-  private async fetchFromGateway(gateway: string, cid: string, attempt: number): Promise<Uint8Array | null> {
+  private async fetchFromGateway(url: string, _cid: string, attempt: number): Promise<Uint8Array | null> {
     try {
-      const response = await fetch(`${gateway}/${cid}`, { 
+      const response = await fetch(url, { 
         signal: AbortSignal.timeout(30000)
       });
       
@@ -99,20 +99,19 @@ export class PinataClient {
     if (!cid?.trim()) throw new Error('CID cannot be empty')
 
     const gateways = [
-      `${this.gateway}/ipfs`,
-      'https://dweb.link/ipfs',
-      'https://ipfs.io/ipfs'
+      `${this.gateway}/ipfs/${cid}`,
+      `https://ipfs.io/ipfs/${cid}`
     ];
 
     try {
       const result = await Promise.race(
-        gateways.map(gateway => this.fetchFromGateway(gateway, cid, 0))
+        gateways.map(gateway => this.fetchFromGateway(gateway, '', 0))
       );
       if (result) return result;
     } catch {
       for (const gateway of gateways) {
         for (let attempt = 0; attempt < 3; attempt++) {
-          const result = await this.fetchFromGateway(gateway, cid, attempt);
+          const result = await this.fetchFromGateway(gateway, '', attempt);
           if (result) return result;
         }
       }

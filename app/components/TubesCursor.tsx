@@ -21,7 +21,22 @@ export function TubesCursor() {
     const script = document.createElement('script');
     script.type = 'module';
     script.textContent = `
+      // Suppress WebGPU warnings
+      const originalWarn = console.warn;
+      const originalError = console.error;
+      console.warn = (...args) => {
+        if (args[0]?.includes?.('WebGPU')) return;
+        originalWarn.apply(console, args);
+      };
+      console.error = (...args) => {
+        if (args[0]?.includes?.('WebGPU')) return;
+        originalError.apply(console, args);
+      };
+      
       import TubesCursor from "https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js";
+      
+      console.warn = originalWarn;
+      console.error = originalError;
       
       const canvas = document.getElementById('${canvasId}');
       if (canvas) {
@@ -47,6 +62,7 @@ export function TubesCursor() {
           }
         });
         window.__tubesApp = app;
+        setTimeout(() => { canvas.style.opacity = '1'; }, 100);
       }
     `;
 
@@ -72,7 +88,9 @@ export function TubesCursor() {
         width: '100%',
         height: '100%',
         pointerEvents: 'none',
-        zIndex: 1
+        zIndex: 1,
+        opacity: 0,
+        transition: 'opacity 0.5s ease-in'
       }}
     />
   );
