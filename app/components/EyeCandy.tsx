@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { TubesCursor } from './TubesCursor';
 
 export function EyeCandy() {
   useEffect(() => {
@@ -125,5 +124,5 @@ export function EyeCandy() {
     };
   }, []);
 
-  return <TubesCursor />;
+  return null;
 }

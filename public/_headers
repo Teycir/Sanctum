@@ -1,9 +1,8 @@
 /*
   Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Embedder-Policy: require-corp
   Cross-Origin-Resource-Policy: same-origin
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: no-referrer
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.pinata.cloud https://gateway.pinata.cloud https://s3.filebase.com https://ipfs.filebase.io https://dweb.link https://ipfs.io https://cloudflareinsights.com; worker-src 'self' blob:; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.pinata.cloud https://gateway.pinata.cloud https://s3.filebase.com https://ipfs.filebase.io https://dweb.link https://ipfs.io https://cloudflareinsights.com; worker-src 'self' blob:; frame-ancestors 'none'
