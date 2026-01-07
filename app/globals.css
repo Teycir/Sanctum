@@ -202,12 +202,12 @@
   cursor: pointer;
   transition: all 0.3s ease;
   animation: pulseBtn 2s ease-in-out infinite;
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2), 0 0 20px rgba(65, 105, 225, 0.3);
 }
 
 .start-btn:hover {
   background: linear-gradient(135deg, #fff 0%, #fafafa 50%, #f0f0f0 100%);
-  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.4), 0 0 40px rgba(65, 105, 225, 0.6);
   transform: translateY(-2px);
 }
 

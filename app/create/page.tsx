@@ -6,6 +6,7 @@ import { LoadingOverlay } from "../components/LoadingOverlay";
 import { SecurityStatus } from "../components/SecurityStatus";
 import { CollapsiblePanel } from "../components/CollapsiblePanel";
 import { ExtensionWarning } from "../components/ExtensionWarning";
+import { EyeCandy } from "../components/EyeCandy";
 import { sanitizeInput, validateVaultForm } from "@/lib/validation/vault-form";
 import { generateVaultQR } from "@/lib/shared/qrcode";
 import { useSecureClipboard } from "@/lib/hooks/useSecureClipboard";
@@ -510,6 +511,7 @@ export default function CreateVault() {
 
   return (
     <>
+      <EyeCandy />
       {loading && <LoadingOverlay step={loadingStep} progress={progress} />}
       <SecurityStatus />
       <ExtensionWarning />
