@@ -74,6 +74,56 @@ const lockScreen = () => {
 
 ---
 
+### 5. Randomized Unlock Timing ✅
+**Location**: `app/vault/page.tsx`
+
+**Features**:
+- Random 500-2000ms delay before every unlock attempt
+- Prevents timing analysis attacks
+- Makes decoy and hidden unlocks indistinguishable
+- Works even with source code access
+- Applies to both successful and failed unlocks
+
+**Implementation**:
+```typescript
+// Before unlock
+const randomDelay = 500 + Math.random() * 1500;
+await new Promise((resolve) => setTimeout(resolve, randomDelay));
+```
+
+**Security Benefit**:
+- Attacker cannot measure timing differences between decoy/hidden unlocks
+- Random delay >> cryptographic timing differences (~nanoseconds)
+- Provides practical timing attack resistance
+
+---
+
+### 6. Browser History Clearing ✅
+**Location**: `app/vault/page.tsx`
+
+**Features**:
+- Vault URL automatically removed from browser history after successful unlock
+- Prevents forensic recovery of vault link
+- Uses `history.replaceState()` to replace URL with generic `/vault` path
+- Works on all modern browsers
+
+**Implementation**:
+```typescript
+// After successful unlock
+if (globalThis.window?.history) {
+  globalThis.window.history.replaceState(null, "", "/vault");
+}
+```
+
+**Security Benefit**:
+- Vault URL not recoverable from browser history
+- Forensic tools cannot find vault link
+- User can safely leave browser open
+
+**See**: [FORENSIC-RESISTANCE.md](./security/FORENSIC-RESISTANCE.md) for complete documentation
+
+---
+
 ## Integration
 
 ### All Pages
@@ -153,9 +203,16 @@ const ESC_DOUBLE_PRESS_WINDOW = 500;
 
 ✅ **Auto-lock after 5 minutes of inactivity**
 ✅ **Double-ESC panic key**
+✅ **Randomized unlock timing (500-2000ms)**
+✅ **Browser history clearing**
 ✅ **Guaranteed lock screen (DOM clearing)**
 ✅ **Mobile and desktop support**
 ✅ **Responsive security indicator**
 ✅ **Production-ready**
 
 All features follow Sanctum's security-first design principles and are ready for production use.
+
+**See also**:
+- [FORENSIC-RESISTANCE.md](./security/FORENSIC-RESISTANCE.md) - Complete forensic resistance documentation
+- [TIMING-ATTACK-MITIGATION.md](./security/TIMING-ATTACK-MITIGATION.md) - Timing attack defenses
+- [RAM-ONLY-STORAGE.md](./security/RAM-ONLY-STORAGE.md) - Memory safety details

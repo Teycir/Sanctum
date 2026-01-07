@@ -303,6 +303,8 @@ See [RAM-ONLY-STORAGE.md](./docs/security/RAM-ONLY-STORAGE.md) for technical det
 - **CID Encryption** - IPFS CIDs encrypted with master key (KeyA + KeyB)
 - **Vault ID Integrity** - 16-byte hash embedded in blobs prevents cross-vault contamination
 - **Provider Isolation** - Pinata and Filebase are completely separate storage namespaces
+- **Randomized Timing** - 500-2000ms random delay prevents timing analysis attacks
+- **History Clearing** - Vault URL automatically removed from browser history after unlock
 - **Auto-Lock** - Locks vault after 5 minutes of inactivity
 - **Panic Key** - Double-press Escape for instant lockout
 - **Secure Clipboard** - Auto-clears after 60 seconds
