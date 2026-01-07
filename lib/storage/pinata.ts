@@ -105,9 +105,10 @@ export class PinataClient {
     ];
 
     try {
-      return await Promise.race(
+      const result = await Promise.race(
         gateways.map(gateway => this.fetchFromGateway(gateway, cid, 0))
       );
+      if (result) return result;
     } catch {
       for (const gateway of gateways) {
         for (let attempt = 0; attempt < 3; attempt++) {
