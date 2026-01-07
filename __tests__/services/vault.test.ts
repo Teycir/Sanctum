@@ -17,7 +17,7 @@ global.fetch = vi.fn((url: string | URL, options?: RequestInit) => {
   const urlStr = typeof url === 'string' ? url : url.toString();
   
   if (urlStr.includes('/api/vault/store-key') && options?.method === 'POST') {
-    const body = JSON.parse(options.body);
+    const body = JSON.parse(options.body as string);
     mockVaultKeys.set(body.vaultId, {
       keyB: body.keyB,
       encryptedDecoyCID: body.encryptedDecoyCID,
@@ -31,7 +31,7 @@ global.fetch = vi.fn((url: string | URL, options?: RequestInit) => {
     } as Response);
   }
   if (urlStr.includes('/api/vault/get-key') && options?.method === 'POST') {
-    const body = JSON.parse(options.body);
+    const body = JSON.parse(options.body as string);
     const stored = mockVaultKeys.get(body.vaultId);
     if (!stored) {
       return Promise.resolve({
@@ -106,9 +106,9 @@ describe("services/vault", () => {
       const result = await service.createVault({
         decoyContent: decoy,
         hiddenContent: hidden,
-        passphrase: "test-pass-12345",
-        decoyPassphrase: "decoy-pass-12345",
-        panicPassphrase: "panic-pass-12345",
+        passphrase: "Test-Pass-12345!",
+        decoyPassphrase: "Decoy-Pass-12345!",
+        panicPassphrase: "Panic-Pass-12345!",
         ipfsCredentials: {
           provider: "pinata",
           pinataJWT: "mock-jwt"
@@ -129,9 +129,9 @@ describe("services/vault", () => {
       const created = await service.createVault({
         decoyContent: decoy,
         hiddenContent: hidden,
-        passphrase: "test-pass-12345",
-        decoyPassphrase: "decoy-pass-12345",
-        panicPassphrase: "panic-pass-12345",
+        passphrase: "Test-Pass-12345!",
+        decoyPassphrase: "Decoy-Pass-12345!",
+        panicPassphrase: "Panic-Pass-12345!",
         ipfsCredentials: {
           provider: "pinata",
           pinataJWT: "mock-jwt"
@@ -140,7 +140,7 @@ describe("services/vault", () => {
 
       const unlocked = await service.unlockVault({
         vaultURL: created.vaultURL,
-        passphrase: "decoy-pass-12345",
+        passphrase: "Decoy-Pass-12345!",
       });
 
       expect(unlocked.isDecoy).toBe(true);
@@ -154,9 +154,9 @@ describe("services/vault", () => {
       const created = await service.createVault({
         decoyContent: decoy,
         hiddenContent: hidden,
-        passphrase: "test-pass-12345",
-        decoyPassphrase: "decoy-pass-12345",
-        panicPassphrase: "panic-pass-12345",
+        passphrase: "Test-Pass-12345!",
+        decoyPassphrase: "Decoy-Pass-12345!",
+        panicPassphrase: "Panic-Pass-12345!",
         ipfsCredentials: {
           provider: "pinata",
           pinataJWT: "mock-jwt"
@@ -165,7 +165,7 @@ describe("services/vault", () => {
 
       const unlocked = await service.unlockVault({
         vaultURL: created.vaultURL,
-        passphrase: "test-pass-12345",
+        passphrase: "Test-Pass-12345!",
       });
 
       expect(unlocked.isDecoy).toBe(false);
@@ -179,9 +179,9 @@ describe("services/vault", () => {
       const created = await service.createVault({
         decoyContent: decoy,
         hiddenContent: hidden,
-        passphrase: "test-pass-12345",
-        decoyPassphrase: "decoy-pass-12345",
-        panicPassphrase: "panic-pass-12345",
+        passphrase: "Test-Pass-12345!",
+        decoyPassphrase: "Decoy-Pass-12345!",
+        panicPassphrase: "Panic-Pass-12345!",
         ipfsCredentials: {
           provider: "pinata",
           pinataJWT: "mock-jwt"
@@ -191,7 +191,7 @@ describe("services/vault", () => {
       await expect(
         service.unlockVault({
           vaultURL: created.vaultURL,
-          passphrase: "panic-pass-12345",
+          passphrase: "Panic-Pass-12345!",
         })
       ).rejects.toThrow("Vault content has been deleted from storage providers");
     }, 10000);

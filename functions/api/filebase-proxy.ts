@@ -33,21 +33,35 @@ export async function onRequest(context: { request: Request; env: Env }) {
       });
     }
 
+    // SECURITY: Prevent SSRF by restricting to Filebase S3 endpoint only
+    try {
+      const url = new URL(filebaseUrl);
+      if (url.protocol !== "https:" || url.hostname !== "s3.filebase.com") {
+         throw new Error("Invalid hostname or protocol");
+      }
+    } catch {
+       return new Response("Invalid URL: Only Filebase S3 endpoints allowed", {
+        status: 403,
+        headers: corsHeaders,
+      });
+    }
+
     // Forward all AWS signature headers
     const forwardHeaders: Record<string, string> = {};
     request.headers.forEach((value, key) => {
+      // Do NOT forward 'host' header as it breaks the upstream request
       if (
         key.startsWith("x-amz-") ||
         key === "authorization" ||
-        key === "host" ||
         key === "content-type"
       ) {
         forwardHeaders[key] = value;
       }
     });
 
-    // Get request body
-    const body = request.method === "POST" ? await request.arrayBuffer() : null;
+    // Get request body - forward for PUT and POST
+    const hasBody = request.method !== "GET" && request.method !== "HEAD";
+    const body = hasBody ? await request.arrayBuffer() : null;
 
     // Forward to Filebase
     const filebaseResponse = await fetch(filebaseUrl, {

@@ -193,15 +193,13 @@ npx wrangler login
 npm run dev
 ```
 
-See [QUICK-START.md](./docs/QUICK-START.md) for detailed setup instructions.
-
 ## 📚 Documentation
 
 - [Project Status](./docs/PROJECT-STATUS.md) - Current implementation status
 - [Security Features](./docs/SECURITY-FEATURES.md) - Auto-lock, panic key, secure clipboard
 - [RAM-Only Storage](./docs/security/RAM-ONLY-STORAGE.md) - Forensic-resistant architecture
-- [Technical Specification](./docs/core/SPECIFICATION.md) - Complete technical spec
-- [Implementation Plan](./docs/core/IMPLEMENTATION-PLAN.md) - Development roadmap
+- [Timing Attack Mitigation](./docs/security/TIMING-ATTACK-MITIGATION.md) - Defense against timing attacks
+- [Security Audit](./docs/SECURITY-AUDIT.md) - Security analysis and recommendations
 
 ## 🔒 Operating Modes
 
@@ -218,14 +216,14 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 **Use Case:** $5 wrench attacks, device seizures, coercion scenarios.
 
 **How it works:**
-- **Without passphrase (or decoy passphrase)** → Shows decoy layer
-- **With hidden passphrase** → Shows hidden layer (real secrets)
-- **With panic passphrase** → Shows "vault deleted" message
-- **Three separate passphrases** → Decoy, Hidden, Panic (all required)
+- **Decoy passphrase** → Shows decoy layer (innocent content)
+- **Hidden passphrase** → Shows hidden layer (real secrets)
+- **Panic passphrase** → Shows "vault deleted" error (duress protection)
+- **Wrong passphrase** → Error: "Invalid passphrase"
 
 **3-Layer Protection:**
-1. **Decoy Layer** - Fake content (optional)
-2. **Hidden Layer** - Real secrets
+1. **Decoy Layer** - Innocent content (optional)
+2. **Hidden Layer** - Real secrets (required)
 3. **Panic Layer** - Shows "vault erased" (cryptographically indistinguishable from real deletion)
 
 ---
@@ -323,373 +321,50 @@ See [RAM-ONLY-STORAGE.md](./docs/security/RAM-ONLY-STORAGE.md) for technical det
 - ✅ **Physical duress** ($5 wrench attacks, torture)
 - ✅ **Device seizure** (law enforcement, border control)
 - ✅ **Censorship** (government blocking, deplatforming)
-- ✅ **Long-term availability** (data permanence)
+
 
 ### Security Features
 
-- **Plausible Deniability** - No metadata reveals hidden layers
-- **Split-Key Architecture** - KeyA (URL) + KeyB (encrypted in DB with HKDF)
-- **CID Encryption** - IPFS CIDs encrypted with master key (KeyA + KeyB)
-- **Vault ID Integrity** - 16-byte hash embedded in blobs prevents cross-vault contamination
-- **Provider Isolation** - Pinata and Filebase are completely separate storage namespaces
-- **Randomized Timing** - 500-2000ms random delay prevents timing analysis attacks
-- **History Clearing** - Vault URL automatically removed from browser history after unlock
-- **Auto-Lock** - Locks vault after 5 minutes of inactivity
+**Cryptographic**:
+- **Plausible Deniability** - Hidden layers cryptographically indistinguishable from decoy
+- **XChaCha20-Poly1305** - Authenticated encryption with 256-bit keys
+- **Argon2id KDF** - 256MB memory, 3 iterations (brute-force resistant)
+- **Split-Key Architecture** - KeyA (URL) + KeyB (encrypted in DB)
+- **Vault ID Integrity** - 16-byte hash prevents cross-vault contamination
+
+**Access Control**:
+- **Auto-Lock** - 5 minutes inactivity timeout
 - **Panic Key** - Double-press Escape for instant lockout
-- **Secure Clipboard** - Auto-clears after 60 seconds
 - **Rate Limiting** - 5 attempts/min per vault, 50/hour per fingerprint
+- **Fingerprint Tracking** - SHA-256(IP + User-Agent) for abuse detection
+- **Honeypot Protection** - Auto-ban on suspicious activity
+
+**Privacy & Forensics**:
+- **RAM-Only Storage** - Zero disk persistence, immune to forensics
+- **History Clearing** - Vault URL auto-removed from browser history
+- **Secure Clipboard** - Auto-clears after 60 seconds
+- **Provider Isolation** - Pinata/Filebase are separate namespaces
+
+**Attack Mitigation**:
+- **Randomized Timing** - 500-2000ms delay prevents timing analysis
 - **CSRF Protection** - Origin/referer validation
-- **Security Headers** - X-Frame-Options, CSP, nosniff
+- **Security Headers** - X-Frame-Options, X-XSS-Protection, nosniff
+- **Input Sanitization** - HTML entity encoding on all user input
 
-### Cross-Vault Contamination Prevention
+See [Security Features](./docs/SECURITY-FEATURES.md) and [RAM-Only Storage](./docs/security/RAM-ONLY-STORAGE.md) for details.
 
-**🛡️ Defense in Depth: Why Provider Isolation + Vault ID Verification Offers More Safety**
+## 🔐 OpSec Best Practices
 
-**The Problem:**
-IPFS is content-addressed (CID = hash of content). If you manually delete blobs from Pinata/Filebase, public IPFS gateways (`ipfs.io`) could serve cached content from **different vaults**, causing you to unlock Vault A and receive Vault B's data.
+1. **Fund decoy realistically** - $50-500 matching your financial status, include transaction history
+2. **Memorize passphrases** - 12+ chars (uppercase, lowercase, number, special). Example: `MySecret#Vault2024`
+3. **Use Tor Browser** - Hides IP, defeats timing attacks (100-500ms noise)
+4. **Test before trusting** - Verify decoy unlocks, practice plausible deniability script
+5. **Never reveal hidden layers** - Act natural, claim "this is all I have"
+6. **Store links securely** - Password manager (KeePassXC/Bitwarden), never email/cloud
+7. **Anti-keylogger** - Copy/paste from password manager, inspect USB ports
 
-**The Solution (Two Security Layers):**
 
-1. **Provider Isolation**
-   - Pinata and Filebase are **completely separate storage namespaces**
-   - Your vault remembers which provider you used (stored in database)
-   - Downloads only from your chosen provider (no cross-provider fallback)
-   - Even if CIDs match, different providers = different content
-
-2. **Vault ID Integrity Verification**
-   - Every blob has a 16-byte vault ID hash embedded in its header
-   - Vault ID derived from your vault's unique salt (SHA-256)
-   - On unlock, system verifies the blob belongs to YOUR vault
-   - Wrong vault = rejected (constant-time comparison prevents timing leaks)
-
-**Why This Offers More Safety:**
-
-✅ **Namespace Isolation**: Pinata users cannot interfere with Filebase users
-   - Your Pinata vault will never accidentally download Filebase content
-   - Eliminates entire class of cross-provider contamination attacks
-
-✅ **Cryptographic Integrity**: Even within same provider, vault ID prevents mix-ups
-   - If you delete Vault A and public gateway serves Vault B's cached data
-   - Vault ID check fails → unlock rejected → you know something is wrong
-
-✅ **Accidental Deletion Recovery**: Public gateway fallback still works safely
-   - If you accidentally delete from Pinata, can recover from `ipfs.io` cache
-   - Vault ID ensures you get YOUR vault, not someone else's
-
-✅ **Defense in Depth**: Two independent security layers
-   - Layer 1 fails (wrong provider) → no data retrieved
-   - Layer 2 fails (wrong vault ID) → unlock rejected
-   - Both must succeed → maximum safety
-
-**Attack Scenario Prevented:**
-```
-Before Fix:
-1. Create Vault A (Pinata) and Vault B (Pinata)
-2. Delete Vault A blobs from Pinata
-3. Unlock Vault A → Public gateway serves Vault B's cached data ❌
-4. You see Vault B's secrets instead of error ❌
-
-After Fix:
-1. Create Vault A (Pinata) and Vault B (Filebase)
-2. Delete Vault A blobs from Pinata  
-3. Unlock Vault A → System only checks Pinata (provider isolation) ✅
-4. If cached data found → Vault ID verification rejects wrong vault ✅
-5. You get clear error or YOUR vault (if cached correctly) ✅
-```
-
-**Technical Details:**
-- Blob structure: `[header][salt][nonce][commitment][vaultID_hash][ciphertext_length][ciphertext][padding]`
-- Vault ID: First 16 bytes of SHA-256(salt)
-- Verification: Constant-time bitwise comparison (prevents timing attacks)
-- Provider: Stored in database, enforced on download
-
-### Timing Attack Limitations
-
-⚠️ **IMPORTANT: JavaScript Runtime Constraints**
-
-Sanctum provides **cryptographic plausible deniability** but has inherent limitations due to JavaScript:
-
-**✅ Protected Against:**
-- Cryptographic analysis (encrypted blobs indistinguishable)
-- Static analysis (cannot prove hidden layer exists)
-- Metadata analysis (both layers same size/structure)
-- Forensic disk analysis (RAM-only storage)
-
-**⚠️ Theoretical Vulnerabilities:**
-- High-precision timing measurements (nanosecond-level)
-- Memory allocation pattern analysis
-- CPU cache timing attacks
-- JIT compiler optimization differences
-- Garbage collection timing variations
-
-**Why JavaScript Cannot Provide True Constant-Time:**
-1. No constant-time primitives in JS/WebAssembly
-2. JIT compiler optimizations are unpredictable
-3. Garbage collection introduces timing variations
-4. Browser optimizations vary by implementation
-5. High-resolution timers available to attackers
-
-**Threat Model:**
-- ✅ Safe: Physical coercion, legal demands, forensic analysis
-- ✅ Safe: Cryptographic attacks on encrypted data
-- ⚠️ Risky: Adversary with nanosecond timing + multiple attempts
-- ❌ Unsafe: Side-channel attacks in controlled lab environment
-
-**Mitigation: Simple Solutions Make Timing Attacks Impossible**
-
-While JavaScript has timing limitations, **using simple tools creates so much noise that attacks become mathematically impossible:**
-
-- 🌐 **Tor Browser** (easiest): Adds 100-500ms network noise → 150 million times larger than timing signal
-- 🖥️ **Whonix VM**: Forced Tor routing + VM isolation → Timing differences undetectable
-- 💿 **Tails OS**: Live USB + built-in Tor → Maximum security for high-risk users
-
-**Result:** Cryptographic timing differences (~nanoseconds) are buried under 150-700ms of random noise. Signal-to-noise ratio: 1:150,000,000 (0.0000007%).
-
-**Bottom line:** With Tor Browser or Whonix, timing attacks are not just "hard" — they're **impossible** to execute successfully. No adversary can extract a signal that's 150 million times smaller than the noise floor.
-
-**See [Timing Attack Mitigation Guide](./docs/security/TIMING-ATTACK-MITIGATION.md) for detailed tool setup and threat-level recommendations.**
-
-### OpSec Best Practices
-
-⚠️ **Critical Security Practices**:
-
-1. **Fund decoy wallet** with realistic amounts ($50-500)
-2. **MEMORIZE passphrases** - never store digitally
-3. **Use Tor Browser** for maximum anonymity
-4. **Clear browser data** after each use
-5. **Test decoy layer** before relying on it
-6. **Never reveal** you have hidden layers
-
-See [OPSEC.md](./docs/OPSEC.md) for comprehensive guidelines.
-
----
-
-## 🔐 OpSec Guidelines
-
-### Critical Operational Security Rules
-
-#### 1. Device Security
-
-**Before Creating Vault:**
-- ✅ Use Tor Browser or VPN
-- ✅ Disable browser extensions (can log keystrokes)
-- ✅ Use private/incognito mode
-- ✅ Verify HTTPS connection
-- ❌ Never use public/shared computers
-- ❌ Never use work/school devices
-
-**After Creating Vault:**
-- ✅ Close all browser tabs
-- ✅ Clear browser history/cache
-- ✅ Restart browser
-- ✅ Verify vault link works before relying on it
-
-#### 2. Passphrase Security
-
-**Strength Requirements:**
-- ✅ Minimum 6 Diceware words (e.g., `correct-horse-battery-staple-mountain-river`)
-- ✅ Use different passphrases for decoy vs hidden
-- ✅ Make decoy passphrase memorable but plausible
-- ❌ Never reuse passphrases from other services
-- ❌ Never store passphrases digitally
-
-**Memory Techniques:**
-- Create a story linking the words
-- Practice entering passphrase 10+ times
-- Test recall after 24 hours
-- Have a trusted contact who knows the passphrase (dead man's switch)
-
-**Anti-Keylogger Protection:**
-- ⭐ **Use Password Manager** (KeePassXC, Bitwarden) - Copy/paste passphrase instead of typing
-  - Keyloggers only see paste event, not individual characters
-  - Software keyloggers cannot capture password manager clipboard
-  - Works with current implementation (no code changes needed)
-- ✅ Use Tails OS for maximum security (clean environment)
-- ✅ Physically inspect USB ports for hardware keyloggers
-- ❌ Never type passphrase on compromised/untrusted devices
-
-#### 3. Decoy Layer Strategy
-
-**Make It Believable:**
-- ✅ Fund decoy wallet with realistic amount ($50-500)
-- ✅ Include plausible documents (tax returns, receipts)
-- ✅ Add personal photos (non-sensitive)
-- ✅ Make it look like "what you're trying to hide"
-- ❌ Don't leave decoy empty (suspicious)
-- ❌ Don't make it obviously fake
-
-**Plausible Deniability Script:**
-> "This is my crypto wallet backup. I keep it encrypted because I'm paranoid about hackers. The passphrase is [decoy passphrase]."
-
-#### 4. Vault Link Management
-
-**Storage Options (Ranked by Security):**
-
-1. **Memory Only** (Most Secure)
-   - Memorize the vault ID
-   - Reconstruct URL manually
-   - Risk: Forget the link
-
-2. **Password Manager** (Recommended)
-   - Use KeePassXC or Bitwarden
-   - Encrypt database with strong master password
-   - Store offline backup
-
-3. **QR Code Print** (Physical Backup)
-   - Print QR code on paper
-   - Store in safe/safety deposit box
-   - Risk: Physical seizure
-
-4. **Encrypted USB** (Portable)
-   - Use VeraCrypt container
-   - Store on USB drive
-   - Risk: Device seizure
-
-**Never:**
-- ❌ Email vault links to yourself
-- ❌ Store in cloud services (Google Drive, Dropbox)
-- ❌ Share over unencrypted messaging (SMS, WhatsApp)
-- ❌ Post on social media (even privately)
-
-#### 5. Access Patterns
-
-**When Accessing Vault:**
-- ✅ Use Tor Browser (hides IP from IPFS gateways)
-- ✅ Access from safe location (home, trusted network)
-- ✅ Verify URL before entering passphrase
-- ✅ Check for HTTPS and valid certificate
-- ❌ Never access from public WiFi
-- ❌ Never access from compromised devices
-
-**Timing Considerations:**
-- Access during normal hours (avoid 3 AM patterns)
-- Don't access immediately before/after sensitive events
-- Randomize access intervals
-
-#### 6. Duress Scenarios
-
-**If Coerced to Reveal Passphrase:**
-
-1. **Reveal decoy passphrase** (not hidden passphrase)
-2. **Act naturally** - don't show relief when decoy unlocks
-3. **Claim ignorance** - "This is all I have"
-4. **Never mention** hidden layers exist
-
-**If Device Seized:**
-
-1. **RAM-only storage protects you** - keys cleared on browser close
-2. **No forensic evidence** - nothing on disk to recover
-3. **Vault link in URL** - KeyA never stored server-side
-4. **Plausible deniability** - adversary cannot prove hidden layers exist
-
-**If Threatened with Violence:**
-
-- Your safety > data security
-- Reveal decoy layer to de-escalate
-- Cryptography protects hidden layer
-- Adversary cannot prove you're lying
-
-#### 7. Threat-Specific Guidance
-
-**Border Crossings:**
-- Don't carry vault links on device
-- Memorize vault ID only
-- Access after crossing border
-- Use local Tor exit node
-
-**Authoritarian Regimes:**
-- Self-host Sanctum on local machine
-- Use Tor hidden service
-- Avoid government-monitored IPFS gateways
-- Consider Tails OS for maximum security
-
-**Domestic Abuse:**
-- Access only when safe
-- Clear all browser data immediately
-- Use decoy layer for "allowed" content
-- Hidden layer for escape plans/evidence
-
-**Whistleblowing:**
-- Use Tails OS on USB
-- Access via Tor only
-- Never access from work network
-- Use burner IPFS credentials
-
-#### 8. Compromise Indicators
-
-**Assume Compromise If:**
-- Warrant canary not updated >90 days
-- Unexpected vault access errors
-- IPFS gateway returns wrong content
-- Browser shows certificate warnings
-- Unusual network activity
-
-**Response Plan:**
-1. Stop using compromised vault immediately
-2. Create new vault with new passphrases
-3. Migrate data to new vault
-4. Destroy old vault link
-5. Self-host if necessary
-
-#### 9. Self-Hosting
-
-**When to Self-Host:**
-- Warrant canary dies
-- Service unavailable
-- Maximum paranoia required
-- Custom security requirements
-
-**How to Self-Host:**
-```bash
-git clone https://github.com/Teycir/Sanctum.git
-cd Sanctum
-npm install
-npm run dev
-# Access at http://localhost:3000
-```
-
-**Benefits:**
-- No reliance on hosted service
-- Full control over infrastructure
-- Can modify code for specific needs
-- Immune to service takedowns
-
-#### 10. Emergency Procedures
-
-**Panic Situations:**
-- Double-press `Escape` key (instant lockout)
-- Close browser immediately
-- Restart device (clears RAM)
-- Duress proof.
-
-**Dead Man's Switch:**
-- Share vault link + decoy passphrase with lawyer
-- Share hidden passphrase with trusted contact
-- Include instructions in will
-- Use time-locked encryption for future access
-
-**Data Destruction:**
-- IPFS data is immutable (cannot delete)
-- Destroy vault link = data inaccessible
-- Forget passphrase = permanent loss
-- No recovery mechanism exists
-
-### Verification Checklist
-
-Before relying on Sanctum for high-risk data:
-
-- [ ] Tested decoy layer unlocks correctly
-- [ ] Tested hidden layer unlocks correctly
-- [ ] Verified vault link works from different device
-- [ ] Memorized both passphrases
-- [ ] Funded decoy wallet with realistic amount
-- [ ] Stored vault link securely (password manager)
-- [ ] Practiced duress scenario response
-- [ ] Configured Tor Browser
-- [ ] Cleared browser data after test
-- [ ] Read full OpSec documentation
-
-**Remember:** Cryptography protects data, OpSec protects you.
+**Duress Response:** Reveal decoy passphrase only. Adversary cannot prove hidden layers exist (cryptographic guarantee).
 
 ---
 
@@ -748,13 +423,12 @@ See [PROJECT-STATUS.md](./docs/PROJECT-STATUS.md) for details.
 
 ## 💼 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+We welcome contributions! Open an issue or submit a pull request on GitHub.
 
 ### Areas We Need Help
 
 - 🔐 Security auditing
 - 🧪 Testing (unit, integration, e2e)
-- 📱 Mobile app development
 - 🌍 Internationalization
 - 📚 Documentation
 - 🎨 UI/UX improvements
@@ -770,21 +444,21 @@ Business Source License 1.1 - see [LICENSE](./LICENSE) for details.
 - **TimeSeal** - Parent project providing cryptographic patterns
 - **Cloudflare Pages** - Free static site hosting
 - **Pinata** - Free IPFS pinning service
+- **Filebase** - Free IPFS storage service
 - **VeraCrypt** - Inspiration for plausible deniability
 - **3D Tubes Cursor Effect** - [soju22's CodePen](https://codepen.io/soju22/pen/qEbdVjK) (CC BY-NC-SA 4.0)
 
 ## 🔗 Links
 
-- **Website**: [sanctum-vault.pages.dev](https://sanctum-vault.pages.dev)
-- **GitHub**: [github.com/Teycir/Sanctum](https://github.com/Teycir/Sanctum)
+- **Website**: [sanctumvault.online](https://sanctumvault.online)
 - **TimeSeal**: [timeseal.online](https://timeseal.online)
-- **Documentation**: [docs.duress.vault](https://docs.duress.vault) (coming soon)
+- **Ghost Chat**: [ghost-chat.pages.dev](https://ghost-chat.pages.dev)
+
 
 ## 📞 Contact & Support
 
 - **Issues**: [GitHub Issues](https://github.com/Teycir/Sanctum/issues)
-- **Security**: security@duress.vault (PGP key coming soon)
-- **Twitter**: [@Sanctum](https://twitter.com/Sanctum) (coming soon)
+- **Contact**: [teycirbensoltane.tn](https://teycirbensoltane.tn)
 
 ## ⚖️ Legal & Ethics
 

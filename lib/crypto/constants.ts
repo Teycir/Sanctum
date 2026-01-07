@@ -36,6 +36,14 @@ export const ARGON2_PROFILES: Record<Argon2ProfileName, Argon2Profile> = {
   paranoid: { m: 1048576, t: 4, p: 4, dkLen: 32 }, // 1 GB
 } as const;
 
+// Ultra-fast profile for testing only
+export const TEST_ARGON2_PROFILE: Argon2Profile = {
+  m: 1024, // 1 MB
+  t: 1, // 1 iteration
+  p: 1, // 1 thread
+  dkLen: 32
+} as const;
+
 // ============================================================================
 // CONSTANTS - SIZE CLASSES
 // ============================================================================

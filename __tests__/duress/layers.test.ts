@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createHiddenVault, unlockHiddenVault, deriveLayerPassphrase } from '../../lib/duress/layers';
-import { ARGON2_PROFILES } from '../../lib/crypto/constants';
+import { TEST_ARGON2_PROFILE } from '../../lib/crypto/constants';
 
 describe('hidden/vault', () => {
   describe('deriveLayerPassphrase', () => {
@@ -34,7 +34,7 @@ describe('hidden/vault', () => {
         content: { decoy, hidden },
         passphrase: 'master-pass-12345',
         decoyPassphrase: 'decoy-pass-12345',
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       const unlocked = await unlockHiddenVault(result, 'decoy-pass-12345');
@@ -50,7 +50,7 @@ describe('hidden/vault', () => {
         content: { decoy, hidden },
         passphrase: 'master-pass-12345',
         decoyPassphrase: 'decoy-pass-12345',
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       const unlocked = await unlockHiddenVault(result, 'master-pass-12345');
@@ -66,7 +66,7 @@ describe('hidden/vault', () => {
         content: { decoy, hidden },
         passphrase: 'correct-pass-12345',
         decoyPassphrase: 'decoy-pass-12345',
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       await expect(async () => {
@@ -83,7 +83,7 @@ describe('hidden/vault', () => {
         content: { decoy, hidden },
         passphrase: 'master-pass-12345',
         decoyPassphrase,
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       const unlocked = await unlockHiddenVault(result, decoyPassphrase);
@@ -98,8 +98,7 @@ describe('hidden/vault', () => {
       const result = createHiddenVault({
         content: { decoy, hidden },
         passphrase: 'master-pass-12345',
-        // No decoyPassphrase provided
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       // Should unlock hidden layer with master passphrase
@@ -116,7 +115,7 @@ describe('hidden/vault', () => {
         content: { decoy, hidden },
         passphrase: 'real-pass-12345',
         decoyPassphrase: 'duress-pass-12345',
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       const unlocked = await unlockHiddenVault(result, 'duress-pass-12345');
@@ -132,7 +131,7 @@ describe('hidden/vault', () => {
         content: { decoy, hidden },
         passphrase: 'real-pass-12345',
         decoyPassphrase: 'duress-pass-12345',
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       const unlocked = await unlockHiddenVault(result, 'real-pass-12345');

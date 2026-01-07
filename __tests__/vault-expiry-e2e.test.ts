@@ -92,7 +92,7 @@ describe('Vault Expiry E2E (MockDatabase)', () => {
 
   it('should actually delete vault after expiry (realistic timing)', async () => {
     const now = Date.now();
-    const expiresAt = now + 2000; // Expires in 2 seconds
+    const expiresAt = now + 500; // Expires in 500ms
 
     await db.storeVault({
       vault_id: 'timed-vault',
@@ -110,12 +110,12 @@ describe('Vault Expiry E2E (MockDatabase)', () => {
     expect(vault).toBeDefined();
 
     // Wait for expiry + grace period
-    await new Promise(resolve => setTimeout(resolve, 2000 + GRACE_PERIOD_MS + 100));
+    await new Promise(resolve => setTimeout(resolve, 500 + GRACE_PERIOD_MS + 100));
 
     // Should be deleted
     vault = await db.getVault('timed-vault');
     expect(vault).toBeNull();
-  }, 10000);
+  }, 3000);
 
   it('should handle multiple vaults with different expiry times', async () => {
     const now = Date.now();
@@ -141,7 +141,7 @@ describe('Vault Expiry E2E (MockDatabase)', () => {
       salt: 'salt',
       nonce: 'nonce',
       created_at: now,
-      expires_at: now + 2000,
+      expires_at: now + 500,
     });
 
     // Long-lived
@@ -166,14 +166,14 @@ describe('Vault Expiry E2E (MockDatabase)', () => {
     expect(await db.getVault('long-lived')).toBeDefined();
 
     // Wait for expiring-soon to expire
-    await new Promise(resolve => setTimeout(resolve, 2000 + GRACE_PERIOD_MS + 100));
+    await new Promise(resolve => setTimeout(resolve, 500 + GRACE_PERIOD_MS + 100));
 
     // Now expiring-soon should be gone
     expect(await db.getVault('expiring-soon')).toBeNull();
 
     // Long-lived should still exist
     expect(await db.getVault('long-lived')).toBeDefined();
-  }, 10000);
+  }, 3000);
 
   it('should apply grace period correctly', async () => {
     const now = Date.now();

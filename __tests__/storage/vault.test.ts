@@ -7,7 +7,8 @@ describe('storage/vault', () => {
       const stored = {
         decoyCID: 'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi',
         hiddenCID: 'bafybeihkoviema5eqheudqvnu5xsx5qzhs4e5qjxh5qxqzqzqzqzqzqzqz',
-        salt: new Uint8Array(32).fill(42)
+        salt: new Uint8Array(32).fill(42),
+        provider: 'pinata' as const
       };
 
       const serialized = serializeVaultMetadata(stored);
@@ -22,7 +23,8 @@ describe('storage/vault', () => {
       const stored = {
         decoyCID: 'Qm',
         hiddenCID: 'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi',
-        salt: new Uint8Array(32).fill(1)
+        salt: new Uint8Array(32).fill(1),
+        provider: 'filebase' as const
       };
 
       const serialized = serializeVaultMetadata(stored);

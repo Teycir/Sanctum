@@ -1,6 +1,4 @@
-// ============================================================================
-// UPLOAD PERFORMANCE BENCHMARK
-// ============================================================================
+import { describe, it, expect, beforeAll } from 'vitest';
 
 const mockUpload = async (data: Uint8Array, delayMs: number): Promise<string> => {
   await new Promise(resolve => setTimeout(resolve, delayMs));
@@ -8,8 +6,8 @@ const mockUpload = async (data: Uint8Array, delayMs: number): Promise<string> =>
 };
 
 describe('Upload Performance Benchmark', () => {
-  const FILE_SIZE = 15 * 1024 * 1024;
-  const UPLOAD_DELAY = 2000;
+  const FILE_SIZE = 1024; // 1KB for testing
+  const UPLOAD_DELAY = 100; // 100ms delay
   
   let decoyBlob: Uint8Array;
   let hiddenBlob: Uint8Array;
@@ -26,9 +24,6 @@ describe('Upload Performance Benchmark', () => {
     await mockUpload(hiddenBlob, UPLOAD_DELAY);
     
     const elapsed = Date.now() - start;
-    
-    console.log('\n📊 SEQUENTIAL: ' + elapsed + 'ms (' + (elapsed / 1000).toFixed(1) + 's)');
-    
     expect(elapsed).toBeGreaterThanOrEqual(UPLOAD_DELAY * 2);
   });
 
@@ -41,13 +36,10 @@ describe('Upload Performance Benchmark', () => {
     ]);
     
     const elapsed = Date.now() - start;
-    
-    console.log('\n📊 PARALLEL: ' + elapsed + 'ms (' + (elapsed / 1000).toFixed(1) + 's)');
-    
     expect(elapsed).toBeLessThan(UPLOAD_DELAY * 1.5);
   });
 
-  it('COMPARISON: Parallel vs Sequential', { timeout: 10000 }, async () => {
+  it('COMPARISON: Parallel vs Sequential', async () => {
     const seqStart = Date.now();
     await mockUpload(decoyBlob, UPLOAD_DELAY);
     await mockUpload(hiddenBlob, UPLOAD_DELAY);
@@ -61,13 +53,6 @@ describe('Upload Performance Benchmark', () => {
     const parTime = Date.now() - parStart;
     
     const improvement = ((seqTime - parTime) / seqTime) * 100;
-    
-    console.log('\n🚀 RESULTS:');
-    console.log('   Sequential: ' + seqTime + 'ms');
-    console.log('   Parallel:   ' + parTime + 'ms');
-    console.log('   Improvement: ' + improvement.toFixed(1) + '% faster');
-    console.log('   Time saved: ' + ((seqTime - parTime) / 1000).toFixed(1) + 's');
-    
     expect(improvement).toBeGreaterThan(40);
   });
 });

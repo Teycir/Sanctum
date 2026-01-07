@@ -2,6 +2,8 @@
 // VAULT FORM VALIDATION
 // ============================================================================
 
+import { getPasswordError } from './password';
+
 const MAX_CONTENT_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export const sanitizeInput = (input: string): string => {
@@ -23,12 +25,7 @@ export const sanitizeInput = (input: string): string => {
 };
 
 export const validatePassword = (password: string, label: string): string | null => {
-  if (password.length < 12) return `${label} must be at least 12 characters`;
-  if (!/[A-Z]/.test(password)) return `${label} must contain at least one uppercase letter`;
-  if (!/[a-z]/.test(password)) return `${label} must contain at least one lowercase letter`;
-  if (!/\d/.test(password)) return `${label} must contain at least one number`;
-  if (!/[^A-Za-z0-9]/.test(password)) return `${label} must contain at least one special character`;
-  return null;
+  return getPasswordError(password, label);
 };
 
 export const validateContentSize = (content: string, label: string): string | null => {

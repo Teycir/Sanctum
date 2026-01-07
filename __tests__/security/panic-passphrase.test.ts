@@ -138,15 +138,15 @@ describe("Panic Passphrase", () => {
     const created = await service.createVault({
       decoyContent: decoy,
       hiddenContent: hidden,
-      passphrase: "hidden-pass-12345",
-      decoyPassphrase: "decoy-pass-12345",
-      panicPassphrase: "panic-pass-12345",
+      passphrase: "Hidden-Pass-12345!",
+      decoyPassphrase: "Decoy-Pass-12345!",
+      panicPassphrase: "Panic-Pass-12345!",
     });
 
     await expect(
       service.unlockVault({
         vaultURL: created.vaultURL,
-        passphrase: "panic-pass-12345",
+        passphrase: "Panic-Pass-12345!",
       })
     ).rejects.toThrow("Vault content has been deleted from storage providers");
   });
@@ -158,14 +158,14 @@ describe("Panic Passphrase", () => {
     const created = await service.createVault({
       decoyContent: decoy,
       hiddenContent: hidden,
-      passphrase: "hidden-pass-12345",
-      decoyPassphrase: "decoy-pass-12345",
-      panicPassphrase: "panic-pass-12345",
+      passphrase: "Hidden-Pass-12345!",
+      decoyPassphrase: "Decoy-Pass-12345!",
+      panicPassphrase: "Panic-Pass-12345!",
     });
 
     const unlocked = await service.unlockVault({
       vaultURL: created.vaultURL,
-      passphrase: "decoy-pass-12345",
+      passphrase: "Decoy-Pass-12345!",
     });
 
     expect(unlocked.isDecoy).toBe(true);
@@ -179,14 +179,14 @@ describe("Panic Passphrase", () => {
     const created = await service.createVault({
       decoyContent: decoy,
       hiddenContent: hidden,
-      passphrase: "hidden-pass-12345",
-      decoyPassphrase: "decoy-pass-12345",
-      panicPassphrase: "panic-pass-12345",
+      passphrase: "Hidden-Pass-12345!",
+      decoyPassphrase: "Decoy-Pass-12345!",
+      panicPassphrase: "Panic-Pass-12345!",
     });
 
     const unlocked = await service.unlockVault({
       vaultURL: created.vaultURL,
-      passphrase: "hidden-pass-12345",
+      passphrase: "Hidden-Pass-12345!",
     });
 
     expect(unlocked.isDecoy).toBe(false);
@@ -210,14 +210,14 @@ describe("Panic Passphrase", () => {
 
     const created = await service.createVault({
       hiddenContent: hidden,
-      passphrase: "hidden-pass-12345",
-      panicPassphrase: "panic!@#$%^&*()_+",
+      passphrase: "Hidden-Pass-12345!",
+      panicPassphrase: "Panic!@#$%^&*()_+1A",
     });
 
     await expect(
       service.unlockVault({
         vaultURL: created.vaultURL,
-        passphrase: "panic!@#$%^&*()_+",
+        passphrase: "Panic!@#$%^&*()_+1A",
       })
     ).rejects.toThrow("Vault content has been deleted from storage providers");
   });
@@ -227,14 +227,14 @@ describe("Panic Passphrase", () => {
 
     const created = await service.createVault({
       hiddenContent: hidden,
-      passphrase: "hidden-pass-12345",
-      panicPassphrase: "páñíç-pāšš-🔥🔥",
+      passphrase: "Hidden-Pass-12345!",
+      panicPassphrase: "Panicpass123456?",
     });
 
     await expect(
       service.unlockVault({
         vaultURL: created.vaultURL,
-        passphrase: "páñíç-pāšš-🔥🔥",
+        passphrase: "Panicpass123456?",
       })
     ).rejects.toThrow("Vault content has been deleted from storage providers");
   });

@@ -1219,6 +1219,7 @@ export default function CreateVault() {
                 </p>
                 {qrCode && (
                   <div style={{ marginBottom: 16 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={qrCode}
                       alt="Vault QR Code"

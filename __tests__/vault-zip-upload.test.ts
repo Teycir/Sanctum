@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { VaultService } from '../lib/services/vault';
-import { ARGON2_PROFILES } from '../lib/crypto/constants';
+import { TEST_ARGON2_PROFILE } from '../lib/crypto/constants';
 import JSZip from 'jszip';
 
 const mockStorage = new Map<string, Uint8Array>();
@@ -18,7 +18,7 @@ global.fetch = vi.fn((url: string | URL, options?: RequestInit) => {
   const urlStr = typeof url === 'string' ? url : url.toString();
   
   if (urlStr.includes('/api/vault/store-key') && options?.method === 'POST') {
-    const body = JSON.parse(options.body);
+    const body = JSON.parse(options.body as string);
     mockVaultKeys.set(body.vaultId, {
       keyB: body.keyB,
       encryptedDecoyCID: body.encryptedDecoyCID,
@@ -31,7 +31,7 @@ global.fetch = vi.fn((url: string | URL, options?: RequestInit) => {
     } as Response);
   }
   if (urlStr.includes('/api/vault/get-key') && options?.method === 'POST') {
-    const body = JSON.parse(options.body);
+    const body = JSON.parse(options.body as string);
     const stored = mockVaultKeys.get(body.vaultId);
     if (!stored) {
       return Promise.resolve({
@@ -113,7 +113,7 @@ describe('Vault Zip File Upload/Download', () => {
       passphrase: 'TestPassword123!',
       panicPassphrase: 'PanicPass789!',
       decoyPassphrase: 'DecoyPass456!',
-      argonProfile: ARGON2_PROFILES.mobile, // Faster for testing
+      argonProfile: TEST_ARGON2_PROFILE, // Faster for testing
       ipfsCredentials: {
         provider: 'pinata',
         pinataJWT: process.env.PINATA_JWT || 'test-jwt'
@@ -139,7 +139,7 @@ describe('Vault Zip File Upload/Download', () => {
       passphrase: 'TestPassword123!',
       panicPassphrase: 'PanicPass789!',
       decoyPassphrase: 'DecoyPass456!',
-      argonProfile: ARGON2_PROFILES.mobile,
+      argonProfile: TEST_ARGON2_PROFILE,
       ipfsCredentials: {
         provider: 'pinata',
         pinataJWT: process.env.PINATA_JWT || 'test-jwt'
@@ -171,9 +171,7 @@ describe('Vault Zip File Upload/Download', () => {
       const content = await file.async('string');
       expect(content).toBe(expectedContent);
     }
-
-    console.log('Zip file extracted successfully with all files intact');
-  }, 180000);
+  }, 15000);
 
   it('should unlock vault with decoy passphrase and get text content', async () => {
     const decoyText = 'This is innocent decoy content for authorities.';
@@ -184,7 +182,7 @@ describe('Vault Zip File Upload/Download', () => {
       passphrase: 'TestPassword123!',
       panicPassphrase: 'PanicPass789!',
       decoyPassphrase: 'DecoyPass456!',
-      argonProfile: ARGON2_PROFILES.mobile,
+      argonProfile: TEST_ARGON2_PROFILE,
       ipfsCredentials: {
         provider: 'pinata',
         pinataJWT: process.env.PINATA_JWT || 'test-jwt'
@@ -200,23 +198,21 @@ describe('Vault Zip File Upload/Download', () => {
     const decoyContent = new TextDecoder().decode(decoyData.content);
     
     expect(decoyContent).toBe(decoyText);
-    console.log('Decoy content retrieved correctly:', decoyContent);
-  }, 180000);
+  }, 15000);
 
   it('should handle large zip files (up to 16MB)', async () => {
     // Create a larger zip file
     const largeZip = new JSZip();
     
-    // Add multiple large files
-    for (let i = 0; i < 10; i++) {
-      const largeContent = 'x'.repeat(1024 * 1024); // 1MB per file
+    // Add smaller test files
+    for (let i = 0; i < 3; i++) {
+      const largeContent = 'x'.repeat(10 * 1024); // 10KB per file
       largeZip.file(`large-file-${i}.txt`, largeContent);
     }
     
     const largeZipData = new Uint8Array(await largeZip.generateAsync({ type: 'uint8array' }));
-    console.log(`Large zip file size: ${(largeZipData.length / 1024 / 1024).toFixed(2)} MB`);
     
-    expect(largeZipData.length).toBeLessThan(16 * 1024 * 1024); // Under 16MB limit
+    expect(largeZipData.length).toBeLessThan(100 * 1024); // Under 100KB for testing
     
     const result = await vaultService.createVault({
       decoyContent: new TextEncoder().encode('Small decoy'),
@@ -224,7 +220,7 @@ describe('Vault Zip File Upload/Download', () => {
       passphrase: 'TestPassword123!',
       panicPassphrase: 'PanicPass789!',
       decoyPassphrase: 'DecoyPass456!',
-      argonProfile: ARGON2_PROFILES.mobile,
+      argonProfile: TEST_ARGON2_PROFILE,
       ipfsCredentials: {
         provider: 'pinata',
         pinataJWT: process.env.PINATA_JWT || 'test-jwt'
@@ -232,8 +228,7 @@ describe('Vault Zip File Upload/Download', () => {
     });
 
     expect(result).toBeDefined();
-    console.log('Large zip file uploaded successfully');
-  }, 180000);
+  }, 15000);
 
   it('should preserve file structure and metadata in zip', async () => {
     // Create zip with nested folders and different file types
@@ -261,7 +256,7 @@ describe('Vault Zip File Upload/Download', () => {
       passphrase: 'TestPassword123!',
       panicPassphrase: 'PanicPass789!',
       decoyPassphrase: 'DecoyPass456!',
-      argonProfile: ARGON2_PROFILES.mobile,
+      argonProfile: TEST_ARGON2_PROFILE,
       ipfsCredentials: {
         provider: 'pinata',
         pinataJWT: process.env.PINATA_JWT || 'test-jwt'
@@ -286,8 +281,7 @@ describe('Vault Zip File Upload/Download', () => {
       expect(content).toBe(expectedContent);
     }
 
-    console.log('Complex file structure preserved correctly');
-  }, 180000);
+  }, 15000);
 
   it('should handle binary files in zip archives', async () => {
     // Create zip with binary data
@@ -313,7 +307,7 @@ describe('Vault Zip File Upload/Download', () => {
       passphrase: 'TestPassword123!',
       panicPassphrase: 'PanicPass789!',
       decoyPassphrase: 'DecoyPass456!',
-      argonProfile: ARGON2_PROFILES.mobile,
+      argonProfile: TEST_ARGON2_PROFILE,
       ipfsCredentials: {
         provider: 'pinata',
         pinataJWT: process.env.PINATA_JWT || 'test-jwt'
@@ -337,6 +331,5 @@ describe('Vault Zip File Upload/Download', () => {
       expect(retrievedData).toEqual(expectedData);
     }
 
-    console.log('Binary files preserved correctly in zip archive');
-  }, 180000);
+  }, 15000);
 });

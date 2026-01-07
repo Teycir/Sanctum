@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 import type { Argon2Profile } from '../crypto/constants';
+import { isValidPassword } from './password';
 
 export const StoredVaultSchema = z.object({
   decoyCID: z.string().min(1, 'Decoy CID required'),
@@ -49,5 +50,8 @@ export const UnlockVaultParamsSchema = z.object({
     },
     { message: 'Invalid vault URL' }
   ),
-  passphrase: z.string().min(12, 'Password must be at least 12 characters')
+  passphrase: z.string().refine(
+    (pass) => isValidPassword(pass),
+    { message: 'Password must be at least 12 characters with uppercase, lowercase, number, and special character' }
+  )
 });

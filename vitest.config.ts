@@ -5,6 +5,15 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        maxThreads: 4,
+        minThreads: 2
+      }
+    },
+    testTimeout: 10000, // Reduced from default 5000ms
+    hookTimeout: 5000,  // Reduced from default 10000ms
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
@@ -25,6 +34,8 @@ export default defineConfig({
     },
     include: ['__tests__/**/*.test.ts'],
     setupFiles: ['__tests__/setup.ts'],
+    logHeapUsage: false,
+    isolate: false, // Faster but less isolated
   },
   resolve: {
     alias: {

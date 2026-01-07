@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { encrypt, decrypt, generateSyntheticNonce } from '../../lib/crypto/core';
 import { deriveKeys } from '../../lib/crypto/kdf';
 import { assembleBlob } from '../../lib/crypto/padding';
-import { ARGON2_PROFILES } from '../../lib/crypto/constants';
+import { TEST_ARGON2_PROFILE } from '../../lib/crypto/constants';
 import { selectVaultSize } from '../../lib/crypto/utils';
 
 describe('crypto/core', () => {
@@ -10,10 +10,9 @@ describe('crypto/core', () => {
     it('should derive consistent keys from same inputs', () => {
       const passphrase = 'test-passphrase';
       const salt = new Uint8Array(32).fill(1);
-      const profile = ARGON2_PROFILES.mobile;
 
-      const result1 = deriveKeys(passphrase, salt, profile);
-      const result2 = deriveKeys(passphrase, salt, profile);
+      const result1 = deriveKeys(passphrase, salt, TEST_ARGON2_PROFILE);
+      const result2 = deriveKeys(passphrase, salt, TEST_ARGON2_PROFILE);
 
       expect(result1.encKey).toEqual(result2.encKey);
       expect(result1.comKey).toEqual(result2.comKey);
@@ -21,10 +20,9 @@ describe('crypto/core', () => {
 
     it('should derive different keys for different passphrases', () => {
       const salt = new Uint8Array(32).fill(1);
-      const profile = ARGON2_PROFILES.mobile;
 
-      const result1 = deriveKeys('passphrase1', salt, profile);
-      const result2 = deriveKeys('passphrase2', salt, profile);
+      const result1 = deriveKeys('passphrase1', salt, TEST_ARGON2_PROFILE);
+      const result2 = deriveKeys('passphrase2', salt, TEST_ARGON2_PROFILE);
 
       expect(result1.encKey).not.toEqual(result2.encKey);
       expect(result1.comKey).not.toEqual(result2.comKey);
@@ -61,7 +59,7 @@ describe('crypto/core', () => {
       const encrypted = encrypt({
         plaintext,
         passphrase,
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       const targetSize = selectVaultSize(encrypted.ciphertext.length);
@@ -79,7 +77,7 @@ describe('crypto/core', () => {
       const encrypted = encrypt({
         plaintext,
         passphrase,
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       const targetSize = selectVaultSize(encrypted.ciphertext.length);
@@ -97,13 +95,13 @@ describe('crypto/core', () => {
       const encrypted1 = encrypt({
         plaintext,
         passphrase,
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       const encrypted2 = encrypt({
         plaintext,
         passphrase,
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       expect(encrypted1.ciphertext).not.toEqual(encrypted2.ciphertext);
@@ -117,7 +115,7 @@ describe('crypto/core', () => {
       const encrypted = encrypt({
         plaintext,
         passphrase,
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       const targetSize = selectVaultSize(encrypted.ciphertext.length);
@@ -135,7 +133,7 @@ describe('crypto/core', () => {
       const encrypted = encrypt({
         plaintext,
         passphrase,
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       const targetSize = selectVaultSize(encrypted.ciphertext.length);
@@ -153,7 +151,7 @@ describe('crypto/core', () => {
       const encrypted = encrypt({
         plaintext,
         passphrase: 'test',
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       const targetSize = selectVaultSize(encrypted.ciphertext.length);
@@ -168,7 +166,7 @@ describe('crypto/core', () => {
       const encrypted = encrypt({
         plaintext,
         passphrase: 'test',
-        argonProfile: ARGON2_PROFILES.mobile
+        argonProfile: TEST_ARGON2_PROFILE
       });
 
       expect(() => {

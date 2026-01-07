@@ -44,7 +44,6 @@ function triggerConfetti() {
 
 interface UnlockedContentProps {
   readonly content: string;
-  readonly isDecoy: boolean;
   readonly downloading: boolean;
   readonly onLock: () => void;
   readonly expiresAt: number | null;
@@ -53,7 +52,6 @@ interface UnlockedContentProps {
 
 function UnlockedContent({
   content,
-  isDecoy,
   downloading,
   onLock,
   expiresAt,
@@ -359,7 +357,6 @@ export default function ViewVault() {
   const [passphrase, setPassphrase] = useState("");
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState("");
-  const [isDecoy, setIsDecoy] = useState(false);
   const [error, setError] = useState("");
   const [isBlurred, setIsBlurred] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -375,7 +372,6 @@ export default function ViewVault() {
   const handleLock = () => {
     setContent("");
     setPassphrase("");
-    setIsDecoy(false);
   };
 
   const renderContent = () => {
@@ -383,7 +379,6 @@ export default function ViewVault() {
       return (
         <UnlockedContent
           content={content}
-          isDecoy={isDecoy}
           downloading={downloading}
           onLock={handleLock}
           expiresAt={expiryInfo?.expiresAt || null}
@@ -632,7 +627,6 @@ export default function ViewVault() {
         setContent(filename);
       }
 
-      setIsDecoy(result.isDecoy);
       setExpiryInfo({
         expiresAt: result.expiresAt || null,
         daysUntilExpiry: result.daysUntilExpiry || null,
