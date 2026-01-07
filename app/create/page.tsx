@@ -10,6 +10,7 @@ import { EyeCandy } from "../components/EyeCandy";
 import { sanitizeInput, validateVaultForm } from "@/lib/validation/vault-form";
 import { generateVaultQR } from "@/lib/shared/qrcode";
 import { useSecureClipboard } from "@/lib/hooks/useSecureClipboard";
+import TextPressure from "../components/text/text-pressure";
 import styles from "./page.module.css";
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
@@ -37,7 +38,9 @@ export default function CreateVault() {
   const [expiryDays, setExpiryDays] = useState<7 | 30 | 90 | 180 | 365>(30);
   const [hasStoredJWT, setHasStoredJWT] = useState(false);
   const [hasStoredFilebase, setHasStoredFilebase] = useState(false);
-  const [jwtStatus, setJwtStatus] = useState<"validating" | "valid" | "invalid" | null>(null);
+  const [jwtStatus, setJwtStatus] = useState<
+    "validating" | "valid" | "invalid" | null
+  >(null);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
   const [progress, setProgress] = useState(0);
@@ -82,37 +85,40 @@ export default function CreateVault() {
     };
   }, []);
 
-  const validateJWT = useCallback(async (jwt: string) => {
-    if (!jwt.trim()) return;
+  const validateJWT = useCallback(
+    async (jwt: string) => {
+      if (!jwt.trim()) return;
 
-    setJwtStatus("validating");
-    try {
-      const response = await fetch(
-        "https://api.pinata.cloud/data/testAuthentication",
-        {
-          headers: { Authorization: `Bearer ${jwt}` },
-        },
-      );
+      setJwtStatus("validating");
+      try {
+        const response = await fetch(
+          "https://api.pinata.cloud/data/testAuthentication",
+          {
+            headers: { Authorization: `Bearer ${jwt}` },
+          },
+        );
 
-      if (response.ok) {
-        setJwtStatus("valid");
-        if (!hasStoredJWT) {
-          const { saveJWT } = await import("@/lib/storage/jwt");
-          await saveJWT(jwt);
-          setHasStoredJWT(true);
+        if (response.ok) {
+          setJwtStatus("valid");
+          if (!hasStoredJWT) {
+            const { saveJWT } = await import("@/lib/storage/jwt");
+            await saveJWT(jwt);
+            setHasStoredJWT(true);
+          }
+        } else {
+          setJwtStatus("invalid");
+          if (hasStoredJWT) {
+            const { clearJWT } = await import("@/lib/storage/jwt");
+            clearJWT();
+            setHasStoredJWT(false);
+          }
         }
-      } else {
+      } catch {
         setJwtStatus("invalid");
-        if (hasStoredJWT) {
-          const { clearJWT } = await import("@/lib/storage/jwt");
-          clearJWT();
-          setHasStoredJWT(false);
-        }
       }
-    } catch {
-      setJwtStatus("invalid");
-    }
-  }, [hasStoredJWT]);
+    },
+    [hasStoredJWT],
+  );
 
   useEffect(() => {
     (async () => {
@@ -509,7 +515,15 @@ export default function CreateVault() {
       <ExtensionWarning />
       <div className={`${styles.container} ${isBlurred ? styles.blurred : ""}`}>
         <div className={styles.content}>
-          <h1 className={styles.title}>Create Vault</h1>
+          <h1 className={styles.title}>
+            <TextPressure
+              text="Create Vault"
+              flex={true}
+              weight={true}
+              minFontSize={32}
+              className="text-white"
+            />
+          </h1>
 
           <button
             type="button"

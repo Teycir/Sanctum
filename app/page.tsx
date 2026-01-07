@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { AnimatedTagline } from './components/AnimatedTagline';
 import { CyclingFeatures } from './components/CyclingFeatures';
 import { VaultIcon } from './components/VaultIcon';
-import DecryptedText from './components/DecryptedText';
 import { SecurityStatus } from './components/SecurityStatus';
 import { EyeCandy } from './components/EyeCandy';
+import TextPressure from './components/text/text-pressure';
 
 export default function Home() {
 
@@ -32,16 +32,19 @@ export default function Home() {
       <div style={{ textAlign: 'center', maxWidth: '90%', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', paddingBottom: '60px' }}>
         <SecurityStatus />
         <VaultIcon />
-        <h1 style={{ fontSize: 'clamp(32px, 8vw, 48px)', marginBottom: 12, fontWeight: 700 }} className="glow-text pulse-glow">
-          <DecryptedText
-            text="Sanctum"
-            animateOn="view"
-            speed={75}
-            maxIterations={20}
-            className="text-white"
-            encryptedClassName="opacity-30"
-          />
-        </h1>
+          <h1 style={{ fontSize: '3rem', fontWeight: 'bold', color: '#fff' }}>
+            <TextPressure
+              text="Sanctum"
+              flex={true}
+              alpha={false}
+              width={false}
+              weight={true}
+              italic={false}
+              textColor="currentColor"
+              minFontSize={48}
+              className="text-white"
+            />
+          </h1>
         <AnimatedTagline text="Deny everything" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', marginBottom: 20 }}>
           <Link href="/create" prefetch={true} style={{ textDecoration: 'none' }}>
