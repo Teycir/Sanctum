@@ -424,10 +424,9 @@
     <script>
         // Update timestamps
         const now = new Date();
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = now.getFullYear();
-        document.getElementById('current-date').textContent = `${day}/${month}/${year}`;
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const formattedDate = `${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+        document.getElementById('current-date').textContent = formattedDate;
         document.getElementById('unix-timestamp').textContent = Math.floor(now.getTime() / 1000);
 
         // Animate title

@@ -101,9 +101,9 @@ function UnlockedContent({
     return (
       <span style={{ opacity: 0.85, fontWeight: 500 }}>
         🗓️ Expires{" "}
-        {new Date(expiresAt!).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
+        {new Date(expiresAt!).toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
           year: "numeric",
         })}
       </span>
