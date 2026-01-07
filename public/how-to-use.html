@@ -139,19 +139,27 @@
       color: #ffc107;
     }
     .back-link {
-      display: inline-block;
-      margin-bottom: 30px;
-      padding: 10px 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #fff 0%, #f0f0f0 50%, #e0e0e0 100%);
+      border: none;
       border-radius: 8px;
-      color: #fff;
+      color: #000;
       text-decoration: none;
       font-size: 14px;
-      transition: all 0.3s ease;
+      font-weight: 700;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2), 0 0 20px rgba(65, 105, 225, 0.3);
+      z-index: 100;
     }
     .back-link:hover {
-      background: rgba(255, 255, 255, 0.15);
+      background: linear-gradient(135deg, #fff 0%, #fafafa 50%, #f0f0f0 100%);
+      box-shadow: 0 8px 24px rgba(255, 255, 255, 0.4), 0 0 40px rgba(65, 105, 225, 0.6);
       transform: translateY(-2px);
     }
     ul {
@@ -167,9 +175,61 @@
 </head>
 <body>
   <div class="container">
-    <a href="/" class="back-link">← Back to Home</a>
+    <a href="/" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Back to Sanctum
+    </a>
     <h1 id="title">How to Use Sanctum</h1>
     
+    <h2>Real-World Use Cases</h2>
+    
+    <div class="step">
+      <div class="step-title">🗞️ Journalist Protecting Sources</div>
+      <div class="step-content">
+        <strong>Decoy:</strong> Published articles and public research notes<br>
+        <strong>Hidden:</strong> Confidential source documents and whistleblower communications<br>
+        <strong>Scenario:</strong> Device seized at border - reveal decoy, sources stay protected
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">✊ Activist in Authoritarian Regime</div>
+      <div class="step-content">
+        <strong>Decoy:</strong> Personal photos and innocuous social media content<br>
+        <strong>Hidden:</strong> Protest coordination plans and evidence of government abuse<br>
+        <strong>Scenario:</strong> Police raid - show decoy layer, cannot prove hidden content exists
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">💰 Crypto Holder Under Duress</div>
+      <div class="step-content">
+        <strong>Decoy:</strong> Small wallet with $200 ("this is all I have")<br>
+        <strong>Hidden:</strong> Main wallet with life savings<br>
+        <strong>Scenario:</strong> $5 wrench attack - hand over decoy wallet, real funds stay safe
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">🔔 Whistleblower Securing Evidence</div>
+      <div class="step-content">
+        <strong>Decoy:</strong> Work documents and meeting notes<br>
+        <strong>Hidden:</strong> Evidence of corporate fraud or government corruption<br>
+        <strong>Scenario:</strong> Employer demands access - show work files, evidence remains hidden
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">🏠 Domestic Abuse Survivor</div>
+      <div class="step-content">
+        <strong>Decoy:</strong> Shared family photos and household documents<br>
+        <strong>Hidden:</strong> Escape plan, evidence of abuse, emergency contacts<br>
+        <strong>Scenario:</strong> Abuser demands access - show family content, safety plan protected
+      </div>
+    </div>
+
     <h2>Creating a Vault</h2>
     
     <div class="step">
@@ -300,12 +360,11 @@
     <div class="step">
       <div class="step-content">
         <ul>
-          <li><strong>Fund decoy wallet</strong> with realistic amounts ($50-500)</li>
-          <li><strong>Memorize passphrases</strong> - never store digitally</li>
-          <li><strong>Use Tor Browser</strong> for maximum anonymity</li>
-          <li><strong>Clear browser data</strong> after each use</li>
-          <li><strong>Test decoy layer</strong> before relying on it</li>
-          <li><strong>Never reveal</strong> you have hidden layers</li>
+          <li><strong>Save vault links securely</strong> - Use a password manager (KeePassXC, Bitwarden) or print QR codes</li>
+          <li><strong>Use strong passphrases</strong> - 6+ Diceware words (e.g., "correct-horse-battery-staple-mountain-river")</li>
+          <li><strong>Make decoy content believable</strong> - Add realistic files/wallet with $50-500 to maintain plausibility</li>
+          <li><strong>Test before trusting</strong> - Verify both decoy and hidden layers unlock correctly before relying on them</li>
+          <li><strong>Use Tor Browser for high-risk scenarios</strong> - Hides your IP from IPFS gateways and prevents tracking</li>
         </ul>
       </div>
     </div>

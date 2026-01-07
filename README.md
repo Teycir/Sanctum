@@ -44,6 +44,38 @@
 
 > Most "secure storage" apps rely on "trust me bro" promises. Sanctum is **Cryptographically Deniable** with **Decentralized Storage**.
 
+### Real-World Use Cases
+
+**🗞️ Journalist Protecting Sources**
+- Decoy: Published articles and public research notes
+- Hidden: Confidential source documents and whistleblower communications
+- Scenario: Device seized at border crossing - reveal decoy, sources stay protected
+
+**✊ Activist in Authoritarian Regime**
+- Decoy: Personal photos and innocuous social media content
+- Hidden: Protest coordination plans and evidence of government abuse
+- Scenario: Police raid - show decoy layer, cannot prove hidden content exists
+
+**💰 Crypto Holder Under Duress**
+- Decoy: Small wallet with $200 ("this is all I have")
+- Hidden: Main wallet with life savings
+- Scenario: $5 wrench attack - hand over decoy wallet, real funds stay safe
+
+**🔔 Whistleblower Securing Evidence**
+- Decoy: Work documents and meeting notes
+- Hidden: Evidence of corporate fraud or government corruption
+- Scenario: Employer demands access - show work files, evidence remains hidden
+
+**🏠 Domestic Abuse Survivor**
+- Decoy: Shared family photos and household documents
+- Hidden: Escape plan, evidence of abuse, emergency contacts
+- Scenario: Abuser demands access - show family content, safety plan protected
+
+**🌍 Human Rights Defender**
+- Decoy: Public advocacy materials and educational content
+- Hidden: Witness testimonies and documentation of atrocities
+- Scenario: Interrogation - reveal public work, witnesses stay anonymous
+
 ### Key Features
 
 -🎭 **Plausible Deniability** - Hidden layers indistinguishable from decoy content

@@ -7,7 +7,7 @@ export function AnimatedTagline({ text }: { readonly text: string }) {
 
   return (
     <motion.p
-      className="text-base md:text-xl opacity-90 mb-6 font-medium text-center cursor-default animate-subtle-shimmer"
+      className="text-base md:text-xl opacity-90 mb-6 font-bold text-center cursor-default animate-subtle-shimmer"
       style={{ lineHeight: 1.2, padding: '0 16px' }}
       initial="hidden"
       animate="visible"
