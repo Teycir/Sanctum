@@ -573,7 +573,7 @@ export default function ViewVault() {
         }
         return Math.min(prev + 1, 66);
       });
-    }, 50);
+    }, 100);
 
     const { VaultService } = await import("@/lib/services/vault");
     const vaultService = new VaultService();

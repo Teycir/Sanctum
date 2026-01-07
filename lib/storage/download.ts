@@ -13,7 +13,11 @@ export function downloadFile(data: Uint8Array, filename: string): void {
   if (!data?.length) throw new Error('Data cannot be empty');
   if (!filename?.trim()) throw new Error('Filename cannot be empty');
 
-  const blob = new Blob([data as BlobPart]);
+  const buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+  if (!(buffer instanceof ArrayBuffer)) {
+    throw new TypeError('SharedArrayBuffer not supported');
+  }
+  const blob = new Blob([buffer], { type: 'application/octet-stream' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
