@@ -1,0 +1,22 @@
+# GitGuardian configuration
+version: 2
+
+# Paths to ignore - test files contain example credentials by design
+paths-ignore:
+  - "**/__tests__/**"
+  - "**/*.test.ts"
+  - "**/*.test.js"
+  - "**/test/**"
+  - "**/__mocks__/**"
+  - "**/docs/**/*.md"
+  - "**/README.md"
+  - "**/.amazonq/rules/**"
+
+# Ignore specific patterns that are false positives
+matches-ignore:
+  - name: Generic Password
+    match: "correct-horse-battery-staple"  # Example Diceware passphrase in docs
+  - name: Generic Password
+    match: "TestPassphrase"  # Test credentials
+  - name: Generic Password
+    match: "PanicPassword"  # Test credentials
