@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS vault_keys (
   encrypted_hidden_cid TEXT NOT NULL,      -- Encrypted CID for hidden layer
   salt TEXT NOT NULL,                      -- Salt for Argon2id
   nonce TEXT NOT NULL,                     -- Combined nonces for CID encryption (48 bytes)
+  provider TEXT NOT NULL DEFAULT 'pinata', -- IPFS provider: 'pinata' | 'filebase'
   created_at INTEGER NOT NULL,
   expires_at INTEGER                       -- Unix timestamp when vault expires (NULL = never)
 );

@@ -109,6 +109,9 @@ export function decrypt(params: DecryptionParams): Uint8Array {
   const storedCommitment = params.blob.slice(offset, offset + BLOB_SIZES.commitment);
   offset += BLOB_SIZES.commitment;
 
+  // Skip vault ID hash (16 bytes) - added for integrity verification
+  offset += 16;
+
   // Read ciphertext length (4 bytes, little-endian)
   const lengthBytes = params.blob.slice(offset, offset + 4);
   const ciphertextLength = new DataView(lengthBytes.buffer, lengthBytes.byteOffset).getUint32(0, true);

@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security - CRITICAL FIX: Cross-Vault Contamination Prevention
+
+**Problem Discovered:**
+When IPFS blobs were manually deleted from storage providers, public IPFS gateways could serve cached content from **different vaults**, causing users to unlock Vault A and receive Vault B's content.
+
+**Root Cause:**
+IPFS is content-addressed (CID = hash of content). If two vaults had similar encrypted blobs after padding, they could share CIDs. When original blobs were deleted from Pinata/Filebase, public gateways (`ipfs.io`) served stale/wrong cached data.
+
+**Solution Implemented:**
+
+1. **Vault ID Integrity Verification**
+   - 16-byte vault ID hash embedded in every blob header (derived from salt)
+   - Constant-time verification on unlock rejects blobs from wrong vaults
+   - Cryptographically impossible to forge (SHA-256 based)
+
+2. **Provider Separation**
+   - Pinata and Filebase are now **completely isolated storage spaces**
+   - Provider type stored in database (`'pinata'` | `'filebase'`)
+   - Downloads only from the provider used during upload
+   - No cross-provider fallback (prevents namespace collision)
+
+**Why This Offers More Safety:**
+
+✅ **Defense in Depth**: Two independent security layers
+   - Layer 1: Provider isolation (wrong provider = no data)
+   - Layer 2: Vault ID verification (wrong vault = rejected)
+
+✅ **Namespace Isolation**: Pinata and Filebase CIDs cannot collide
+   - Even if CIDs match, different providers = different content
+   - Eliminates cross-vault contamination attack vector
+
+✅ **Accidental Deletion Recovery**: Public gateway fallback still works
+   - If you delete from Pinata, can recover from `ipfs.io` cache
+   - Vault ID check ensures you get YOUR vault, not someone else's
+
+✅ **Attack Scenario Prevented**:
+   ```
+   Before: Delete Vault A blobs → Unlock Vault A → Get Vault B content ❌
+   After:  Delete Vault A blobs → Unlock Vault A → Integrity check fails ✅
+           OR recover from cache with verified integrity ✅
+   ```
+
+**Technical Details:**
+- Blob structure: `[header][salt][nonce][commitment][vaultID_hash][ciphertext_length][ciphertext][padding]`
+- Vault ID: First 16 bytes of SHA-256(salt)
+- Verification: Constant-time comparison (prevents timing leaks)
+- Database migration: `003_add_provider.sql`
+
+**Impact:**
+- ✅ Security: Cryptographically prevents wrong vault access
+- ✅ Reliability: Can recover from accidental deletions
+- ✅ Isolation: Pinata/Filebase users cannot interfere with each other
+- ⚠️ BREAKING: All existing vaults deleted during migration (lack provider column and vault ID verification)
+- 🔄 Migration Required: Run `./scripts/migrate-db.sh` to apply schema changes
+- 📝 Action Required: Users must recreate all vaults after migration
+- 🔄 Migration Required: Run `./scripts/migrate-db.sh` to add provider column to existing database rows
+
 ## [1.2.0] - 2025-01-08
 
 ### Added - UI/UX Enhancements

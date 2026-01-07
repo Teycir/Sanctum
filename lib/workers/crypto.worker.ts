@@ -18,8 +18,8 @@ self.onmessage = async (e: MessageEvent) => {
       }
 
       case 'unlock-vault': {
-        const { result, passphrase } = payload as { result: HiddenVaultResult; passphrase: string };
-        const unlockResult: UnlockResult = unlockHiddenVault(result, passphrase);
+        const { result, passphrase, vaultId } = payload as { result: HiddenVaultResult; passphrase: string; vaultId?: string };
+        const unlockResult: UnlockResult = unlockHiddenVault(result, passphrase, vaultId);
         self.postMessage({ type: 'unlock-vault-result', payload: unlockResult, id });
         break;
       }

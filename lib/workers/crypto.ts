@@ -70,10 +70,11 @@ export class CryptoWorker {
   async unlockHiddenVault(
     result: HiddenVaultResult,
     passphrase: string,
+    vaultId?: string,
   ): Promise<UnlockResult> {
     // Use inline crypto in Node/test environment
     if (isNode) {
-      return unlockHiddenVault(result, passphrase);
+      return unlockHiddenVault(result, passphrase, vaultId);
     }
     
     if (!this.worker) await this.init();
@@ -84,7 +85,7 @@ export class CryptoWorker {
       this.pending.set(id, { resolve: resolve as (value: HiddenVaultResult | UnlockResult) => void, reject });
       this.worker!.postMessage({
         type: "unlock-vault",
-        payload: { result, passphrase },
+        payload: { result, passphrase, vaultId },
         id,
       });
     });

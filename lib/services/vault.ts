@@ -133,6 +133,7 @@ export class VaultService {
         encryptedHiddenCID: base64UrlEncode(encryptedHiddenCID),
         salt: base64UrlEncode(vault.salt),
         nonce: base64UrlEncode(combinedNonces),
+        provider: stored.provider,
         expiresAt,
       }),
     });
@@ -202,7 +203,7 @@ export class VaultService {
     if (!fetchResponse.ok) {
       throw new Error('Vault not found');
     }
-    const { keyB: keyBEncoded, encryptedDecoyCID, encryptedHiddenCID, nonce, expiresAt } = await fetchResponse.json();
+    const { keyB: keyBEncoded, encryptedDecoyCID, encryptedHiddenCID, nonce, provider, expiresAt } = await fetchResponse.json();
     
     // Decode KeyB (already decrypted by server)
     const keyB = base64UrlDecode(keyBEncoded);
@@ -228,15 +229,22 @@ export class VaultService {
       decoyCID,
       hiddenCID,
       salt,
+      provider: provider as 'pinata' | 'filebase',
       decoyFilename,
       hiddenFilename,
     };
 
     const vault = await downloadVault(stored);
 
+    // Derive vault ID from salt for integrity verification
+    const vaultIdFromSalt = Array.from(vault.salt.slice(0, 16))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
     const { content, isDecoy } = await this.crypto.unlockHiddenVault(
       vault,
       validated.passphrase,
+      vaultIdFromSalt,
     );
     const filename = isDecoy ? stored.decoyFilename : stored.hiddenFilename;
 

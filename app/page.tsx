@@ -45,7 +45,7 @@ export default function Home() {
               className="text-white"
             />
           </h1>
-        <AnimatedTagline text="Deny everything" />
+        <AnimatedTagline text="Duress proof." />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', marginBottom: 20 }}>
           <Link href="/create" prefetch={true} style={{ textDecoration: 'none' }}>
             <button className="start-btn">

@@ -18,10 +18,17 @@ export async function onRequestPost(context) {
     }
 
     const body = await request.json();
-    const { vaultId, keyB, encryptedDecoyCID, encryptedHiddenCID, salt, nonce, expiresAt } = body;
+    const { vaultId, keyB, encryptedDecoyCID, encryptedHiddenCID, salt, nonce, expiresAt, provider } = body;
 
     if (!vaultId || !keyB || !encryptedDecoyCID || !encryptedHiddenCID || !salt || !nonce) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (provider && !['pinata', 'filebase'].includes(provider)) {
+      return new Response(JSON.stringify({ error: 'Invalid provider' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
@@ -72,9 +79,9 @@ export async function onRequestPost(context) {
 
     await env.DB
       .prepare(
-        'INSERT INTO vault_keys (vault_id, encrypted_key_b, encrypted_decoy_cid, encrypted_hidden_cid, salt, nonce, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO vault_keys (vault_id, encrypted_key_b, encrypted_decoy_cid, encrypted_hidden_cid, salt, nonce, provider, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
       )
-      .bind(vaultId, encryptedKeyBBase64, encryptedDecoyCID, encryptedHiddenCID, salt, nonce, Date.now(), expiresAt || null)
+      .bind(vaultId, encryptedKeyBBase64, encryptedDecoyCID, encryptedHiddenCID, salt, nonce, provider || 'pinata', Date.now(), expiresAt || null)
       .run();
 
     return new Response(JSON.stringify({ success: true }), {

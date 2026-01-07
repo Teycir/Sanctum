@@ -12,6 +12,7 @@ export const StoredVaultSchema = z.object({
     (data) => data.length === 32,
     'Salt must be 32 bytes'
   ),
+  provider: z.enum(['pinata', 'filebase']),
   decoyFilename: z.string().optional(),
   hiddenFilename: z.string().optional()
 });
