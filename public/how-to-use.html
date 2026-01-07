@@ -192,7 +192,7 @@
   </div>
   <div class="container">
     <a href="/" class="back-link" title="Back to Sanctum">←</a>
-    <h1 id="title" class="text-pressure" style="cursor: default; user-select: none;">How to Use Sanctum</h1>
+    <h1 id="title" style="cursor: default; user-select: none;">How to Use Sanctum</h1>
     
     <h2>Real-World Use Cases</h2>
     
@@ -400,6 +400,10 @@
       if (iteration >= maxIterations) {
         title.textContent = text;
         clearInterval(interval);
+        // Initialize text pressure after scramble completes
+        if (typeof window.initTextPressure === 'function') {
+          window.initTextPressure('#title');
+        }
       }
       iteration++;
     }, speed);

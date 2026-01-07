@@ -94,7 +94,8 @@
 
 ## 🐦 Warrant Canary
 
-**Last Updated:** January 2025
+**[View Live Canary](https://sanctumvault.online/canary)** - Auto-updates with current timestamp on every visit
+
 
 **Statement:**
 

@@ -47,6 +47,9 @@ function initTextPressure(selector) {
   document.addEventListener('mousemove', handleMouseMove);
 }
 
+// Make initTextPressure globally accessible
+window.initTextPressure = initTextPressure;
+
 // Animated Tagline - Scramble reveal effect
 function initAnimatedTagline(selector) {
   const element = document.querySelector(selector);

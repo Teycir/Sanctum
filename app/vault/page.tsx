@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
 import { LoadingOverlay } from "../components/LoadingOverlay";
 import { SecurityStatus } from "../components/SecurityStatus";
+import { Footer } from "../components/Footer";
 import { useSecureClipboard } from "@/lib/hooks/useSecureClipboard";
 import TextPressure from "../components/text/text-pressure";
 
@@ -725,6 +726,7 @@ export default function ViewVault() {
           {renderContent()}
         </div>
       </div>
+      <Footer />
     </>
   );
 }
