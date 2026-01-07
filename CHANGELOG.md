@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-01-07
+
+### Security
+- **CRITICAL**: Implemented RAM-only storage for all sensitive data (JWT, credentials, encryption salts)
+- **CRITICAL**: Removed localStorage persistence to prevent forensic recovery after device seizure
+- Ephemeral salts regenerated per session (no disk persistence)
+- Zero forensic evidence - all keys cleared on tab close
+- Immune to disk carving and SSD wear-leveling recovery
+- Added warrant canary with quarterly updates for transparency on legal demands
+
+### Added
+- Comprehensive OpSec guidelines with 10 critical security sections
+- Threat-specific guidance for border crossings, authoritarian regimes, domestic abuse, whistleblowing
+- 12 documented attack scenarios with detailed countermeasures in FAQ
+- Verification checklist for high-risk users
+- Emergency procedures including panic key and dead man's switch
+- Self-hosting instructions for maximum security
+- Documentation: `docs/security/RAM-ONLY-STORAGE.md`
+- Documentation: `docs/security/OPSEC-FIX-RAM-ONLY.md`
+
+### Changed
+- `lib/storage/jwt.ts`: Replaced localStorage with RAM-only variable
+- `lib/storage/filebase-credentials.ts`: Replaced localStorage with RAM-only variable
+- `lib/storage/device-encryption.ts`: Ephemeral salt generation (no localStorage)
+- `lib/storage/credentials.ts`: Replaced localStorage with RAM-only variable
+- `public/faq.html`: Added 12 attack scenarios with countermeasures
+- `README.md`: Added warrant canary and comprehensive OpSec section
+
+### Impact
+- **User Experience**: Must re-enter IPFS credentials each session (no "remember me")
+- **Security Benefit**: True zero-trust architecture, forensic-resistant
+- **Threat Model**: Aligned with high-risk users facing device seizure
+
+### Testing
+- All 115 tests passing (19 test suites)
+- RAM-only storage verified
+- No breaking changes to API
+
 ### Security
 - **CRITICAL**: Fixed timing attack vulnerability in vault unlocking - now uses constant-time execution to prevent layer detection
 - Implemented split-key architecture with HKDF + XChaCha20-Poly1305 (server-side KeyB encryption)
@@ -47,7 +85,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Panic key (double-press Escape)
 - Secure clipboard (60s auto-clear)
 
-[Unreleased]: https://github.com/teycir/Sanctum/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/teycir/Sanctum/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/teycir/Sanctum/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/teycir/Sanctum/releases/tag/v1.0.0
 
 
