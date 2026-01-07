@@ -40,6 +40,27 @@
 
 **Sanctum** is a zero-trust, client-side encrypted vault system designed for activists, journalists, whistleblowers, and anyone facing physical duress, device seizure, or censorship. It provides **cryptographically sound plausible deniability** through passphrase-derived hidden layers while leveraging decentralized IPFS storage.
 
+### Screenshots
+
+<div align="center">
+
+#### Landing Page
+![Landing Page](public/assets/landingpage.png)
+
+#### Create Vault
+![Create Vault](public/assets/createvault.png)
+
+#### Vault Created
+![Vault Created](public/assets/createdvault.png)
+
+#### Unlock Vault
+![Unlock Vault](public/assets/unlock.png)
+
+#### Unlocked Content
+![Unlocked Content](public/assets/unlocked.png)
+
+</div>
+
 ### Why is this different?
 
 > Most "secure storage" apps rely on "trust me bro" promises. Sanctum is **Cryptographically Deniable** with **Decentralized Storage**.
