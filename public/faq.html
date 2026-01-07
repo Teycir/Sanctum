@@ -260,6 +260,7 @@
     </div>
   </div>
   <script src="/footer.js"></script>
+  <script src="/text-animations.js"></script>
   <script>
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;:,.<>?';
     const title = document.getElementById('title');
@@ -278,7 +279,6 @@
       
       if (iteration >= maxIterations) {
         title.textContent = text;
-        title.classList.add('text-pressure');
         clearInterval(interval);
         // Initialize text pressure after scramble completes
         if (typeof window.initTextPressure === 'function') {
@@ -290,6 +290,5 @@
   </script>
   <script src="/loader.js"></script>
   <script src="/eye-candy.js"></script>
-  <script src="/text-animations.js"></script>
 </body>
 </html>

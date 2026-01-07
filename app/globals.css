@@ -270,9 +270,11 @@
 .form-input {
   width: 100%;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   color: #fff;
   font-size: 13px;
   box-sizing: border-box;
@@ -289,9 +291,11 @@
 .provider-input {
   width: 100%;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   color: #fff;
   font-size: 12px;
   box-sizing: border-box;
@@ -301,9 +305,11 @@
 .provider-input-last {
   width: 100%;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   color: #fff;
   font-size: 12px;
   box-sizing: border-box;
@@ -328,9 +334,11 @@
 .custom-file-button {
   display: inline-block;
   padding: 8px 16px;
-  background: rgba(13, 71, 161, 0.6);
-  border: 1px solid rgba(13, 71, 161, 0.6);
+  background: rgba(13, 71, 161, 0.3);
+  border: 1px solid rgba(13, 71, 161, 0.5);
   border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   color: #fff;
   font-size: 12px;
   cursor: pointer;
