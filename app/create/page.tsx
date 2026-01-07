@@ -422,7 +422,7 @@ export default function CreateVault() {
         }
         return Math.min(prev + 1, 90);
       });
-    }, 50);
+    }, 100);
 
     const startTime = Date.now();
 

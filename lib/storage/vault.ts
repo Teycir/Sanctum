@@ -33,8 +33,10 @@ export async function uploadVault(
     throw new Error('IPFS credentials are required for vault upload');
   }
   
-  const decoyResult = await uploadToIPFS(vault.decoyBlob, credentials);
-  const hiddenResult = await uploadToIPFS(vault.hiddenBlob, credentials);
+  const [decoyResult, hiddenResult] = await Promise.all([
+    uploadToIPFS(vault.decoyBlob, credentials),
+    uploadToIPFS(vault.hiddenBlob, credentials)
+  ]);
 
   return {
     decoyCID: decoyResult.cid,

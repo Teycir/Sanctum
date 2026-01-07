@@ -104,10 +104,16 @@ export class PinataClient {
       'https://ipfs.io/ipfs'
     ];
 
-    for (const gateway of gateways) {
-      for (let attempt = 0; attempt < 3; attempt++) {
-        const result = await this.fetchFromGateway(gateway, cid, attempt);
-        if (result) return result;
+    try {
+      return await Promise.race(
+        gateways.map(gateway => this.fetchFromGateway(gateway, cid, 0))
+      );
+    } catch {
+      for (const gateway of gateways) {
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const result = await this.fetchFromGateway(gateway, cid, attempt);
+          if (result) return result;
+        }
       }
     }
 
