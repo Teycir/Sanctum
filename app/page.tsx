@@ -12,9 +12,6 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px 40px', position: 'relative' }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 8, zIndex: 10 }}>
-        <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.7)', fontWeight: 500 }}>
-          🔒 Client-Side Crypto - Browser encryption
-        </div>
         <a
           href="https://github.com/Teycir/Sanctum#readme"
           target="_blank"
