@@ -22,10 +22,12 @@
 ## 📑 Table of Contents
 
 - [Overview](#-overview)
+- [Warrant Canary](#-warrant-canary)
 - [Quick Start](#-quick-start)
 - [Operating Modes](#-operating-modes)
 - [Architecture](#️-architecture)
 - [Security Attack Scenarios](#️-security-attack-scenarios)
+- [OpSec Guidelines](#-opsec-guidelines)
 - [Storage Providers](#-storage-providers)
 - [FAQ](#-faq)
 - [Project Status](#-project-status)
@@ -48,11 +50,64 @@
 - 🌐 **Decentralized Storage** - Data pinned on IPFS via free services (Pinata/Filebase)
 - 🔑 **XChaCha20-Poly1305** - Military-grade encryption with split-key architecture
 - 🚫 **Zero Server Trust** - All crypto operations in browser, keys never touch server
+- 🧠 **RAM-Only Storage** - No disk persistence, immune to forensic recovery
 - 💰 **100% Free** - No credit card required, stack multiple free tiers
 - 🔒 **Auto-Lock** - Locks after 5 minutes of inactivity
 - ⚡ **Panic Key** - Double-press Escape for instant lockout
 - 📋 **Secure Clipboard** - Auto-clears after 60 seconds
 - 📦 **File Support** - Upload .zip/.rar archives up to 25MB
+
+---
+
+## 🐦 Warrant Canary
+
+**Last Updated:** January 2025
+
+**Statement:**
+
+As of the date above, Sanctum developers have:
+
+✅ **NOT received any:**
+- National Security Letters (NSLs)
+- FISA court orders
+- Gag orders preventing disclosure of legal demands
+- Requests to implement backdoors or weaken encryption
+- Requests to log user activity or decrypt user data
+- Warrants requiring disclosure of user information
+
+✅ **NOT been:**
+- Compelled to modify source code
+- Required to hand over cryptographic keys (none exist server-side)
+- Forced to compromise the integrity of the system
+
+✅ **Architecture guarantees:**
+- Zero-knowledge: We cannot decrypt user vaults (client-side encryption)
+- No user logs: We don't collect IP addresses, usage patterns, or metadata
+- No backdoors: All code is open-source and auditable
+- RAM-only: No persistent storage of keys or credentials
+
+**Verification:**
+- This canary is updated quarterly
+- Signed commits verify authenticity
+- If this section is removed or not updated for >90 days, assume compromise
+- Check commit history: `git log --show-signature README.md`
+
+**What We CAN Be Compelled To Do:**
+- Take down the hosted service (users can self-host)
+- Remove specific vault IDs from our database (data remains on IPFS)
+- Provide encrypted vault metadata (useless without KeyA in URL)
+
+**What We CANNOT Be Compelled To Do:**
+- Decrypt user vaults (cryptographically impossible)
+- Provide user passphrases (never transmitted to server)
+- Log future user activity (architecture prevents it)
+
+**If This Canary Dies:**
+1. Assume legal compromise
+2. Self-host immediately: `npm run dev`
+3. Use Tor Browser for all vault access
+4. Rotate all passphrases
+5. Migrate to new IPFS providers
 
 ---
 
@@ -89,6 +144,7 @@ See [QUICK-START.md](./docs/QUICK-START.md) for detailed setup instructions.
 
 - [Project Status](./docs/PROJECT-STATUS.md) - Current implementation status
 - [Security Features](./docs/SECURITY-FEATURES.md) - Auto-lock, panic key, secure clipboard
+- [RAM-Only Storage](./docs/security/RAM-ONLY-STORAGE.md) - Forensic-resistant architecture
 - [Technical Specification](./docs/core/SPECIFICATION.md) - Complete technical spec
 - [Implementation Plan](./docs/core/IMPLEMENTATION-PLAN.md) - Development roadmap
 
@@ -173,6 +229,16 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 
 **❌ NO.** Argon2id with 256MB memory and 3 iterations makes brute-force computationally infeasible. Use strong passphrases (6+ Diceware words).
 
+### "What if they perform disk forensics on my device?"
+
+**✅ SAFE.** Sanctum uses RAM-only storage with zero disk persistence:
+- No localStorage/sessionStorage for sensitive data
+- Keys cleared on tab close
+- Ephemeral salts regenerated per session
+- Immune to disk carving and SSD wear-leveling analysis
+
+See [RAM-ONLY-STORAGE.md](./docs/security/RAM-ONLY-STORAGE.md) for technical details.
+
 ### "What if they seize the IPFS providers?"
 
 **✅ SAFE.** Data is encrypted before upload. Providers only see encrypted blobs. Without your passphrase and vault link, decryption is impossible.
@@ -223,6 +289,228 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 6. **Never reveal** you have hidden layers
 
 See [OPSEC.md](./docs/OPSEC.md) for comprehensive guidelines.
+
+---
+
+## 🔐 OpSec Guidelines
+
+### Critical Operational Security Rules
+
+#### 1. Device Security
+
+**Before Creating Vault:**
+- ✅ Use Tor Browser or VPN
+- ✅ Disable browser extensions (can log keystrokes)
+- ✅ Use private/incognito mode
+- ✅ Verify HTTPS connection
+- ❌ Never use public/shared computers
+- ❌ Never use work/school devices
+
+**After Creating Vault:**
+- ✅ Close all browser tabs
+- ✅ Clear browser history/cache
+- ✅ Restart browser
+- ✅ Verify vault link works before relying on it
+
+#### 2. Passphrase Security
+
+**Strength Requirements:**
+- ✅ Minimum 6 Diceware words (e.g., `correct-horse-battery-staple-mountain-river`)
+- ✅ Use different passphrases for decoy vs hidden
+- ✅ Make decoy passphrase memorable but plausible
+- ❌ Never reuse passphrases from other services
+- ❌ Never store passphrases digitally
+
+**Memory Techniques:**
+- Create a story linking the words
+- Practice entering passphrase 10+ times
+- Test recall after 24 hours
+- Have a trusted contact who knows the passphrase (dead man's switch)
+
+#### 3. Decoy Layer Strategy
+
+**Make It Believable:**
+- ✅ Fund decoy wallet with realistic amount ($50-500)
+- ✅ Include plausible documents (tax returns, receipts)
+- ✅ Add personal photos (non-sensitive)
+- ✅ Make it look like "what you're trying to hide"
+- ❌ Don't leave decoy empty (suspicious)
+- ❌ Don't make it obviously fake
+
+**Plausible Deniability Script:**
+> "This is my crypto wallet backup. I keep it encrypted because I'm paranoid about hackers. The passphrase is [decoy passphrase]."
+
+#### 4. Vault Link Management
+
+**Storage Options (Ranked by Security):**
+
+1. **Memory Only** (Most Secure)
+   - Memorize the vault ID
+   - Reconstruct URL manually
+   - Risk: Forget the link
+
+2. **Password Manager** (Recommended)
+   - Use KeePassXC or Bitwarden
+   - Encrypt database with strong master password
+   - Store offline backup
+
+3. **QR Code Print** (Physical Backup)
+   - Print QR code on paper
+   - Store in safe/safety deposit box
+   - Risk: Physical seizure
+
+4. **Encrypted USB** (Portable)
+   - Use VeraCrypt container
+   - Store on USB drive
+   - Risk: Device seizure
+
+**Never:**
+- ❌ Email vault links to yourself
+- ❌ Store in cloud services (Google Drive, Dropbox)
+- ❌ Share over unencrypted messaging (SMS, WhatsApp)
+- ❌ Post on social media (even privately)
+
+#### 5. Access Patterns
+
+**When Accessing Vault:**
+- ✅ Use Tor Browser (hides IP from IPFS gateways)
+- ✅ Access from safe location (home, trusted network)
+- ✅ Verify URL before entering passphrase
+- ✅ Check for HTTPS and valid certificate
+- ❌ Never access from public WiFi
+- ❌ Never access from compromised devices
+
+**Timing Considerations:**
+- Access during normal hours (avoid 3 AM patterns)
+- Don't access immediately before/after sensitive events
+- Randomize access intervals
+
+#### 6. Duress Scenarios
+
+**If Coerced to Reveal Passphrase:**
+
+1. **Reveal decoy passphrase** (not hidden passphrase)
+2. **Act naturally** - don't show relief when decoy unlocks
+3. **Claim ignorance** - "This is all I have"
+4. **Never mention** hidden layers exist
+
+**If Device Seized:**
+
+1. **RAM-only storage protects you** - keys cleared on browser close
+2. **No forensic evidence** - nothing on disk to recover
+3. **Vault link in URL** - KeyA never stored server-side
+4. **Plausible deniability** - adversary cannot prove hidden layers exist
+
+**If Threatened with Violence:**
+
+- Your safety > data security
+- Reveal decoy layer to de-escalate
+- Cryptography protects hidden layer
+- Adversary cannot prove you're lying
+
+#### 7. Threat-Specific Guidance
+
+**Border Crossings:**
+- Don't carry vault links on device
+- Memorize vault ID only
+- Access after crossing border
+- Use local Tor exit node
+
+**Authoritarian Regimes:**
+- Self-host Sanctum on local machine
+- Use Tor hidden service
+- Avoid government-monitored IPFS gateways
+- Consider Tails OS for maximum security
+
+**Domestic Abuse:**
+- Access only when safe
+- Clear all browser data immediately
+- Use decoy layer for "allowed" content
+- Hidden layer for escape plans/evidence
+
+**Whistleblowing:**
+- Use Tails OS on USB
+- Access via Tor only
+- Never access from work network
+- Use burner IPFS credentials
+
+#### 8. Compromise Indicators
+
+**Assume Compromise If:**
+- Warrant canary not updated >90 days
+- Unexpected vault access errors
+- IPFS gateway returns wrong content
+- Browser shows certificate warnings
+- Unusual network activity
+
+**Response Plan:**
+1. Stop using compromised vault immediately
+2. Create new vault with new passphrases
+3. Migrate data to new vault
+4. Destroy old vault link
+5. Self-host if necessary
+
+#### 9. Self-Hosting
+
+**When to Self-Host:**
+- Warrant canary dies
+- Service unavailable
+- Maximum paranoia required
+- Custom security requirements
+
+**How to Self-Host:**
+```bash
+git clone https://github.com/Teycir/Sanctum.git
+cd Sanctum
+npm install
+npm run dev
+# Access at http://localhost:3000
+```
+
+**Benefits:**
+- No reliance on hosted service
+- Full control over infrastructure
+- Can modify code for specific needs
+- Immune to service takedowns
+
+#### 10. Emergency Procedures
+
+**Panic Situations:**
+- Double-press `Escape` key (instant lockout)
+- Close browser immediately
+- Restart device (clears RAM)
+- Deny everything
+
+**Dead Man's Switch:**
+- Share vault link + decoy passphrase with lawyer
+- Share hidden passphrase with trusted contact
+- Include instructions in will
+- Use time-locked encryption for future access
+
+**Data Destruction:**
+- IPFS data is immutable (cannot delete)
+- Destroy vault link = data inaccessible
+- Forget passphrase = permanent loss
+- No recovery mechanism exists
+
+### Verification Checklist
+
+Before relying on Sanctum for high-risk data:
+
+- [ ] Tested decoy layer unlocks correctly
+- [ ] Tested hidden layer unlocks correctly
+- [ ] Verified vault link works from different device
+- [ ] Memorized both passphrases
+- [ ] Funded decoy wallet with realistic amount
+- [ ] Stored vault link securely (password manager)
+- [ ] Practiced duress scenario response
+- [ ] Configured Tor Browser
+- [ ] Cleared browser data after test
+- [ ] Read full OpSec documentation
+
+**Remember:** Cryptography protects data, OpSec protects you.
+
+---
 
 ## 🌐 Storage Providers
 

@@ -1,18 +1,19 @@
 // ============================================================================
-// ENCRYPTED CREDENTIAL STORAGE
+// RAM-ONLY CREDENTIAL STORAGE (NO DISK PERSISTENCE)
 // ============================================================================
 
 import { encrypt, decrypt } from '../crypto/core';
 import { ARGON2_PROFILES } from '../crypto/constants';
 
-const STORAGE_KEY = 'sanctum_credentials';
-
 export interface StoredCredentials {
   pinataJWT: string;
 }
 
+// RAM-only storage - cleared on tab close
+let credentialsCache: string | null = null;
+
 /**
- * Save credentials encrypted in localStorage
+ * Save credentials encrypted in RAM only
  */
 export async function saveCredentials(
   credentials: StoredCredentials,
@@ -33,20 +34,19 @@ export async function saveCredentials(
     ...encrypted.ciphertext
   ]);
 
-  localStorage.setItem(STORAGE_KEY, btoa(String.fromCharCode(...blob)));
+  credentialsCache = btoa(String.fromCodePoint(...blob));
 }
 
 /**
- * Load credentials from encrypted localStorage
+ * Load credentials from RAM
  */
 export async function loadCredentials(
   masterPassword: string
 ): Promise<StoredCredentials | null> {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return null;
+  if (!credentialsCache) return null;
 
   try {
-    const blob = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+    const blob = Uint8Array.from(atob(credentialsCache), (c, i) => c.codePointAt(i) ?? 0);
     
     const plaintext = decrypt({
       blob,
@@ -61,8 +61,8 @@ export async function loadCredentials(
 }
 
 /**
- * Clear stored credentials
+ * Clear stored credentials from RAM
  */
 export function clearCredentials(): void {
-  localStorage.removeItem(STORAGE_KEY);
+  credentialsCache = null;
 }

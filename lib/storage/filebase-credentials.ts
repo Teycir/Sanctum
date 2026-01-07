@@ -1,38 +1,37 @@
 // ============================================================================
-// FILEBASE CREDENTIALS ENCRYPTION
+// RAM-ONLY FILEBASE CREDENTIALS (NO DISK PERSISTENCE)
 // ============================================================================
 
 import { encryptWithDeviceKey, decryptWithDeviceKey } from './device-encryption';
-
-const STORAGE_KEY = 'sanctum_filebase_encrypted';
 
 interface FilebaseCredentials {
   accessKey: string;
   secretKey: string;
 }
 
+// RAM-only storage - cleared on tab close
+let credentialsCache: string | null = null;
+
 export async function saveFilebaseCredentials(credentials: FilebaseCredentials): Promise<void> {
-  const encrypted = await encryptWithDeviceKey(JSON.stringify(credentials));
-  localStorage.setItem(STORAGE_KEY, encrypted);
+  credentialsCache = await encryptWithDeviceKey(JSON.stringify(credentials));
 }
 
 export async function loadFilebaseCredentials(): Promise<FilebaseCredentials | null> {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return null;
+  if (!credentialsCache) return null;
   
-  const decrypted = await decryptWithDeviceKey(stored);
+  const decrypted = await decryptWithDeviceKey(credentialsCache);
   if (!decrypted) return null;
   
   try {
     return JSON.parse(decrypted);
   } catch (error) {
     if (error instanceof SyntaxError) {
-      return null; // Invalid JSON
+      return null;
     }
     throw error;
   }
 }
 
 export function clearFilebaseCredentials(): void {
-  localStorage.removeItem(STORAGE_KEY);
+  credentialsCache = null;
 }

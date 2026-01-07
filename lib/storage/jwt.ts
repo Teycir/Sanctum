@@ -1,22 +1,21 @@
 // ============================================================================
-// AUTOMATIC JWT ENCRYPTION
+// RAM-ONLY JWT STORAGE (NO DISK PERSISTENCE)
 // ============================================================================
 
 import { encryptWithDeviceKey, decryptWithDeviceKey } from './device-encryption';
 
-const STORAGE_KEY = 'sanctum_jwt_encrypted';
+// RAM-only storage - cleared on tab close
+let jwtCache: string | null = null;
 
 export async function saveJWT(jwt: string): Promise<void> {
-  const encrypted = await encryptWithDeviceKey(jwt);
-  localStorage.setItem(STORAGE_KEY, encrypted);
+  jwtCache = await encryptWithDeviceKey(jwt);
 }
 
 export async function loadJWT(): Promise<string | null> {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return null;
-  return decryptWithDeviceKey(stored);
+  if (!jwtCache) return null;
+  return decryptWithDeviceKey(jwtCache);
 }
 
 export function clearJWT(): void {
-  localStorage.removeItem(STORAGE_KEY);
+  jwtCache = null;
 }

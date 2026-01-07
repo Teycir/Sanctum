@@ -4,10 +4,10 @@
 
 import { sha256 } from '@noble/hashes/sha2';
 
-const DEVICE_KEY_SALT = 'sanctum_device_salt';
 const DEFAULT_PIN = 'sanctum_default'; // Default PIN for automatic encryption
 let cachedKey: CryptoKey | null = null;
 let cachedPin: string | null = null;
+let cachedSalt: string | null = null; // RAM-only salt storage
 
 /**
  * Derive device encryption key from user PIN (never stored)
@@ -19,14 +19,14 @@ async function getDeviceKey(pin: string): Promise<CryptoKey> {
     return cachedKey;
   }
 
-  let salt = localStorage.getItem(DEVICE_KEY_SALT);
-  if (!salt) {
+  // Generate ephemeral salt (RAM-only, never persisted)
+  if (!cachedSalt) {
     const saltBytes = crypto.getRandomValues(new Uint8Array(16));
-    salt = btoa(String.fromCodePoint(...saltBytes));
-    localStorage.setItem(DEVICE_KEY_SALT, salt);
+    cachedSalt = btoa(String.fromCodePoint(...saltBytes));
   }
+  const salt = cachedSalt;
 
-  const saltBytes = Uint8Array.from(atob(salt), c => c.codePointAt(0)!);
+  const saltBytes = Uint8Array.from(atob(salt), (c, i) => c.codePointAt(i) ?? 0);
   const pinBytes = new TextEncoder().encode(pin);
   const combined = new Uint8Array(saltBytes.length + pinBytes.length);
   combined.set(saltBytes, 0);
@@ -54,6 +54,7 @@ async function getDeviceKey(pin: string): Promise<CryptoKey> {
 export function clearDeviceKey(): void {
   cachedKey = null;
   cachedPin = null;
+  cachedSalt = null; // Clear ephemeral salt
 }
 
 /**
@@ -89,7 +90,7 @@ export async function encryptWithDeviceKey(data: string, pin: string = DEFAULT_P
 export async function decryptWithDeviceKey(encrypted: string, pin: string = DEFAULT_PIN): Promise<string | null> {
   try {
     const key = await getDeviceKey(pin);
-    const combined = Uint8Array.from(atob(encrypted), c => c.codePointAt(0)!);
+    const combined = Uint8Array.from(atob(encrypted), (c, i) => c.codePointAt(i) ?? 0);
     const iv = combined.slice(0, 12);
     const ciphertext = combined.slice(12);
     

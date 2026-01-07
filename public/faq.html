@@ -171,12 +171,67 @@
 
     <div class="faq-item">
       <div class="faq-question">What is the panic key?</div>
-      <div class="faq-answer">Double-press Escape to instantly lock your vault. Combined with auto-lock after 5 minutes of inactivity, this protects against physical access threats.</div>
+      <div class="faq-answer">Double-press Escape to instantly lock your vault. Combined with auto-lock after 5 minutes of inactivity, this protects against physical access threats. Secure clipboard auto-clears after 60 seconds.</div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-question">Can authorities force me to reveal my passphrase?</div>
-      <div class="faq-answer">Reveal the decoy layer. They cannot prove hidden layers exist. However, consult legal counsel for your jurisdiction's laws on encryption and self-incrimination.</div>
+      <div class="faq-question">🔐 Attack: Physical Duress ($5 Wrench Attack)</div>
+      <div class="faq-answer"><strong>Threat:</strong> Coerced to reveal passphrase under torture/violence.<br><strong>Countermeasure:</strong> Reveal decoy passphrase only. Adversary sees funded wallet + innocent files. Cannot cryptographically prove hidden layer exists. Plausible deniability protects you.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">💻 Attack: Device Seizure + Forensic Analysis</div>
+      <div class="faq-answer"><strong>Threat:</strong> Device seized, disk forensics performed to recover keys.<br><strong>Countermeasure:</strong> RAM-only storage. No localStorage/sessionStorage for keys. All sensitive data cleared on tab close. Ephemeral salts regenerated per session. Immune to disk carving and SSD wear-leveling recovery.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">🔍 Attack: Encrypted Blob Size Analysis</div>
+      <div class="faq-answer"><strong>Threat:</strong> Adversary analyzes blob sizes to detect hidden layers.<br><strong>Countermeasure:</strong> Deterministic padding to standard sizes (1KB, 10KB, 100KB, 1MB, 10MB). All vaults same size class look identical. Even empty decoys padded to minimum size.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">⚡ Attack: Timing Analysis (Side-Channel)</div>
+      <div class="faq-answer"><strong>Threat:</strong> Measure decryption time to detect which layer unlocked.<br><strong>Countermeasure:</strong> Constant-time decryption. Both layers always attempted regardless of success. Timing difference <15% (tested). Cannot distinguish decoy from hidden unlock.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">🔨 Attack: Passphrase Brute-Force</div>
+      <div class="faq-answer"><strong>Threat:</strong> Adversary attempts to brute-force weak passphrases.<br><strong>Countermeasure:</strong> Argon2id KDF with 256MB memory + 3 iterations. Computationally infeasible to brute-force. Use 6+ Diceware words (77 bits entropy). Rate limiting: 5 attempts/min per vault.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">🌐 Attack: IPFS Provider Seizure</div>
+      <div class="faq-answer"><strong>Threat:</strong> Government seizes Pinata/Filebase servers.<br><strong>Countermeasure:</strong> Data encrypted before upload. Providers only see encrypted blobs. Without passphrase + vault link, decryption impossible. Use multiple providers for redundancy.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">☁️ Attack: Cloudflare Workers Compromise</div>
+      <div class="faq-answer"><strong>Threat:</strong> Attacker compromises Cloudflare D1 database.<br><strong>Countermeasure:</strong> Split-key architecture. KeyA in URL (never server-side). KeyB encrypted in DB. CIDs encrypted with master key. Attacker gets encrypted metadata only. Cannot decrypt vaults or access IPFS content.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">📊 Attack: Metadata Analysis</div>
+      <div class="faq-answer"><strong>Threat:</strong> Analyze vault metadata to detect patterns.<br><strong>Countermeasure:</strong> All vaults upload 2 blobs (decoy + hidden) regardless of content. Consistent structure prevents pattern analysis. CIDs encrypted. No IP logging. Use Tor Browser for anonymity.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">🕵️ Attack: Browser Extension Keylogging</div>
+      <div class="faq-answer"><strong>Threat:</strong> Malicious browser extension logs passphrases.<br><strong>Countermeasure:</strong> Extension warning on page load. Recommend disabling extensions before vault creation. Use private/incognito mode. Consider Tor Browser (no extensions).</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">🚨 Attack: Rubber-Hose Cryptanalysis (Ongoing Coercion)</div>
+      <div class="faq-answer"><strong>Threat:</strong> Prolonged coercion to reveal all layers.<br><strong>Countermeasure:</strong> Your safety > data security. Reveal decoy layer. Adversary cannot prove hidden layer exists. If threatened with violence, comply with decoy. Cryptography protects hidden layer. Self-host + Tor for maximum security.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">🔗 Attack: Vault Link Interception</div>
+      <div class="faq-answer"><strong>Threat:</strong> Adversary intercepts vault link during transmission.<br><strong>Countermeasure:</strong> Never share links over unencrypted channels (SMS, email). Use encrypted messaging (Signal, Session). Store in password manager (KeePassXC, Bitwarden). Print QR code for physical backup. KeyA in URL is useless without passphrase.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">⚖️ Attack: Legal Compulsion (Warrant Canary)</div>
+      <div class="faq-answer"><strong>Threat:</strong> Government compels service to backdoor encryption.<br><strong>Countermeasure:</strong> Warrant canary updated quarterly. If removed/not updated >90 days, assume compromise. Self-host immediately. Client-side encryption prevents server-side backdoors. Open-source code auditable.</div>
     </div>
   </div>
   <script>
