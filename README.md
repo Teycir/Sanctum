@@ -13,7 +13,7 @@
 
 ### _"Duress proof.."_
 
-[Create a Vault](#-quick-start) · [View Architecture](#️-architecture) · [Report Bug](https://github.com/teycir/Sanctum/issues)
+[📺 Watch Demo](https://youtu.be/k54qKVYhcrM) · [Create a Vault](#-quick-start) · [View Architecture](#️-architecture) · [Report Bug](https://github.com/teycir/Sanctum/issues)
 
 </div>
 
