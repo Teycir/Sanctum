@@ -104,8 +104,9 @@
 
 ### Key Features
 
--🎭 **Plausible Deniability** - Hidden layers indistinguishable from decoy content
+- 🎭 **Plausible Deniability** - Hidden layers indistinguishable from decoy content
 - 🚨 **Panic Passphrase** - Shows "vault deleted" under duress (3rd layer)
+- ⏰ **30-Day Grace Period** - Accidentally expired vaults can be recovered
 - 🌐 **Decentralized Storage** - Data pinned on IPFS via free services (Pinata/Filebase)
 - 🔑 **XChaCha20-Poly1305** - Military-grade encryption with split-key architecture
 - 🚫 **Zero Server Trust** - All crypto operations in browser, keys never touch server
@@ -221,10 +222,40 @@ Basic encrypted storage without deniability. Single encrypted blob uploaded to I
 **Use Case:** $5 wrench attacks, device seizures, coercion scenarios.
 
 **How it works:**
-- **Decoy passphrase** → Shows decoy layer (innocent content)
+
+**Client-Side (Browser):**
+1. User creates vault with decoy + hidden content
+2. Browser encrypts both layers with XChaCha20-Poly1305
+3. Uploads encrypted blobs to IPFS (Pinata/Filebase)
+4. Generates split keys: KeyA (stays in URL) + KeyB (sent to server)
+5. Server encrypts KeyB and stores with encrypted IPFS CIDs
+
+**Server-Side (Cloudflare D1):**
+- Stores: Encrypted KeyB, Encrypted CIDs, vault metadata
+- **Two-stage cleanup** prevents database overflow:
+  - **Stage 1**: Expired vaults marked inactive (`is_active = 0`) - soft delete
+  - **Stage 2**: Vaults inactive for 30+ days permanently deleted
+- **30-day grace period**: Accidentally expired vaults can be recovered
+
+**Unlock Flow:**
+1. User enters passphrase
+2. Browser fetches encrypted metadata from server
+3. Combines KeyA (from URL) + KeyB (from server) to decrypt IPFS CIDs
+4. Downloads encrypted blobs from IPFS
+5. Decrypts with passphrase → reveals decoy or hidden layer
+
+**Passphrase Behavior:**
+- **Empty/Decoy passphrase** → Shows decoy layer (innocent content)
 - **Hidden passphrase** → Shows hidden layer (real secrets)
 - **Panic passphrase** → Shows "vault deleted" error (duress protection)
 - **Wrong passphrase** → Error: "Invalid passphrase"
+
+**Error Messages (Plausible Deniability):**
+All unavailable scenarios show identical message: `"Vault content has been deleted from storage providers"`
+- Panic passphrase entered
+- Vault expired (soft deleted)
+- Vault doesn't exist
+- IPFS blobs missing
 
 **3-Layer Protection:**
 1. **Decoy Layer** - Innocent content (optional)
