@@ -632,11 +632,6 @@ export default function ViewVault() {
         daysUntilExpiry: result.daysUntilExpiry || null,
       });
 
-      // SECURITY: Clear vault URL from browser history (forensic resistance)
-      if (globalThis.window?.history) {
-        globalThis.window.history.replaceState(null, "", "/vault");
-      }
-
       triggerConfetti();
     } catch (err) {
       clearInterval(progressInterval);
@@ -682,7 +677,13 @@ export default function ViewVault() {
         <div style={{ width: "100%", maxWidth: 600 }}>
           <button
             type="button"
-            onClick={() => router.push("/")}
+            onClick={() => {
+              // SECURITY: Clear vault URL from browser history (forensic resistance)
+              if (globalThis.window?.history) {
+                globalThis.window.history.replaceState(null, "", "/");
+              }
+              router.push("/");
+            }}
             style={{
               marginBottom: 20,
               padding: 0,
