@@ -24,8 +24,8 @@ export const sanitizeInput = (input: string): string => {
   }
 };
 
-export const validatePassword = (password: string, label: string): string | null => {
-  return getPasswordError(password, label);
+export const validatePassword = (password: string, label: string, allowEmpty: boolean = false): string | null => {
+  return getPasswordError(password, label, allowEmpty);
 };
 
 export const validateContentSize = (content: string, label: string): string | null => {
@@ -79,7 +79,7 @@ export const validateVaultForm = (data: VaultFormData): string | null => {
   }
 
   if (decoyPassphrase) {
-    const decoyError = validatePassword(decoyPassphrase, "Decoy password");
+    const decoyError = validatePassword(decoyPassphrase, "Decoy password", false);
     if (decoyError) return decoyError;
 
     if (passphrase === decoyPassphrase) {

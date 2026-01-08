@@ -11,6 +11,7 @@ import { Footer } from "../components/Footer";
 import { sanitizeInput, validateVaultForm } from "@/lib/validation/vault-form";
 import { generateVaultQR } from "@/lib/shared/qrcode";
 import { useSecureClipboard } from "@/lib/hooks/useSecureClipboard";
+import { PasswordStrength } from "../components/PasswordStrength";
 import TextPressure from "../components/text/text-pressure";
 import styles from "./page.module.css";
 
@@ -30,8 +31,11 @@ export default function CreateVault() {
   const [hiddenContent, setHiddenContent] = useState("");
   const [hiddenFile, setHiddenFile] = useState<File | null>(null);
   const [passphrase, setPassphrase] = useState("");
+  const [passphraseConfirm, setPassphraseConfirm] = useState("");
   const [decoyPassphrase, setDecoyPassphrase] = useState("");
+  const [decoyPassphraseConfirm, setDecoyPassphraseConfirm] = useState("");
   const [panicPassphrase, setPanicPassphrase] = useState("");
+  const [panicPassphraseConfirm, setPanicPassphraseConfirm] = useState("");
   const [pinataJWT, setPinataJWT] = useState("");
   const [filebaseAccessKey, setFilebaseAccessKey] = useState("");
   const [filebaseSecretKey, setFilebaseSecretKey] = useState("");
@@ -249,6 +253,7 @@ export default function CreateVault() {
     if (loading) return false;
     if (!hiddenContent.trim() && !hiddenFile) return false;
     if (!passphrase.trim()) return false;
+    if (!panicPassphrase.trim()) return false;
     if (provider === "pinata") return jwtStatus === "valid";
     return filebaseAccessKey.trim() && filebaseSecretKey.trim();
   };
@@ -268,10 +273,44 @@ export default function CreateVault() {
       : sanitizeInput(hiddenContent.trim());
     const sanitizedPassphrase = sanitizeInput(passphrase.trim());
     const sanitizedDecoyPassphrase = sanitizeInput(decoyPassphrase.trim());
+    const sanitizedPanicPassphrase = sanitizeInput(panicPassphrase.trim());
 
-    // Only validate text content if no files
+    // Validate password confirmations
+    if (sanitizedPassphrase !== sanitizeInput(passphraseConfirm.trim())) {
+      setError("Hidden passwords do not match");
+      return;
+    }
+    if (sanitizedPanicPassphrase !== sanitizeInput(panicPassphraseConfirm.trim())) {
+      setError("Panic passwords do not match");
+      return;
+    }
+    if (sanitizedDecoyPassphrase && sanitizedDecoyPassphrase !== sanitizeInput(decoyPassphraseConfirm.trim())) {
+      setError("Decoy passwords do not match");
+      return;
+    }
+
+    // Validate panic passphrase
+    if (!sanitizedPanicPassphrase) {
+      setError("Panic password is required");
+      return;
+    }
+    const { validatePassword } = await import("@/lib/validation/vault-form");
+    const panicError = validatePassword(sanitizedPanicPassphrase, "Panic password");
+    if (panicError) {
+      setError(panicError);
+      return;
+    }
+    if (sanitizedPanicPassphrase === sanitizedPassphrase) {
+      setError("Panic password must be different from hidden password");
+      return;
+    }
+    if (sanitizedDecoyPassphrase && sanitizedPanicPassphrase === sanitizedDecoyPassphrase) {
+      setError("Panic password must be different from decoy password");
+      return;
+    }
+
+    // Validate text content if no files
     if (!decoyFile && !hiddenFile) {
-      // Skip validation if both decoy content and password are empty (hidden-only vault)
       const hasDecoyContent = sanitizedDecoy.trim().length > 0;
       const hasDecoyPassword = sanitizedDecoyPassphrase.length > 0;
 
@@ -288,9 +327,6 @@ export default function CreateVault() {
           return;
         }
       } else {
-        // Hidden-only vault - just validate hidden password
-        const { validatePassword } =
-          await import("@/lib/validation/vault-form");
         const passphraseError = validatePassword(
           sanitizedPassphrase,
           "Hidden password",
@@ -301,12 +337,10 @@ export default function CreateVault() {
         }
       }
     } else {
-      // Validate passwords only
       if (!sanitizedPassphrase) {
         setError("Please enter a password for hidden layer");
         return;
       }
-      const { validatePassword } = await import("@/lib/validation/vault-form");
       const passphraseError = validatePassword(
         sanitizedPassphrase,
         "Hidden password",
@@ -464,7 +498,7 @@ export default function CreateVault() {
         hiddenContent: hiddenData,
         passphrase: sanitizedPassphrase,
         decoyPassphrase: sanitizedDecoyPassphrase || undefined,
-        panicPassphrase: sanitizeInput(panicPassphrase.trim()),
+        panicPassphrase: sanitizedPanicPassphrase,
         argonProfile: ARGON2_PROFILES.desktop,
         decoyFilename: decoyFile?.name,
         hiddenFilename: hiddenFile?.name,
@@ -571,144 +605,25 @@ export default function CreateVault() {
                 );
               })()}
               <CollapsiblePanel
-                title="🎭 Decoy Content (Optional)"
-                defaultOpen={false}
-              >
-                <p style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>
-                  💡 Choose either text OR file (.zip/.rar only) • Max: 25MB
-                </p>
-                <textarea
-                  value={decoyContent}
-                  onChange={(e) => {
-                    if (decoyFile) {
-                      setError("Clear file first to enter text");
-                      return;
-                    }
-                    setDecoyContent(e.target.value);
-                  }}
-                  placeholder="Innocent content shown under duress..."
-                  disabled={!!decoyFile}
-                  className={styles.textarea}
-                  style={{ opacity: decoyFile ? 0.5 : 1 }}
-                />
-                <input
-                  type="file"
-                  accept=".zip,.rar,application/zip,application/x-rar-compressed"
-                  disabled={!!decoyContent.trim()}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    if (decoyContent.trim()) {
-                      setError("Clear text first to upload file");
-                      e.target.value = "";
-                      return;
-                    }
-                    if (
-                      !file.name.toLowerCase().endsWith(".zip") &&
-                      !file.name.toLowerCase().endsWith(".rar")
-                    ) {
-                      setError("Only .zip and .rar files are allowed");
-                      e.target.value = "";
-                      return;
-                    }
-                    if (file.size > MAX_FILE_SIZE) {
-                      setError(
-                        `File too large. Maximum size is 25MB (${(file.size / 1024 / 1024).toFixed(2)}MB provided)`,
-                      );
-                      e.target.value = "";
-                      return;
-                    }
-                    setDecoyFile(file);
-                    setError("");
-                  }}
-                  className="custom-file-input"
-                  id="decoy-file-input"
-                />
-                <label
-                  htmlFor="decoy-file-input"
-                  className="custom-file-button"
-                  style={{
-                    opacity: decoyContent.trim() ? 0.5 : 1,
-                    cursor: decoyContent.trim() ? "not-allowed" : "pointer",
-                  }}
-                >
-                  📁 Choose File (.zip/.rar)
-                </label>
-                {decoyFile && (
-                  <div
-                    style={{
-                      fontSize: 11,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    <span style={{ color: "#4ade80" }}>
-                      ✓ {decoyFile.name} (
-                      {(decoyFile.size / 1024 / 1024).toFixed(2)} MB)
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setDecoyFile(null)}
-                      style={{
-                        padding: "2px 6px",
-                        background: "rgba(255, 0, 0, 0.2)",
-                        border: "1px solid rgba(255, 0, 0, 0.3)",
-                        borderRadius: 4,
-                        color: "#ff6b6b",
-                        fontSize: 10,
-                        cursor: "pointer",
-                      }}
-                    >
-                      Clear
-                    </button>
-                  </div>
-                )}
-                <div>
-                  <label
-                    htmlFor="decoy-password"
-                    style={{
-                      display: "block",
-                      marginBottom: 6,
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Decoy Password{" "}
-                    {(decoyContent.trim() || decoyFile) && "(Required)"}
-                  </label>
-                  <input
-                    id="decoy-password"
-                    type="password"
-                    value={decoyPassphrase}
-                    onChange={(e) => setDecoyPassphrase(e.target.value)}
-                    placeholder="Password to reveal decoy content..."
-                    className="form-input"
-                  />
-                  {(decoyContent.trim() || decoyFile) && (
-                    <p className={styles.passwordHint}>
-                      Password must be 12+ characters with uppercase, lowercase,
-                      number, and special character
-                    </p>
-                  )}
-                </div>
-              </CollapsiblePanel>
-
-              <CollapsiblePanel
                 title="🔒 Hidden Content (Required)"
                 defaultOpen={true}
               >
-                <p style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>
+                <p style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.9)", marginBottom: 12 }}>
                   💡 Choose either text OR file (.zip/.rar only) • Max: 25MB
                 </p>
                 <textarea
                   value={hiddenContent}
                   onChange={(e) => {
                     if (hiddenFile) {
-                      setError("Clear file first to enter text");
+                      if (confirm("Switching to text will remove the uploaded file. Continue?")) {
+                        setHiddenFile(null);
+                        setHiddenContent(e.target.value);
+                        setError("");
+                      }
                       return;
                     }
                     setHiddenContent(e.target.value);
+                    setError("");
                   }}
                   placeholder="Enter your real secret content..."
                   disabled={!!hiddenFile}
@@ -734,9 +649,12 @@ export default function CreateVault() {
                     const file = e.target.files?.[0];
                     if (!file) return;
                     if (hiddenContent.trim()) {
-                      setError("Clear text first to upload file");
-                      e.target.value = "";
-                      return;
+                      if (confirm("Switching to file will clear your text content. Continue?")) {
+                        setHiddenContent("");
+                      } else {
+                        e.target.value = "";
+                        return;
+                      }
                     }
                     if (
                       !file.name.toLowerCase().endsWith(".zip") &&
@@ -799,12 +717,12 @@ export default function CreateVault() {
                     </button>
                   </div>
                 )}
-                <div>
+                <div style={{ marginTop: 16 }}>
                   <label
                     htmlFor="hidden-password"
                     style={{
                       display: "block",
-                      marginBottom: 6,
+                      marginBottom: 8,
                       fontSize: 13,
                       fontWeight: 600,
                     }}
@@ -815,22 +733,39 @@ export default function CreateVault() {
                     id="hidden-password"
                     type="password"
                     value={passphrase}
-                    onChange={(e) => setPassphrase(e.target.value)}
+                    onChange={(e) => {
+                      setPassphrase(e.target.value);
+                      setError("");
+                    }}
                     placeholder="Enter a strong password..."
                     className="form-input"
                   />
-                  <p className={styles.passwordHint}>
-                    Password must be 12+ characters with uppercase, lowercase,
-                    number, and special character
-                  </p>
+                  <PasswordStrength password={passphrase} />
+                  <input
+                    id="hidden-password-confirm"
+                    type="password"
+                    value={passphraseConfirm}
+                    onChange={(e) => {
+                      setPassphraseConfirm(e.target.value);
+                      setError("");
+                    }}
+                    placeholder="Confirm password..."
+                    className="form-input"
+                    style={{ marginTop: 10 }}
+                  />
+                  {passphraseConfirm && (
+                    <p style={{ fontSize: 11, marginTop: 6, color: passphrase === passphraseConfirm ? '#4ade80' : '#ff6b6b' }}>
+                      {passphrase === passphraseConfirm ? '✓ Passwords match' : '✗ Passwords do not match'}
+                    </p>
+                  )}
                 </div>
               </CollapsiblePanel>
 
               <CollapsiblePanel
                 title="🚨 Panic Password (Required)"
-                defaultOpen={false}
+                defaultOpen={true}
               >
-                <p style={{ fontSize: 13, color: "rgba(255, 193, 7, 0.9)", fontWeight: 600, marginBottom: 12 }}>
+                <p style={{ fontSize: 13, color: "rgba(255, 193, 7, 0.9)", marginBottom: 16 }}>
                   ⚠️ Shows &quot;vault deleted&quot; message when entered under duress
                 </p>
                 <div>
@@ -838,7 +773,7 @@ export default function CreateVault() {
                     htmlFor="panic-password"
                     style={{
                       display: "block",
-                      marginBottom: 6,
+                      marginBottom: 8,
                       fontSize: 13,
                       fontWeight: 600,
                     }}
@@ -849,19 +784,190 @@ export default function CreateVault() {
                     id="panic-password"
                     type="password"
                     value={panicPassphrase}
-                    onChange={(e) => setPanicPassphrase(e.target.value)}
+                    onChange={(e) => {
+                      setPanicPassphrase(e.target.value);
+                      setError("");
+                    }}
                     placeholder="Emergency password to show &apos;vault deleted&apos;..."
                     className="form-input"
                   />
-                  <p className={styles.passwordHint}>
-                    Must be different from hidden and decoy passwords
+                  <PasswordStrength password={panicPassphrase} />
+                  <input
+                    id="panic-password-confirm"
+                    type="password"
+                    value={panicPassphraseConfirm}
+                    onChange={(e) => {
+                      setPanicPassphraseConfirm(e.target.value);
+                      setError("");
+                    }}
+                    placeholder="Confirm panic password..."
+                    className="form-input"
+                    style={{ marginTop: 10 }}
+                  />
+                  {panicPassphraseConfirm && (
+                    <p style={{ fontSize: 11, marginTop: 6, color: panicPassphrase === panicPassphraseConfirm ? '#4ade80' : '#ff6b6b' }}>
+                      {panicPassphrase === panicPassphraseConfirm ? '✓ Passwords match' : '✗ Passwords do not match'}
+                    </p>
+                  )}
+                </div>
+              </CollapsiblePanel>
+
+              <CollapsiblePanel
+                title="🎭 Decoy Content (Optional)"
+                defaultOpen={false}
+              >
+                <p style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.9)", marginBottom: 12 }}>
+                  💡 Choose either text OR file (.zip/.rar only) • Max: 25MB
+                </p>
+                <textarea
+                  value={decoyContent}
+                  onChange={(e) => {
+                    if (decoyFile) {
+                      if (confirm("Switching to text will remove the uploaded file. Continue?")) {
+                        setDecoyFile(null);
+                        setDecoyContent(e.target.value);
+                        setError("");
+                      }
+                      return;
+                    }
+                    setDecoyContent(e.target.value);
+                    setError("");
+                  }}
+                  placeholder="Innocent content shown under duress..."
+                  disabled={!!decoyFile}
+                  className={styles.textarea}
+                  style={{ opacity: decoyFile ? 0.5 : 1 }}
+                />
+                <input
+                  type="file"
+                  accept=".zip,.rar,application/zip,application/x-rar-compressed"
+                  disabled={!!decoyContent.trim()}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (decoyContent.trim()) {
+                      if (confirm("Switching to file will clear your text content. Continue?")) {
+                        setDecoyContent("");
+                      } else {
+                        e.target.value = "";
+                        return;
+                      }
+                    }
+                    if (
+                      !file.name.toLowerCase().endsWith(".zip") &&
+                      !file.name.toLowerCase().endsWith(".rar")
+                    ) {
+                      setError("Only .zip and .rar files are allowed");
+                      e.target.value = "";
+                      return;
+                    }
+                    if (file.size > MAX_FILE_SIZE) {
+                      setError(
+                        `File too large. Maximum size is 25MB (${(file.size / 1024 / 1024).toFixed(2)}MB provided)`,
+                      );
+                      e.target.value = "";
+                      return;
+                    }
+                    setDecoyFile(file);
+                    setError("");
+                  }}
+                  className="custom-file-input"
+                  id="decoy-file-input"
+                />
+                <label
+                  htmlFor="decoy-file-input"
+                  className="custom-file-button"
+                  style={{
+                    opacity: decoyContent.trim() ? 0.5 : 1,
+                    cursor: decoyContent.trim() ? "not-allowed" : "pointer",
+                  }}
+                >
+                  📁 Choose File (.zip/.rar)
+                </label>
+                {decoyFile && (
+                  <div
+                    style={{
+                      fontSize: 11,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <span style={{ color: "#4ade80" }}>
+                      ✓ {decoyFile.name} (
+                      {(decoyFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setDecoyFile(null)}
+                      style={{
+                        padding: "2px 6px",
+                        background: "rgba(255, 0, 0, 0.2)",
+                        border: "1px solid rgba(255, 0, 0, 0.3)",
+                        borderRadius: 4,
+                        color: "#ff6b6b",
+                        fontSize: 10,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+                <div style={{ marginTop: 16 }}>
+                  <label
+                    htmlFor="decoy-password"
+                    style={{
+                      display: "block",
+                      marginBottom: 8,
+                      fontSize: 13,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Decoy Password (Optional - but must be strong if used)
+                  </label>
+                  <p style={{ fontSize: 11, color: "rgba(255, 255, 255, 0.7)", marginBottom: 10 }}>
+                    If you enter a password, it must meet the same requirements as hidden password
                   </p>
+                  <input
+                    id="decoy-password"
+                    type="password"
+                    value={decoyPassphrase}
+                    onChange={(e) => {
+                      setDecoyPassphrase(e.target.value);
+                      setError("");
+                    }}
+                    placeholder="Password to reveal decoy content..."
+                    className="form-input"
+                  />
+                  {decoyPassphrase && (
+                    <>
+                      <PasswordStrength password={decoyPassphrase} />
+                      <input
+                        id="decoy-password-confirm"
+                        type="password"
+                        value={decoyPassphraseConfirm}
+                        onChange={(e) => {
+                          setDecoyPassphraseConfirm(e.target.value);
+                          setError("");
+                        }}
+                        placeholder="Confirm decoy password..."
+                        className="form-input"
+                        style={{ marginTop: 10 }}
+                      />
+                      {decoyPassphraseConfirm && (
+                        <p style={{ fontSize: 11, marginTop: 6, color: decoyPassphrase === decoyPassphraseConfirm ? '#4ade80' : '#ff6b6b' }}>
+                          {decoyPassphrase === decoyPassphraseConfirm ? '✓ Passwords match' : '✗ Passwords do not match'}
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
               </CollapsiblePanel>
 
               <div
                 style={{
-                  marginTop: 16,
+                  marginTop: 20,
                   padding: 16,
                   background: "rgba(255, 193, 7, 0.08)",
                   borderRadius: 8,
@@ -956,12 +1062,26 @@ export default function CreateVault() {
                 >
                   ⚠️ Vault will be automatically deleted after expiry date
                 </p>
+                <p
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    marginTop: 8,
+                    color: "#ffc107",
+                  }}
+                >
+                  📅 Expires: {new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </p>
               </div>
 
               <div
                 style={{
-                  marginTop: 8,
-                  padding: 12,
+                  marginTop: 20,
+                  padding: 16,
                   background: "rgba(13, 71, 161, 0.1)",
                   borderRadius: 8,
                 }}
@@ -1173,6 +1293,7 @@ export default function CreateVault() {
               {error && (
                 <div
                   style={{
+                    marginTop: 20,
                     padding: 12,
                     background: "rgba(255, 0, 0, 0.1)",
                     border: "1px solid rgba(255, 0, 0, 0.3)",
@@ -1185,7 +1306,7 @@ export default function CreateVault() {
                 </div>
               )}
 
-              <div style={{ display: "flex", justifyContent: "center" }}>
+              <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
                 <button
                   type="button"
                   onClick={handleCreate}
@@ -1198,6 +1319,7 @@ export default function CreateVault() {
                     cursor: getButtonCursor(),
                     boxSizing: "border-box",
                   }}
+                  title={!isFormValid() ? "Please fill all required fields" : ""}
                 >
                   {loading ? "Creating..." : "Create Vault"}
                 </button>
@@ -1500,7 +1622,11 @@ export default function CreateVault() {
                     setHiddenContent("");
                     setHiddenFile(null);
                     setPassphrase("");
+                    setPassphraseConfirm("");
                     setDecoyPassphrase("");
+                    setDecoyPassphraseConfirm("");
+                    setPanicPassphrase("");
+                    setPanicPassphraseConfirm("");
                   }}
                   onMouseEnter={(e) =>
                     (e.currentTarget.style.background =

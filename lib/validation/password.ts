@@ -11,16 +11,11 @@
  * - At least one lowercase letter
  * - At least one number
  * - At least one special character
- * - OR empty string (for decoy layer without password)
  * 
  * @param password Password to validate
  * @returns true if valid, false otherwise
  */
 export function isValidPassword(password: string): boolean {
-  // Allow empty passphrase for decoy layer without password
-  if (password === '') return true;
-  
-  // Enforce strict validation for non-empty passwords
   return (
     password.length >= 12 &&
     /[A-Z]/.test(password) &&
@@ -35,11 +30,13 @@ export function isValidPassword(password: string): boolean {
  * 
  * @param password Password to validate
  * @param label Label for the password field (e.g., "Hidden password")
+ * @param allowEmpty Whether empty password is allowed (for optional fields)
  * @returns Error message or null if valid
  */
-export function getPasswordError(password: string, label: string = 'Password'): string | null {
-  if (password === '') return null; // Empty is valid
-  
+export function getPasswordError(password: string, label: string = 'Password', allowEmpty: boolean = false): string | null {
+  if (!password) {
+    return allowEmpty ? null : `${label} is required`;
+  }
   if (password.length < 12) {
     return `${label} must be at least 12 characters`;
   }
