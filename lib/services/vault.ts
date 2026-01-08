@@ -254,7 +254,10 @@ export class VaultService {
     }
   }
 
-  private async downloadAndDecryptVault(urlData: any, serverData: any): Promise<HiddenVaultResult> {
+  private async downloadAndDecryptVault(
+    urlData: { vaultId: string; keyA: Uint8Array; salt: Uint8Array; decoyFilename?: string; hiddenFilename?: string },
+    serverData: { keyB: string; encryptedDecoyCID: string; encryptedHiddenCID: string; nonce: string; provider: string }
+  ): Promise<HiddenVaultResult> {
     const keyB = base64UrlDecode(serverData.keyB);
     const masterKey = await deriveMasterKey(urlData.keyA, keyB);
     const combinedNonces = base64UrlDecode(serverData.nonce);
