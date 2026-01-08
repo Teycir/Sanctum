@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createHiddenVault, unlockHiddenVault, deriveLayerPassphrase } from '../../lib/duress/layers';
-import { TEST_ARGON2_PROFILE } from '../../lib/crypto/constants';
+import { TEST_ARGON2_PROFILE } from '../test-constants';
 
 describe('hidden/vault', () => {
   describe('deriveLayerPassphrase', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { VaultService } from '../lib/services/vault';
-import { TEST_ARGON2_PROFILE } from '../lib/crypto/constants';
+import { TEST_ARGON2_PROFILE } from './test-constants';
 import JSZip from 'jszip';
 
 const mockStorage = new Map<string, Uint8Array>();
