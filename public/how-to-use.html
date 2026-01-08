@@ -241,6 +241,15 @@
       </div>
     </div>
 
+    <div class="step">
+      <div class="step-title">🕵️ Intelligence Operative</div>
+      <div class="step-content">
+        <strong>Decoy:</strong> Tourist photos and travel itinerary<br>
+        <strong>Hidden:</strong> Mission briefings, contact networks, classified intelligence<br>
+        <strong>Scenario:</strong> Captured by hostile forces - reveal tourist cover, mission data stays secure
+      </div>
+    </div>
+
     <h2>Creating a Vault</h2>
     
     <div class="step">
@@ -277,8 +286,9 @@
       </div>
       <div class="step-content">
         <ul>
-          <li><strong>Decoy Layer:</strong> Innocent content shown without passphrase (optional but recommended)</li>
-          <li><strong>Hidden Layer:</strong> Your real secrets (text or .zip/.rar file up to 25MB)</li>
+          <li><strong>Hidden Layer (Required):</strong> Your real secrets (text or .zip/.rar file up to 25MB)</li>
+          <li><strong>Panic Layer (Required):</strong> Shows "vault deleted" when panic password is entered - provides duress protection</li>
+          <li><strong>Decoy Layer (Optional):</strong> Innocent content shown with decoy password. If you add decoy content/file, decoy password becomes required.</li>
         </ul>
       </div>
     </div>
@@ -286,10 +296,15 @@
     <div class="step">
       <div class="step-title">
         <span class="step-number">4</span>
-        Set Passphrase
+        Set Passwords (All Required: 12+ chars, uppercase, lowercase, number, special character)
       </div>
       <div class="step-content">
-        Create a strong passphrase for the hidden layer. Use 6+ Diceware words or a memorable phrase. Never store digitally.
+        <ul>
+          <li><strong>Hidden Password (Required):</strong> Unlocks your real secrets</li>
+          <li><strong>Panic Password (Required):</strong> Shows "vault deleted" under duress</li>
+          <li><strong>Decoy Password (Required if decoy content exists):</strong> Unlocks innocent decoy layer</li>
+        </ul>
+        All passwords must be different from each other. Use 6+ Diceware words or memorable phrases.
       </div>
     </div>
 
@@ -322,14 +337,15 @@
     <div class="step">
       <div class="step-title">
         <span class="step-number">2</span>
-        Enter Passphrase
+        Enter Password
       </div>
       <div class="step-content">
         <ul>
-          <li><strong>Decoy passphrase:</strong> Shows decoy layer (innocent content)</li>
-          <li><strong>Hidden passphrase:</strong> Shows hidden layer (real secrets)</li>
-          <li><strong>Panic passphrase:</strong> Shows "vault deleted" error (duress protection)</li>
-          <li><strong>Wrong passphrase:</strong> Error - "Invalid passphrase"</li>
+          <li><strong>No password (empty):</strong> Shows decoy layer if no decoy password was set</li>
+          <li><strong>Decoy password:</strong> Shows decoy layer (innocent content)</li>
+          <li><strong>Hidden password:</strong> Shows hidden layer (real secrets)</li>
+          <li><strong>Panic password:</strong> Shows "vault deleted" error (duress protection)</li>
+          <li><strong>Wrong password:</strong> Error - "Invalid password"</li>
         </ul>
       </div>
     </div>
@@ -356,7 +372,7 @@
     <div class="step">
       <div class="step-title">Panic Key</div>
       <div class="step-content">
-        Double-press <strong>Escape</strong> to instantly lock the vault. Use in emergency situations.
+        Double-press <strong>Escape</strong> to instantly lock the vault. Use in emergency situations. Separate from panic password which shows "vault deleted".
       </div>
     </div>
 
@@ -373,10 +389,11 @@
       <div class="step-content">
         <ul>
           <li><strong>Save vault links securely</strong> - Use a password manager (KeePassXC, Bitwarden) or print QR codes</li>
-          <li><strong>Use strong passphrases</strong> - 6+ Diceware words (e.g., "correct-horse-battery-staple-mountain-river")</li>
+          <li><strong>Use strong passwords</strong> - 12+ chars with uppercase, lowercase, number, special character. Use 6+ Diceware words (e.g., "Correct-Horse-Battery-Staple-Mountain-River!23")</li>
           <li><strong>Make decoy content believable</strong> - Add realistic files/wallet with $50-500 to maintain plausibility</li>
-          <li><strong>Test before trusting</strong> - Verify both decoy and hidden layers unlock correctly before relying on them</li>
+          <li><strong>Test before trusting</strong> - Verify decoy, hidden, and panic passwords all work correctly</li>
           <li><strong>Use Tor Browser for high-risk scenarios</strong> - Hides your IP from IPFS gateways and prevents tracking</li>
+          <li><strong>Never reveal panic password</strong> - Only use under extreme duress to fake vault deletion</li>
         </ul>
       </div>
     </div>

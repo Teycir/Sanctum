@@ -12,6 +12,7 @@ import { sanitizeInput, validateVaultForm } from "@/lib/validation/vault-form";
 import { generateVaultQR } from "@/lib/shared/qrcode";
 import { useSecureClipboard } from "@/lib/hooks/useSecureClipboard";
 import { PasswordStrength } from "../components/PasswordStrength";
+import { PasswordRequirements } from "../components/PasswordRequirements";
 import TextPressure from "../components/text/text-pressure";
 import styles from "./page.module.css";
 
@@ -284,7 +285,7 @@ export default function CreateVault() {
       setError("Panic passwords do not match");
       return;
     }
-    if (sanitizedDecoyPassphrase && sanitizedDecoyPassphrase !== sanitizeInput(decoyPassphraseConfirm.trim())) {
+    if (sanitizedDecoyPassphrase !== sanitizeInput(decoyPassphraseConfirm.trim())) {
       setError("Decoy passwords do not match");
       return;
     }
@@ -312,9 +313,12 @@ export default function CreateVault() {
     // Validate text content if no files
     if (!decoyFile && !hiddenFile) {
       const hasDecoyContent = sanitizedDecoy.trim().length > 0;
-      const hasDecoyPassword = sanitizedDecoyPassphrase.length > 0;
 
-      if (hasDecoyContent || hasDecoyPassword) {
+      if (hasDecoyContent) {
+        if (!sanitizedDecoyPassphrase) {
+          setError("Decoy password is required when decoy content is provided");
+          return;
+        }
         const validationError = validateVaultForm({
           decoyContent: sanitizedDecoy,
           hiddenContent: sanitizedHidden,
@@ -349,7 +353,24 @@ export default function CreateVault() {
         setError(passphraseError);
         return;
       }
-      if (sanitizedDecoyPassphrase) {
+      if (decoyFile) {
+        if (!sanitizedDecoyPassphrase) {
+          setError("Decoy password is required when decoy file is provided");
+          return;
+        }
+        const decoyError = validatePassword(
+          sanitizedDecoyPassphrase,
+          "Decoy password",
+        );
+        if (decoyError) {
+          setError(decoyError);
+          return;
+        }
+        if (sanitizedPassphrase === sanitizedDecoyPassphrase) {
+          setError("Hidden password must be different from decoy password");
+          return;
+        }
+      } else if (sanitizedDecoyPassphrase) {
         const decoyError = validatePassword(
           sanitizedDecoyPassphrase,
           "Decoy password",
@@ -729,6 +750,7 @@ export default function CreateVault() {
                   >
                     Hidden Password (Required)
                   </label>
+                  <PasswordRequirements />
                   <input
                     id="hidden-password"
                     type="password"
@@ -780,6 +802,7 @@ export default function CreateVault() {
                   >
                     Panic Password (Required)
                   </label>
+                  <PasswordRequirements />
                   <input
                     id="panic-password"
                     type="password"
@@ -924,11 +947,9 @@ export default function CreateVault() {
                       fontWeight: 600,
                     }}
                   >
-                    Decoy Password (Optional - but must be strong if used)
+                    Decoy Password {(decoyContent.trim() || decoyFile) ? "(Required)" : "(Optional)"}
                   </label>
-                  <p style={{ fontSize: 11, color: "rgba(255, 255, 255, 0.7)", marginBottom: 10 }}>
-                    If you enter a password, it must meet the same requirements as hidden password
-                  </p>
+                  <PasswordRequirements />
                   <input
                     id="decoy-password"
                     type="password"
@@ -940,27 +961,23 @@ export default function CreateVault() {
                     placeholder="Password to reveal decoy content..."
                     className="form-input"
                   />
-                  {decoyPassphrase && (
-                    <>
-                      <PasswordStrength password={decoyPassphrase} />
-                      <input
-                        id="decoy-password-confirm"
-                        type="password"
-                        value={decoyPassphraseConfirm}
-                        onChange={(e) => {
-                          setDecoyPassphraseConfirm(e.target.value);
-                          setError("");
-                        }}
-                        placeholder="Confirm decoy password..."
-                        className="form-input"
-                        style={{ marginTop: 10 }}
-                      />
-                      {decoyPassphraseConfirm && (
-                        <p style={{ fontSize: 11, marginTop: 6, color: decoyPassphrase === decoyPassphraseConfirm ? '#4ade80' : '#ff6b6b' }}>
-                          {decoyPassphrase === decoyPassphraseConfirm ? '✓ Passwords match' : '✗ Passwords do not match'}
-                        </p>
-                      )}
-                    </>
+                  <PasswordStrength password={decoyPassphrase} />
+                  <input
+                    id="decoy-password-confirm"
+                    type="password"
+                    value={decoyPassphraseConfirm}
+                    onChange={(e) => {
+                      setDecoyPassphraseConfirm(e.target.value);
+                      setError("");
+                    }}
+                    placeholder="Confirm decoy password..."
+                    className="form-input"
+                    style={{ marginTop: 10 }}
+                  />
+                  {decoyPassphraseConfirm && (
+                    <p style={{ fontSize: 11, marginTop: 6, color: decoyPassphrase === decoyPassphraseConfirm ? '#4ade80' : '#ff6b6b' }}>
+                      {decoyPassphrase === decoyPassphraseConfirm ? '✓ Passwords match' : '✗ Passwords do not match'}
+                    </p>
                   )}
                 </div>
               </CollapsiblePanel>

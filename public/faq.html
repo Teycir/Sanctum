@@ -161,7 +161,7 @@
 
     <div class="faq-item">
       <div class="faq-question">How does plausible deniability work?</div>
-      <div class="faq-answer">Sanctum creates two layers: a decoy layer (visible without passphrase) and a hidden layer (revealed with correct passphrase). The hidden layer is cryptographically indistinguishable from the decoy, making it impossible to prove its existence.</div>
+      <div class="faq-answer">Sanctum creates three layers: a decoy layer (optional, shown with decoy password), a hidden layer (your real secrets, shown with hidden password), and a panic layer (shows "vault deleted" with panic password). All layers are cryptographically indistinguishable, making it impossible to prove hidden content exists.</div>
     </div>
 
     <div class="faq-item">
@@ -195,8 +195,8 @@
     </div>
 
     <div class="faq-item">
-      <div class="faq-question">What is the panic key?</div>
-      <div class="faq-answer">Double-press Escape to instantly lock your vault. Combined with auto-lock after 5 minutes of inactivity, this protects against physical access threats. Secure clipboard auto-clears after 60 seconds.</div>
+      <div class="faq-question">What is the panic password?</div>
+      <div class="faq-answer">The panic password is a required third password that shows "vault deleted" when entered. Use it under duress to make attackers believe the vault was destroyed. Combined with the panic key (double-press Escape) and auto-lock after 5 minutes, this provides multiple layers of emergency protection.</div>
     </div>
 
     <div class="faq-item">
@@ -257,6 +257,51 @@
     <div class="faq-item">
       <div class="faq-question">⚖️ Attack: Legal Compulsion (Warrant Canary)</div>
       <div class="faq-answer"><strong>Threat:</strong> Government compels service to backdoor encryption.<br><strong>Countermeasure:</strong> Warrant canary updated quarterly. If removed/not updated >90 days, assume compromise. Self-host immediately. Client-side encryption prevents server-side backdoors. Open-source code auditable.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">🔍 Attack: Memory Dump / Cold Boot Attack</div>
+      <div class="faq-answer"><strong>Threat:</strong> Attacker performs memory dump or cold boot attack to extract keys from RAM.<br><strong>Countermeasure:</strong> Keys isolated in Web Worker memory. Auto-cleared on idle (5 min). Panic key (double-Escape) instant wipe. Use full disk encryption (BitLocker/LUKS). Power off device when not in use.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">🌐 Attack: DNS/Network-Level Blocking</div>
+      <div class="faq-answer"><strong>Threat:</strong> ISP or government blocks access to sanctumvault.online or IPFS gateways.<br><strong>Countermeasure:</strong> Self-host on localhost. Use Tor Browser (.onion support planned). Access IPFS via multiple gateways (ipfs.io, dweb.link, cloudflare-ipfs.com). VPN + DNS-over-HTTPS bypass censorship.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">📱 Attack: Mobile Device Compromise</div>
+      <div class="faq-answer"><strong>Threat:</strong> Mobile OS keylogger or screen recording malware.<br><strong>Countermeasure:</strong> Use desktop with Tor Browser for high-risk vaults. On mobile: disable keyboard suggestions, use password manager autofill, check for suspicious apps. iOS Lockdown Mode recommended.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">📷 Attack: Shoulder Surfing / Camera Surveillance</div>
+      <div class="faq-answer"><strong>Threat:</strong> Adversary observes password entry via camera or over shoulder.<br><strong>Countermeasure:</strong> Use password manager autofill. Cover screen when entering passwords. Check for cameras in sensitive locations. Use privacy screen protector. Memorize passwords to avoid writing them down.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">⏱️ Attack: Replay Attack / Session Hijacking</div>
+      <div class="faq-answer"><strong>Threat:</strong> Attacker captures and replays authentication tokens.<br><strong>Countermeasure:</strong> No session tokens used. Each unlock requires full password + vault link. Auto-lock after 5 min. No cookies or persistent auth. HTTPS-only prevents MITM.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">🔌 Attack: Supply Chain Compromise</div>
+      <div class="faq-answer"><strong>Threat:</strong> Malicious code injected into dependencies or build process.<br><strong>Countermeasure:</strong> Open-source code on GitHub. Reproducible builds. Subresource Integrity (SRI) for CDN assets. Audit dependencies regularly. Self-host to avoid CDN compromise. Verify commit signatures.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">🧠 Attack: AI-Powered Password Cracking</div>
+      <div class="faq-answer"><strong>Threat:</strong> Machine learning models trained on leaked passwords to predict passphrases.<br><strong>Countermeasure:</strong> Use Diceware (random words from 7776-word list). Avoid common phrases, song lyrics, quotes. 6+ words = 77 bits entropy (uncrackable). Argon2id makes each guess expensive (256MB RAM + 3 iterations).</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">🐛 Attack: Zero-Day Browser Exploit</div>
+      <div class="faq-answer"><strong>Threat:</strong> Unpatched browser vulnerability allows code execution.<br><strong>Countermeasure:</strong> Keep browser updated. Use Tor Browser (hardened Firefox). Enable site isolation. Disable JavaScript for non-essential sites. Use virtual machine for high-risk operations. Consider Qubes OS for compartmentalization.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">📡 Attack: Traffic Analysis / Correlation</div>
+      <div class="faq-answer"><strong>Threat:</strong> Adversary correlates vault creation time with IPFS upload time to identify users.<br><strong>Countermeasure:</strong> Use Tor Browser (hides IP, adds latency noise). Upload via VPN. Delay vault sharing by hours/days. Use public WiFi (not home network). Batch multiple vault creations to obscure patterns.</div>
     </div>
   </div>
   <script src="/footer.js"></script>

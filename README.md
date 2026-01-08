@@ -92,6 +92,11 @@
 - Hidden: Escape plan, evidence of abuse, emergency contacts
 - Scenario: Abuser demands access - show family content, safety plan protected
 
+**🕵️ Intelligence Operative**
+- Decoy: Tourist photos and travel itinerary
+- Hidden: Mission briefings, contact networks, classified intelligence
+- Scenario: Captured by hostile forces - reveal tourist cover, mission data stays secure
+
 **🌍 Human Rights Defender**
 - Decoy: Public advocacy materials and educational content
 - Hidden: Witness testimonies and documentation of atrocities
