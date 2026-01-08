@@ -1,15 +1,11 @@
 'use client';
 
-import { TubesCursor } from './TubesCursor';
-
 export function LockOverlay() {
   const handleReload = () => {
     window.location.reload();
   };
 
   return (
-    <>
-      <TubesCursor />
       <div
         style={{
           position: 'fixed',
@@ -48,6 +44,5 @@ export function LockOverlay() {
           </button>
         </div>
       </div>
-    </>
   );
 }
