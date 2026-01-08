@@ -32,6 +32,9 @@ export function StorageQuotaDisplay({ quota }: StorageQuotaDisplayProps) {
   const availableMB = bytesToMB(quota.available);
   const limitMB = bytesToMB(quota.limit);
   const availablePercent = calculateAvailablePercentage(quota.available, quota.limit);
+  
+  // If used is 0, it means quota tracking is not available (e.g., Filebase)
+  const isQuotaTracked = quota.used > 0 || quota.available < quota.limit;
 
   return (
     <div
@@ -42,10 +45,16 @@ export function StorageQuotaDisplay({ quota }: StorageQuotaDisplayProps) {
         borderRadius: 6,
       }}
     >
-      <p style={{ fontSize: 10, opacity: 0.8 }}>
-        {availableMB.toFixed(0)} MB free of {limitMB.toFixed(0)} MB (
-        {availablePercent.toFixed(1)}% available)
-      </p>
+      {isQuotaTracked ? (
+        <p style={{ fontSize: 10, opacity: 0.8 }}>
+          {availableMB.toFixed(0)} MB free of {limitMB.toFixed(0)} MB (
+          {availablePercent.toFixed(1)}% available)
+        </p>
+      ) : (
+        <p style={{ fontSize: 10, opacity: 0.8 }}>
+          {limitMB.toFixed(0)} MB limit (usage tracking unavailable)
+        </p>
+      )}
       <p style={{ fontSize: 9, opacity: 0.6, marginTop: 4 }}>
         💾 Accepts .zip or .rar files
       </p>
