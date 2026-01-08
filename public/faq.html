@@ -82,7 +82,7 @@
       text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(200, 150, 255, 0.3);
       animation: pulse-glow 8s ease-in-out infinite;
     }
-    .faq-item {
+    .step {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(65, 105, 225, 0.3);
       border-radius: var(--radius);
@@ -92,19 +92,18 @@
       backdrop-filter: blur(20px);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 40px rgba(13, 71, 161, 0.1);
     }
-    .faq-item:hover {
+    .step:hover {
       background: rgba(255, 255, 255, 0.12);
       border: 1px solid rgba(65, 105, 225, 0.5);
       box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 0 50px rgba(65, 105, 225, 0.3);
       transform: translateY(-2px);
     }
-    .faq-question {
+    .step-title {
       font-size: 18px;
       font-weight: 600;
-      margin-bottom: 12px;
-      color: #fff;
+      margin-bottom: 10px;
     }
-    .faq-answer {
+    .step-content {
       font-size: 14px;
       line-height: 1.6;
       color: rgba(255, 255, 255, 0.8);
@@ -154,158 +153,157 @@
     <a href="/" class="back-link" title="Back to Sanctum">←</a>
     <h1 id="title" style="cursor: default; user-select: none;">FAQ</h1>
     
-    <div class="faq-item">
-      <div class="faq-question">What is Sanctum?</div>
-      <div class="faq-answer">Sanctum is a zero-trust, client-side encrypted vault system providing cryptographically sound plausible deniability through passphrase-derived hidden layers with decentralized IPFS storage.</div>
+    <div class="step">
+      <div class="step-title">What is Sanctum?</div>
+      <div class="step-content">Sanctum is a zero-trust, client-side encrypted vault system providing cryptographically sound plausible deniability through passphrase-derived hidden layers with decentralized IPFS storage.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">How does plausible deniability work?</div>
-      <div class="faq-answer">Sanctum creates three layers: a decoy layer (optional, shown with decoy password), a hidden layer (your real secrets, shown with hidden password), and a panic layer (shows "vault deleted" with panic password). All layers are cryptographically indistinguishable, making it impossible to prove hidden content exists.</div>
+    <div class="step">
+      <div class="step-title">How does plausible deniability work?</div>
+      <div class="step-content">Sanctum creates three layers: a decoy layer (optional, shown with decoy password), a hidden layer (your real secrets, shown with hidden password), and a panic layer (shows "vault deleted" with panic password). All layers are cryptographically indistinguishable, making it impossible to prove hidden content exists.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">Is my data safe?</div>
-      <div class="faq-answer">Yes. All encryption happens client-side in your browser using XChaCha20-Poly1305 with Argon2id key derivation. Your keys never touch our servers. Data is stored encrypted on IPFS.</div>
+    <div class="step">
+      <div class="step-title">Is my data safe?</div>
+      <div class="step-content">Yes. All encryption happens client-side in your browser using XChaCha20-Poly1305 with Argon2id key derivation. Your keys never touch our servers. Data is stored encrypted on IPFS.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">Why do I see 2 files on IPFS even with empty decoy?</div>
-      <div class="faq-answer">This is a security feature. Duress vaults always upload 2 encrypted blobs (decoy + hidden) to prevent metadata analysis. Even empty blobs are indistinguishable from real data, maintaining plausible deniability.</div>
+    <div class="step">
+      <div class="step-title">Why do I see 2 files on IPFS even with empty decoy?</div>
+      <div class="step-content">This is a security feature. Duress vaults always upload 2 encrypted blobs (decoy + hidden) to prevent metadata analysis. Even empty blobs are indistinguishable from real data, maintaining plausible deniability.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">What if I lose the vault link?</div>
-      <div class="faq-answer">Your data is lost forever. There is no recovery mechanism by design. Always save your vault links securely in a password manager or print QR codes.</div>
+    <div class="step">
+      <div class="step-title">What if I lose the vault link?</div>
+      <div class="step-content">Your data is lost forever. There is no recovery mechanism by design. Always save your vault links securely in a password manager or print QR codes.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">Can I delete a vault?</div>
-      <div class="faq-answer">Yes. Vaults auto-destroy based on your chosen duration (1 week, 1 month, 3 months, 6 months, or 12 months). You can also manually delete files from Pinata or Filebase dashboards using the CID (shown after vault creation). Without the vault link, the encrypted data remains inaccessible anyway.</div>
+    <div class="step">
+      <div class="step-title">Can I delete a vault?</div>
+      <div class="step-content">Yes. Vaults auto-destroy based on your chosen duration (1 week, 1 month, 3 months, 6 months, or 12 months). You can also manually delete files from Pinata or Filebase dashboards using the CID (shown after vault creation). Without the vault link, the encrypted data remains inaccessible anyway.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">What are the file size limits?</div>
-      <div class="faq-answer">Maximum 25 MB per file. Supported formats: .zip and .rar archives.</div>
+    <div class="step">
+      <div class="step-title">What are the file size limits?</div>
+      <div class="step-content">Maximum 25 MB per file. Supported formats: .zip and .rar archives.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">Is Sanctum free?</div>
-      <div class="faq-answer">Yes, 100% free. We use free tiers from Pinata (1GB) and Filebase (5GB) for IPFS storage. No credit card required.</div>
+    <div class="step">
+      <div class="step-title">Is Sanctum free?</div>
+      <div class="step-content">Yes, 100% free. We use free tiers from Pinata (1GB) and Filebase (5GB) for IPFS storage. No credit card required.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">What is the panic password?</div>
-      <div class="faq-answer">The panic password is a required third password that shows "vault deleted" when entered. Use it under duress to make attackers believe the vault was destroyed. Combined with the panic key (double-press Escape) and auto-lock after 5 minutes, this provides multiple layers of emergency protection.</div>
+    <div class="step">
+      <div class="step-title">What is the panic password?</div>
+      <div class="step-content">The panic password is a required third password that shows "vault deleted" when entered. Use it under duress to make attackers believe the vault was destroyed. Combined with the panic key (double-press Escape) and auto-lock after 5 minutes, this provides multiple layers of emergency protection.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">🔐 Attack: Physical Duress ($5 Wrench Attack)</div>
-      <div class="faq-answer"><strong>Threat:</strong> Coerced to reveal passphrase under torture/violence.<br><strong>Countermeasure:</strong> Reveal decoy passphrase only. Adversary sees funded wallet + innocent files. Cannot cryptographically prove hidden layer exists. Plausible deniability protects you.</div>
+    <div class="step">
+      <div class="step-title">🔐 Attack: Physical Duress ($5 Wrench Attack)</div>
+      <div class="step-content"><strong>Threat:</strong> Coerced to reveal passphrase under torture/violence.<br><strong>Countermeasure:</strong> Reveal decoy passphrase only. Adversary sees funded wallet + innocent files. Cannot cryptographically prove hidden layer exists. Plausible deniability protects you.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">💻 Attack: Device Seizure + Forensic Analysis</div>
-      <div class="faq-answer"><strong>Threat:</strong> Device seized, disk forensics performed to recover keys.<br><strong>Countermeasure:</strong> RAM-only storage. No localStorage/sessionStorage for keys. All sensitive data cleared on tab close. Ephemeral salts regenerated per session. Immune to disk carving and SSD wear-leveling recovery.</div>
+    <div class="step">
+      <div class="step-title">💻 Attack: Device Seizure + Forensic Analysis</div>
+      <div class="step-content"><strong>Threat:</strong> Device seized, disk forensics performed to recover keys.<br><strong>Countermeasure:</strong> RAM-only storage. No localStorage/sessionStorage for keys. All sensitive data cleared on tab close. Ephemeral salts regenerated per session. Immune to disk carving and SSD wear-leveling recovery.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">🔍 Attack: Encrypted Blob Size Analysis</div>
-      <div class="faq-answer"><strong>Threat:</strong> Adversary analyzes blob sizes to detect hidden layers.<br><strong>Countermeasure:</strong> Deterministic padding to standard sizes (1KB, 10KB, 100KB, 1MB, 10MB). All vaults same size class look identical. Even empty decoys padded to minimum size.</div>
+    <div class="step">
+      <div class="step-title">🔍 Attack: Encrypted Blob Size Analysis</div>
+      <div class="step-content"><strong>Threat:</strong> Adversary analyzes blob sizes to detect hidden layers.<br><strong>Countermeasure:</strong> Deterministic padding to standard sizes (1KB, 10KB, 100KB, 1MB, 10MB). All vaults same size class look identical. Even empty decoys padded to minimum size.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">⚡ Attack: Timing Analysis (Side-Channel)</div>
-      <div class="faq-answer"><strong>Threat:</strong> Measure decryption time to detect which layer unlocked.<br><strong>Countermeasure:</strong> Constant-time decryption. Both layers always attempted regardless of success. Timing difference <15% (tested). Cannot distinguish decoy from hidden unlock.</div>
+    <div class="step">
+      <div class="step-title">⚡ Attack: Timing Analysis (Side-Channel)</div>
+      <div class="step-content"><strong>Threat:</strong> Measure decryption time to detect which layer unlocked.<br><strong>Countermeasure:</strong> Constant-time decryption. Both layers always attempted regardless of success. Timing difference <15% (tested). Cannot distinguish decoy from hidden unlock.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">🔨 Attack: Passphrase Brute-Force</div>
-      <div class="faq-answer"><strong>Threat:</strong> Adversary attempts to brute-force weak passphrases.<br><strong>Countermeasure:</strong> Argon2id KDF with 256MB memory + 3 iterations. Computationally infeasible to brute-force. Use 6+ Diceware words (77 bits entropy). Rate limiting: 5 attempts/min per vault.</div>
+    <div class="step">
+      <div class="step-title">🔨 Attack: Passphrase Brute-Force</div>
+      <div class="step-content"><strong>Threat:</strong> Adversary attempts to brute-force weak passphrases.<br><strong>Countermeasure:</strong> Argon2id KDF with 256MB memory + 3 iterations. Computationally infeasible to brute-force. Use 6+ Diceware words (77 bits entropy). Rate limiting: 5 attempts/min per vault.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">🌐 Attack: IPFS Provider Seizure</div>
-      <div class="faq-answer"><strong>Threat:</strong> Government seizes Pinata/Filebase servers.<br><strong>Countermeasure:</strong> Data encrypted before upload. Providers only see encrypted blobs. Without passphrase + vault link, decryption impossible. Use multiple providers for redundancy.</div>
+    <div class="step">
+      <div class="step-title">🌐 Attack: IPFS Provider Seizure</div>
+      <div class="step-content"><strong>Threat:</strong> Government seizes Pinata/Filebase servers.<br><strong>Countermeasure:</strong> Data encrypted before upload. Providers only see encrypted blobs. Without passphrase + vault link, decryption impossible. Use multiple providers for redundancy.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">☁️ Attack: Cloudflare Workers Compromise</div>
-      <div class="faq-answer"><strong>Threat:</strong> Attacker compromises Cloudflare D1 database.<br><strong>Countermeasure:</strong> Split-key architecture. KeyA in URL (never server-side). KeyB encrypted in DB. CIDs encrypted with master key. Attacker gets encrypted metadata only. Cannot decrypt vaults or access IPFS content.</div>
+    <div class="step">
+      <div class="step-title">☁️ Attack: Cloudflare Workers Compromise</div>
+      <div class="step-content"><strong>Threat:</strong> Attacker compromises Cloudflare D1 database.<br><strong>Countermeasure:</strong> Split-key architecture. KeyA in URL (never server-side). KeyB encrypted in DB. CIDs encrypted with master key. Attacker gets encrypted metadata only. Cannot decrypt vaults or access IPFS content.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">📊 Attack: Metadata Analysis</div>
-      <div class="faq-answer"><strong>Threat:</strong> Analyze vault metadata to detect patterns.<br><strong>Countermeasure:</strong> All vaults upload 2 blobs (decoy + hidden) regardless of content. Consistent structure prevents pattern analysis. CIDs encrypted. No IP logging. Use Tor Browser for anonymity.</div>
+    <div class="step">
+      <div class="step-title">📊 Attack: Metadata Analysis</div>
+      <div class="step-content"><strong>Threat:</strong> Analyze vault metadata to detect patterns.<br><strong>Countermeasure:</strong> All vaults upload 2 blobs (decoy + hidden) regardless of content. Consistent structure prevents pattern analysis. CIDs encrypted. No IP logging. Use Tor Browser for anonymity.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">🕵️ Attack: Browser Extension Keylogging</div>
-      <div class="faq-answer"><strong>Threat:</strong> Malicious browser extension logs passphrases.<br><strong>Countermeasure:</strong> Extension warning on page load. Recommend disabling extensions before vault creation. Use private/incognito mode. Consider Tor Browser (no extensions).</div>
+    <div class="step">
+      <div class="step-title">🕵️ Attack: Browser Extension Keylogging</div>
+      <div class="step-content"><strong>Threat:</strong> Malicious browser extension logs passphrases.<br><strong>Countermeasure:</strong> Extension warning on page load. Recommend disabling extensions before vault creation. Use private/incognito mode. Consider Tor Browser (no extensions).</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">🚨 Attack: Rubber-Hose Cryptanalysis (Ongoing Coercion)</div>
-      <div class="faq-answer"><strong>Threat:</strong> Prolonged coercion to reveal all layers.<br><strong>Countermeasure:</strong> Your safety > data security. Reveal decoy layer. Adversary cannot prove hidden layer exists. If threatened with violence, comply with decoy. Cryptography protects hidden layer. Self-host + Tor for maximum security.</div>
+    <div class="step">
+      <div class="step-title">🚨 Attack: Rubber-Hose Cryptanalysis (Ongoing Coercion)</div>
+      <div class="step-content"><strong>Threat:</strong> Prolonged coercion to reveal all layers.<br><strong>Countermeasure:</strong> Your safety > data security. Reveal decoy layer. Adversary cannot prove hidden layer exists. If threatened with violence, comply with decoy. Cryptography protects hidden layer. Self-host + Tor for maximum security.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">🔗 Attack: Vault Link Interception</div>
-      <div class="faq-answer"><strong>Threat:</strong> Adversary intercepts vault link during transmission.<br><strong>Countermeasure:</strong> Never share links over unencrypted channels (SMS, email). Use encrypted messaging (Signal, Session). Store in password manager (KeePassXC, Bitwarden). Print QR code for physical backup. KeyA in URL is useless without passphrase.</div>
+    <div class="step">
+      <div class="step-title">🔗 Attack: Vault Link Interception</div>
+      <div class="step-content"><strong>Threat:</strong> Adversary intercepts vault link during transmission.<br><strong>Countermeasure:</strong> Never share links over unencrypted channels (SMS, email). Use encrypted messaging (Signal, Session). Store in password manager (KeePassXC, Bitwarden). Print QR code for physical backup. KeyA in URL is useless without passphrase.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">⚖️ Attack: Legal Compulsion (Warrant Canary)</div>
-      <div class="faq-answer"><strong>Threat:</strong> Government compels service to backdoor encryption.<br><strong>Countermeasure:</strong> Warrant canary updated quarterly. If removed/not updated >90 days, assume compromise. Self-host immediately. Client-side encryption prevents server-side backdoors. Open-source code auditable.</div>
+    <div class="step">
+      <div class="step-title">⚖️ Attack: Legal Compulsion (Warrant Canary)</div>
+      <div class="step-content"><strong>Threat:</strong> Government compels service to backdoor encryption.<br><strong>Countermeasure:</strong> Warrant canary updated quarterly. If removed/not updated >90 days, assume compromise. Self-host immediately. Client-side encryption prevents server-side backdoors. Open-source code auditable.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">🔍 Attack: Memory Dump / Cold Boot Attack</div>
-      <div class="faq-answer"><strong>Threat:</strong> Attacker performs memory dump or cold boot attack to extract keys from RAM.<br><strong>Countermeasure:</strong> Keys isolated in Web Worker memory. Auto-cleared on idle (5 min). Panic key (double-Escape) instant wipe. Use full disk encryption (BitLocker/LUKS). Power off device when not in use.</div>
+    <div class="step">
+      <div class="step-title">🔍 Attack: Memory Dump / Cold Boot Attack</div>
+      <div class="step-content"><strong>Threat:</strong> Attacker performs memory dump or cold boot attack to extract keys from RAM.<br><strong>Countermeasure:</strong> Keys isolated in Web Worker memory. Auto-cleared on idle (5 min). Panic key (double-Escape) instant wipe. Use full disk encryption (BitLocker/LUKS). Power off device when not in use.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">🌐 Attack: DNS/Network-Level Blocking</div>
-      <div class="faq-answer"><strong>Threat:</strong> ISP or government blocks access to sanctumvault.online or IPFS gateways.<br><strong>Countermeasure:</strong> Self-host on localhost. Use Tor Browser (.onion support planned). Access IPFS via multiple gateways (ipfs.io, dweb.link, cloudflare-ipfs.com). VPN + DNS-over-HTTPS bypass censorship.</div>
+    <div class="step">
+      <div class="step-title">🌐 Attack: DNS/Network-Level Blocking</div>
+      <div class="step-content"><strong>Threat:</strong> ISP or government blocks access to sanctumvault.online or IPFS gateways.<br><strong>Countermeasure:</strong> Self-host on localhost. Use Tor Browser (.onion support planned). Access IPFS via multiple gateways (ipfs.io, dweb.link, cloudflare-ipfs.com). VPN + DNS-over-HTTPS bypass censorship.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">📱 Attack: Mobile Device Compromise</div>
-      <div class="faq-answer"><strong>Threat:</strong> Mobile OS keylogger or screen recording malware.<br><strong>Countermeasure:</strong> Use desktop with Tor Browser for high-risk vaults. On mobile: disable keyboard suggestions, use password manager autofill, check for suspicious apps. iOS Lockdown Mode recommended.</div>
+    <div class="step">
+      <div class="step-title">📱 Attack: Mobile Device Compromise</div>
+      <div class="step-content"><strong>Threat:</strong> Mobile OS keylogger or screen recording malware.<br><strong>Countermeasure:</strong> Use desktop with Tor Browser for high-risk vaults. On mobile: disable keyboard suggestions, use password manager autofill, check for suspicious apps. iOS Lockdown Mode recommended.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">📷 Attack: Shoulder Surfing / Camera Surveillance</div>
-      <div class="faq-answer"><strong>Threat:</strong> Adversary observes password entry via camera or over shoulder.<br><strong>Countermeasure:</strong> Use password manager autofill. Cover screen when entering passwords. Check for cameras in sensitive locations. Use privacy screen protector. Memorize passwords to avoid writing them down.</div>
+    <div class="step">
+      <div class="step-title">📷 Attack: Shoulder Surfing / Camera Surveillance</div>
+      <div class="step-content"><strong>Threat:</strong> Adversary observes password entry via camera or over shoulder.<br><strong>Countermeasure:</strong> Use password manager autofill. Cover screen when entering passwords. Check for cameras in sensitive locations. Use privacy screen protector. Memorize passwords to avoid writing them down.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">⏱️ Attack: Replay Attack / Session Hijacking</div>
-      <div class="faq-answer"><strong>Threat:</strong> Attacker captures and replays authentication tokens.<br><strong>Countermeasure:</strong> No session tokens used. Each unlock requires full password + vault link. Auto-lock after 5 min. No cookies or persistent auth. HTTPS-only prevents MITM.</div>
+    <div class="step">
+      <div class="step-title">⏱️ Attack: Replay Attack / Session Hijacking</div>
+      <div class="step-content"><strong>Threat:</strong> Attacker captures and replays authentication tokens.<br><strong>Countermeasure:</strong> No session tokens used. Each unlock requires full password + vault link. Auto-lock after 5 min. No cookies or persistent auth. HTTPS-only prevents MITM.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">🔌 Attack: Supply Chain Compromise</div>
-      <div class="faq-answer"><strong>Threat:</strong> Malicious code injected into dependencies or build process.<br><strong>Countermeasure:</strong> Open-source code on GitHub. Reproducible builds. Subresource Integrity (SRI) for CDN assets. Audit dependencies regularly. Self-host to avoid CDN compromise. Verify commit signatures.</div>
+    <div class="step">
+      <div class="step-title">🔌 Attack: Supply Chain Compromise</div>
+      <div class="step-content"><strong>Threat:</strong> Malicious code injected into dependencies or build process.<br><strong>Countermeasure:</strong> Open-source code on GitHub. Reproducible builds. Subresource Integrity (SRI) for CDN assets. Audit dependencies regularly. Self-host to avoid CDN compromise. Verify commit signatures.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">🧠 Attack: AI-Powered Password Cracking</div>
-      <div class="faq-answer"><strong>Threat:</strong> Machine learning models trained on leaked passwords to predict passphrases.<br><strong>Countermeasure:</strong> Use Diceware (random words from 7776-word list). Avoid common phrases, song lyrics, quotes. 6+ words = 77 bits entropy (uncrackable). Argon2id makes each guess expensive (256MB RAM + 3 iterations).</div>
+    <div class="step">
+      <div class="step-title">🧠 Attack: AI-Powered Password Cracking</div>
+      <div class="step-content"><strong>Threat:</strong> Machine learning models trained on leaked passwords to predict passphrases.<br><strong>Countermeasure:</strong> Use Diceware (random words from 7776-word list). Avoid common phrases, song lyrics, quotes. 6+ words = 77 bits entropy (uncrackable). Argon2id makes each guess expensive (256MB RAM + 3 iterations).</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">🐛 Attack: Zero-Day Browser Exploit</div>
-      <div class="faq-answer"><strong>Threat:</strong> Unpatched browser vulnerability allows code execution.<br><strong>Countermeasure:</strong> Keep browser updated. Use Tor Browser (hardened Firefox). Enable site isolation. Disable JavaScript for non-essential sites. Use virtual machine for high-risk operations. Consider Qubes OS for compartmentalization.</div>
+    <div class="step">
+      <div class="step-title">🐛 Attack: Zero-Day Browser Exploit</div>
+      <div class="step-content"><strong>Threat:</strong> Unpatched browser vulnerability allows code execution.<br><strong>Countermeasure:</strong> Keep browser updated. Use Tor Browser (hardened Firefox). Enable site isolation. Disable JavaScript for non-essential sites. Use virtual machine for high-risk operations. Consider Qubes OS for compartmentalization.</div>
     </div>
 
-    <div class="faq-item">
-      <div class="faq-question">📡 Attack: Traffic Analysis / Correlation</div>
-      <div class="faq-answer"><strong>Threat:</strong> Adversary correlates vault creation time with IPFS upload time to identify users.<br><strong>Countermeasure:</strong> Use Tor Browser (hides IP, adds latency noise). Upload via VPN. Delay vault sharing by hours/days. Use public WiFi (not home network). Batch multiple vault creations to obscure patterns.</div>
+    <div class="step">
+      <div class="step-title">📡 Attack: Traffic Analysis / Correlation</div>
+      <div class="step-content"><strong>Threat:</strong> Adversary correlates vault creation time with IPFS upload time to identify users.<br><strong>Countermeasure:</strong> Use Tor Browser (hides IP, adds latency noise). Upload via VPN. Delay vault sharing by hours/days. Use public WiFi (not home network). Batch multiple vault creations to obscure patterns.</div>
     </div>
   </div>
   <script src="/footer.js"></script>
-  <script src="/text-animations.js"></script>
   <script>
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;:,.<>?';
     const title = document.getElementById('title');
@@ -335,5 +333,6 @@
   </script>
   <script src="/loader.js"></script>
   <script src="/eye-candy.js"></script>
+  <script src="/text-animations.js"></script>
 </body>
 </html>
