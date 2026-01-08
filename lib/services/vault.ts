@@ -2,10 +2,7 @@
 // TYPES & INTERFACES
 // ============================================================================
 
-import {
-  uploadVault,
-  downloadVault,
-} from "../storage/vault";
+import { uploadVault, downloadVault } from "../storage/vault";
 import type { UploadCredentials } from "../storage/uploader";
 import { CryptoWorker } from "../workers/crypto";
 import { base64UrlEncode, base64UrlDecode } from "../crypto/utils";
@@ -14,13 +11,10 @@ import {
   CreateVaultParamsSchema,
   UnlockVaultParamsSchema,
 } from "../validation/schemas";
-import type { LayerContent } from "../duress/layers";
-import {
-  generateSplitKeys,
-  deriveMasterKey,
-} from "../crypto/split-key";
-import { xchacha20poly1305 } from '@noble/ciphers/chacha';
-import { randomBytes } from '@noble/hashes/utils';
+import type { HiddenVaultResult, LayerContent } from "../duress/layers";
+import { generateSplitKeys, deriveMasterKey } from "../crypto/split-key";
+import { xchacha20poly1305 } from "@noble/ciphers/chacha";
+import { randomBytes } from "@noble/hashes/utils";
 
 export interface CreateVaultParams {
   readonly decoyContent?: Uint8Array;
@@ -95,46 +89,52 @@ export class VaultService {
     });
 
     const stored = await uploadVault(vault, params.ipfsCredentials);
-    
+
     // Generate split keys (TimeSeal pattern)
     const { keyA, keyB, masterKey } = await generateSplitKeys();
     const vaultId = crypto.randomUUID();
-    
+
     // Hash panic passphrase (SHA-256) - REQUIRED for security
     if (!params.panicPassphrase) {
-      throw new Error('Panic passphrase is required');
+      throw new Error("Panic passphrase is required");
     }
-    const { sha256 } = await import('@noble/hashes/sha2');
+    const { sha256 } = await import("@noble/hashes/sha2");
     const hash = sha256(new TextEncoder().encode(params.panicPassphrase));
     const panicPassphraseHash = base64UrlEncode(hash);
-    
+
     // Calculate expiry timestamp with 5-second buffer for mobile lag
     // This ensures vaults don't expire prematurely due to clock drift or processing delays
     const MOBILE_LAG_BUFFER_MS = 5000; // 5 seconds
-    const expiresAt = params.expiryDays 
-      ? Date.now() + (params.expiryDays * 24 * 60 * 60 * 1000) + MOBILE_LAG_BUFFER_MS
+    const expiresAt = params.expiryDays
+      ? Date.now() +
+        params.expiryDays * 24 * 60 * 60 * 1000 +
+        MOBILE_LAG_BUFFER_MS
       : null;
-    
+
     // Encrypt KeyB with server-side secret (server will do this)
     // Client only sends KeyB, server encrypts it with VAULT_ENCRYPTION_SECRET
-    
+
     // Encrypt CIDs with master key (separate nonces for each CID)
     const decoyNonce = randomBytes(24);
     const hiddenNonce = randomBytes(24);
     const decoyCipher = xchacha20poly1305(masterKey, decoyNonce);
     const hiddenCipher = xchacha20poly1305(masterKey, hiddenNonce);
-    const encryptedDecoyCID = decoyCipher.encrypt(new TextEncoder().encode(stored.decoyCID));
-    const encryptedHiddenCID = hiddenCipher.encrypt(new TextEncoder().encode(stored.hiddenCID));
-    
+    const encryptedDecoyCID = decoyCipher.encrypt(
+      new TextEncoder().encode(stored.decoyCID),
+    );
+    const encryptedHiddenCID = hiddenCipher.encrypt(
+      new TextEncoder().encode(stored.hiddenCID),
+    );
+
     // Combine nonces for storage
     const combinedNonces = new Uint8Array(48);
     combinedNonces.set(decoyNonce, 0);
     combinedNonces.set(hiddenNonce, 24);
-    
+
     // Store KeyB + encrypted CIDs on server (server will encrypt KeyB)
-    const storeResponse = await fetch('/api/vault/store-key', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const storeResponse = await fetch("/api/vault/store-key", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         vaultId,
         keyB: base64UrlEncode(keyB),
@@ -147,11 +147,11 @@ export class VaultService {
         panicPassphraseHash,
       }),
     });
-    
+
     if (!storeResponse.ok) {
-      throw new Error('Failed to store vault metadata');
+      throw new Error("Failed to store vault metadata");
     }
-    
+
     // Embed KeyA + vaultId in URL hash
     const urlData = {
       vaultId,
@@ -160,12 +160,12 @@ export class VaultService {
       decoyFilename: params.decoyFilename,
       hiddenFilename: params.hiddenFilename,
     };
-    const encodedData = base64UrlEncode(new TextEncoder().encode(JSON.stringify(urlData)));
+    const encodedData = base64UrlEncode(
+      new TextEncoder().encode(JSON.stringify(urlData)),
+    );
 
     const baseURL =
-      globalThis.window === undefined
-        ? ""
-        : globalThis.window.location.origin;
+      globalThis.window === undefined ? "" : globalThis.window.location.origin;
     const vaultURL = `${baseURL}/vault#${encodedData}`;
 
     return {
@@ -182,102 +182,117 @@ export class VaultService {
    * @throws Error if URL invalid, download fails, or decryption fails
    */
   async unlockVault(params: UnlockVaultParams): Promise<UnlockVaultResult> {
+    const validated = this.validateUnlockParams(params);
+    const urlData = this.parseVaultURL(validated.vaultURL);
+    const serverData = await this.fetchVaultMetadata(urlData.vaultId);
+    
+    await this.checkPanicPassphrase(validated.passphrase, serverData.panicPassphraseHash);
+    this.checkVaultActive(serverData.isActive, serverData.expiresAt);
+    
+    const vault = await this.downloadAndDecryptVault(urlData, serverData);
+    const { content, isDecoy } = await this.unlockVaultContent(vault, validated.passphrase);
+    
+    return {
+      content,
+      isDecoy,
+      filename: isDecoy ? urlData.decoyFilename : urlData.hiddenFilename,
+      expiresAt: serverData.expiresAt,
+      daysUntilExpiry: this.calculateDaysUntilExpiry(serverData.expiresAt),
+    };
+  }
+
+  private validateUnlockParams(params: UnlockVaultParams) {
     const result = UnlockVaultParamsSchema.safeParse(params);
     if (!result.success) {
-      const firstError = result.error.issues[0];
-      throw new Error(firstError.message);
+      throw new Error(result.error.issues[0].message);
     }
-    const validated = result.data;
-    
-    // Check panic passphrase first (before any crypto operations)
-    const hash = validated.vaultURL.split("#")[1];
+    return result.data;
+  }
+
+  private parseVaultURL(vaultURL: string) {
+    const hash = vaultURL.split("#")[1];
     if (!hash) {
       throw new Error("Invalid vault URL: missing metadata");
     }
-
-    // Decode URL data (contains vaultId + KeyA + salt)
     const urlDataBytes = base64UrlDecode(hash);
-    const urlDataStr = new TextDecoder().decode(urlDataBytes);
-    const urlData = JSON.parse(urlDataStr);
-    
-    const { vaultId, keyA: keyAEncoded, salt: saltEncoded, decoyFilename, hiddenFilename } = urlData;
-    const keyA = base64UrlDecode(keyAEncoded);
-    const salt = base64UrlDecode(saltEncoded);
-    
-    // Fetch decrypted KeyB and encrypted CIDs from server
-    // Server decrypts KeyB using VAULT_ENCRYPTION_SECRET before sending
-    const fetchResponse = await fetch('/api/vault/get-key', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const urlData = JSON.parse(new TextDecoder().decode(urlDataBytes));
+    return {
+      vaultId: urlData.vaultId,
+      keyA: base64UrlDecode(urlData.keyA),
+      salt: base64UrlDecode(urlData.salt),
+      decoyFilename: urlData.decoyFilename,
+      hiddenFilename: urlData.hiddenFilename,
+    };
+  }
+
+  private async fetchVaultMetadata(vaultId: string) {
+    const response = await fetch("/api/vault/get-key", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ vaultId }),
     });
-    if (!fetchResponse.ok) {
-      throw new Error('Vault not found');
+    if (!response.ok) {
+      throw new Error("Vault not found");
     }
-    const { keyB: keyBEncoded, encryptedDecoyCID, encryptedHiddenCID, nonce, provider, expiresAt, panicPassphraseHash } = await fetchResponse.json();
+    return response.json();
+  }
+
+  private async checkPanicPassphrase(passphrase: string, panicPassphraseHash?: string) {
+    if (!panicPassphraseHash || !passphrase) return;
     
-    // Check if panic passphrase was entered (show same error as deleted vault)
-    if (panicPassphraseHash && validated.passphrase) {
-      const { sha256 } = await import('@noble/hashes/sha2');
-      const enteredHash = sha256(new TextEncoder().encode(validated.passphrase));
-      const enteredHashEncoded = base64UrlEncode(enteredHash);
-      
-      if (enteredHashEncoded === panicPassphraseHash) {
-        throw new Error('Vault content has been deleted from storage providers');
-      }
+    const { sha256 } = await import("@noble/hashes/sha2");
+    const enteredHash = sha256(new TextEncoder().encode(passphrase));
+    
+    if (base64UrlEncode(enteredHash) === panicPassphraseHash) {
+      throw new Error("Vault content has been deleted from storage providers");
     }
+  }
+
+  private checkVaultActive(isActive: boolean, expiresAt?: number) {
+    if (!isActive || (expiresAt && Date.now() > expiresAt)) {
+      throw new Error("Vault content has been deleted from storage providers");
+    }
+  }
+
+  private async downloadAndDecryptVault(urlData: any, serverData: any): Promise<HiddenVaultResult> {
+    const keyB = base64UrlDecode(serverData.keyB);
+    const masterKey = await deriveMasterKey(urlData.keyA, keyB);
+    const combinedNonces = base64UrlDecode(serverData.nonce);
     
-    // Decode KeyB (already decrypted by server)
-    const keyB = base64UrlDecode(keyBEncoded);
+    const decoyCipher = xchacha20poly1305(masterKey, combinedNonces.slice(0, 24));
+    const hiddenCipher = xchacha20poly1305(masterKey, combinedNonces.slice(24, 48));
     
-    // Derive master key and decrypt CIDs
-    const masterKey = await deriveMasterKey(keyA, keyB);
-    const combinedNonces = base64UrlDecode(nonce);
-    const decoyNonce = combinedNonces.slice(0, 24);
-    const hiddenNonce = combinedNonces.slice(24, 48);
-    
-    const decoyCipher = xchacha20poly1305(masterKey, decoyNonce);
-    const hiddenCipher = xchacha20poly1305(masterKey, hiddenNonce);
-    
-    const decoyCID = new TextDecoder().decode(
-      decoyCipher.decrypt(base64UrlDecode(encryptedDecoyCID))
-    );
-    const hiddenCID = new TextDecoder().decode(
-      hiddenCipher.decrypt(base64UrlDecode(encryptedHiddenCID))
-    );
-    
-    // Reconstruct stored metadata for download
     const stored = {
-      decoyCID,
-      hiddenCID,
-      salt,
-      provider: provider as 'pinata' | 'filebase',
-      decoyFilename,
-      hiddenFilename,
+      decoyCID: new TextDecoder().decode(decoyCipher.decrypt(base64UrlDecode(serverData.encryptedDecoyCID))),
+      hiddenCID: new TextDecoder().decode(hiddenCipher.decrypt(base64UrlDecode(serverData.encryptedHiddenCID))),
+      salt: urlData.salt,
+      provider: serverData.provider as "pinata" | "filebase",
+      decoyFilename: urlData.decoyFilename,
+      hiddenFilename: urlData.hiddenFilename,
     };
 
-    const vault = await downloadVault(stored);
-
-    // Derive vault ID from salt for integrity verification
-    const vaultIdFromSalt = Array.from(vault.salt.slice(0, 16))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-
-    const { content, isDecoy } = await this.crypto.unlockHiddenVault(
-      vault,
-      validated.passphrase,
-      vaultIdFromSalt,
-    );
-    const filename = isDecoy ? stored.decoyFilename : stored.hiddenFilename;
-
-    // Calculate days until expiry
-    let daysUntilExpiry: number | null = null;
-    if (expiresAt) {
-      const msUntilExpiry = expiresAt - Date.now();
-      daysUntilExpiry = Math.ceil(msUntilExpiry / (24 * 60 * 60 * 1000));
+    try {
+      return await downloadVault(stored);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
+      if (errorMsg.includes("not found") || errorMsg.includes("deleted from storage")) {
+        throw new Error("Vault content has been deleted from storage providers");
+      }
+      throw error;
     }
+  }
 
-    return { content, isDecoy, filename, expiresAt, daysUntilExpiry };
+  private async unlockVaultContent(vault: HiddenVaultResult, passphrase: string) {
+    const vaultIdFromSalt = Array.from(vault.salt.slice(0, 16) as Uint8Array)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    return this.crypto.unlockHiddenVault(vault, passphrase, vaultIdFromSalt);
+  }
+
+  private calculateDaysUntilExpiry(expiresAt?: number): number | null {
+    if (!expiresAt) return null;
+    const msUntilExpiry = expiresAt - Date.now();
+    return Math.ceil(msUntilExpiry / (24 * 60 * 60 * 1000));
   }
 
   /**

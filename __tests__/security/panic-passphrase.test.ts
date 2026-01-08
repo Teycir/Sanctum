@@ -8,6 +8,9 @@ interface MockVaultKey {
   encryptedHiddenCID: string;
   nonce: string;
   panicPassphraseHash?: string;
+  provider: string;
+  isActive: boolean;
+  expiresAt: number | null;
 }
 
 const mockVaultKeys = new Map<string, MockVaultKey>();
@@ -22,7 +25,10 @@ globalThis.fetch = vi.fn((url: string | URL, options?: RequestInit) => {
       encryptedDecoyCID: body.encryptedDecoyCID,
       encryptedHiddenCID: body.encryptedHiddenCID,
       nonce: body.nonce,
-      panicPassphraseHash: body.panicPassphraseHash
+      panicPassphraseHash: body.panicPassphraseHash,
+      provider: body.provider || 'pinata',
+      isActive: true,
+      expiresAt: body.expiresAt || null
     });
     return Promise.resolve({
       ok: true,
