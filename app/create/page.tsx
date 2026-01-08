@@ -208,7 +208,8 @@ export default function CreateVault() {
             await import("@/lib/storage/pinata-quota");
           const quota = await checkPinataQuota(pinataJWT.trim());
           setStorageQuota(quota);
-        } catch {
+        } catch (err) {
+          console.error("Failed to fetch Pinata quota:", err);
           setStorageQuota(null);
         }
       } else if (
@@ -221,7 +222,8 @@ export default function CreateVault() {
             await import("@/lib/storage/filebase-quota");
           const quota = await checkFilebaseQuota();
           setStorageQuota(quota);
-        } catch {
+        } catch (err) {
+          console.error("Failed to fetch Filebase quota:", err);
           setStorageQuota(null);
         }
       } else {
