@@ -19,12 +19,23 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Clean up expired vaults before querying (lazy deletion)
-    // Add 1-second grace period to account for mobile lag and clock drift
+    // Two-stage cleanup to prevent DB overflow:
+    // 1. Lazy deactivation: Mark recently expired vaults as inactive (soft delete)
+    // 2. Hard deletion: Remove vaults that have been inactive for 30+ days
     const GRACE_PERIOD_MS = 1000;
+    const HARD_DELETE_AFTER_DAYS = 30;
+    const HARD_DELETE_THRESHOLD = Date.now() - (HARD_DELETE_AFTER_DAYS * 24 * 60 * 60 * 1000);
+    
+    // Stage 1: Deactivate expired vaults
     await env.DB
-      .prepare('DELETE FROM vault_keys WHERE expires_at IS NOT NULL AND expires_at < ?')
+      .prepare('UPDATE vault_keys SET is_active = 0 WHERE expires_at IS NOT NULL AND expires_at < ? AND is_active = 1')
       .bind(Date.now() - GRACE_PERIOD_MS)
+      .run();
+    
+    // Stage 2: Hard delete vaults that expired 30+ days ago
+    await env.DB
+      .prepare('DELETE FROM vault_keys WHERE expires_at IS NOT NULL AND expires_at < ? AND is_active = 0')
+      .bind(HARD_DELETE_THRESHOLD)
       .run();
 
     const result = await env.DB
@@ -32,8 +43,10 @@ export async function onRequestPost(context) {
       .bind(vaultId)
       .first();
 
-    if (!result) {
-      return new Response(JSON.stringify({ error: 'Vault not found' }), {
+    // Check if vault exists AND is active
+    // Return same error message as panic/expired to maintain plausible deniability
+    if (!result || result.is_active === 0) {
+      return new Response(JSON.stringify({ error: 'Vault content has been deleted from storage providers' }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' }
       });
