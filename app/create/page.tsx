@@ -1248,7 +1248,7 @@ export default function CreateVault() {
                       type="password"
                       value={filebaseAccessKey}
                       onChange={(e) => setFilebaseAccessKey(e.target.value)}
-                      placeholder="ex: F9CE9EEDA069BB4B3203..."
+                      placeholder="ex: F9CE9EEDA069BB4B3214"
                       className="provider-input"
                     />
                     <label
@@ -1262,7 +1262,7 @@ export default function CreateVault() {
                       type="password"
                       value={filebaseSecretKey}
                       onChange={(e) => setFilebaseSecretKey(e.target.value)}
-                      placeholder="ex: iUOYzd0UghnCWvFjntDGqKXn3fsIhUoN0l7GbLX3..."
+                      placeholder="ex: iUOYzd0UghnCWvFjntDGqKXn3fsIhUoN0l7GbLY4"
                       className="provider-input"
                     />
                     <label htmlFor="filebase-bucket" className="provider-label">
