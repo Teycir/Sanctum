@@ -35,8 +35,12 @@ describe('Password Validation', () => {
   });
 
   describe('getPasswordError', () => {
-    it('should return null for empty password', () => {
-      expect(getPasswordError('')).toBeNull();
+    it('should return error for empty password by default', () => {
+      expect(getPasswordError('')).toBe('Password is required');
+    });
+
+    it('should return null for empty password when allowEmpty is true', () => {
+      expect(getPasswordError('', 'Password', true)).toBeNull();
     });
 
     it('should return null for valid password', () => {

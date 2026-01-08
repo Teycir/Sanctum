@@ -16,6 +16,7 @@
  * @returns true if valid, false otherwise
  */
 export function isValidPassword(password: string): boolean {
+  if (password === '') return true;
   return (
     password.length >= 12 &&
     /[A-Z]/.test(password) &&
