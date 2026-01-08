@@ -19,7 +19,12 @@ export function dummyDerivation(salt: Uint8Array, profile: Argon2Profile): void 
 }
 
 /**
- * Constant-time conditional execution
+ * Constant-time conditional execution with randomized order
+ * 
+ * SECURITY: Executes both functions in random order to prevent timing attacks.
+ * While not truly constant-time due to JS limitations, this makes timing analysis
+ * significantly harder by randomizing execution order.
+ * 
  * @param condition Condition to check
  * @param trueFn Function to execute if true
  * @param falseFn Function to execute if false
@@ -29,7 +34,22 @@ export function constantTimeSelect<T>(
   trueFn: () => T,
   falseFn: () => T
 ): T {
-  const trueResult = trueFn();
-  const falseResult = falseFn();
-  return condition ? trueResult : falseResult;
+  // Randomize execution order to prevent timing attacks
+  const executeFirstFirst = Math.random() < 0.5;
+  
+  let firstResult: T;
+  let secondResult: T;
+  
+  if (executeFirstFirst) {
+    firstResult = trueFn();
+    secondResult = falseFn();
+  } else {
+    firstResult = falseFn();
+    secondResult = trueFn();
+  }
+  
+  // Return based on original condition
+  return executeFirstFirst 
+    ? (condition ? firstResult : secondResult)
+    : (condition ? secondResult : firstResult);
 }

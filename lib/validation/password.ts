@@ -3,6 +3,11 @@
 // ============================================================================
 
 /**
+ * Password requirements message (reused across validation and UI)
+ */
+export const PASSWORD_REQUIREMENTS_MESSAGE = 'Password must be at least 12 characters with uppercase, lowercase, number, and special character';
+
+/**
  * Validates password strength requirements
  * 
  * Requirements:
@@ -16,7 +21,6 @@
  * @returns true if valid, false otherwise
  */
 export function isValidPassword(password: string): boolean {
-  if (password === '') return true;
   return (
     password.length >= 12 &&
     /[A-Z]/.test(password) &&

@@ -78,6 +78,9 @@ export class VaultService {
       hidden: validated.hiddenContent,
     };
 
+    // Generate vault ID first (before encryption) for integrity verification
+    const vaultId = crypto.randomUUID();
+
     const vault = await this.crypto.createHiddenVault({
       content,
       passphrase: validated.passphrase,
@@ -86,13 +89,13 @@ export class VaultService {
         (typeof validated.argonProfile === "string"
           ? ARGON2_PROFILES[validated.argonProfile]
           : validated.argonProfile) || ARGON2_PROFILES.desktop,
+      vaultId, // Pass vaultId for integrity embedding
     });
 
     const stored = await uploadVault(vault, params.ipfsCredentials);
 
     // Generate split keys (TimeSeal pattern)
     const { keyA, keyB, masterKey } = await generateSplitKeys();
-    const vaultId = crypto.randomUUID();
 
     // Hash panic passphrase (SHA-256) - REQUIRED for security
     if (!params.panicPassphrase) {
@@ -190,7 +193,7 @@ export class VaultService {
     this.checkVaultActive(serverData.isActive, serverData.expiresAt);
     
     const vault = await this.downloadAndDecryptVault(urlData, serverData);
-    const { content, isDecoy } = await this.unlockVaultContent(vault, validated.passphrase);
+    const { content, isDecoy } = await this.unlockVaultContent(vault, validated.passphrase, urlData.vaultId);
     
     return {
       content,
@@ -242,8 +245,13 @@ export class VaultService {
     
     const { sha256 } = await import("@noble/hashes/sha2");
     const enteredHash = sha256(new TextEncoder().encode(passphrase));
+    const enteredHashEncoded = base64UrlEncode(enteredHash);
     
-    if (base64UrlEncode(enteredHash) === panicPassphraseHash) {
+    // Constant-time comparison to prevent timing attacks
+    const { constantTimeEqual } = await import("../crypto/utils");
+    const storedHashBytes = base64UrlDecode(panicPassphraseHash);
+    
+    if (constantTimeEqual(enteredHash, storedHashBytes)) {
       throw new Error("Vault content has been deleted from storage providers");
     }
   }
@@ -285,11 +293,8 @@ export class VaultService {
     }
   }
 
-  private async unlockVaultContent(vault: HiddenVaultResult, passphrase: string) {
-    const vaultIdFromSalt = Array.from(vault.salt.slice(0, 16) as Uint8Array)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    return this.crypto.unlockHiddenVault(vault, passphrase, vaultIdFromSalt);
+  private async unlockVaultContent(vault: HiddenVaultResult, passphrase: string, vaultId: string) {
+    return this.crypto.unlockHiddenVault(vault, passphrase, vaultId);
   }
 
   private calculateDaysUntilExpiry(expiresAt?: number): number | null {

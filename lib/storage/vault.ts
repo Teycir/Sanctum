@@ -60,35 +60,19 @@ export async function uploadVault(
 export async function downloadVault(
   stored: StoredVault,
 ): Promise<HiddenVaultResult> {
-  const errors: string[] = [];
-
   if (stored.provider === "filebase") {
     const { FilebaseClient } = await import("./filebase");
-    try {
-      const filebase = new FilebaseClient("");
-      const decoyBlob = await filebase.download(stored.decoyCID);
-      const hiddenBlob = await filebase.download(stored.hiddenCID);
-      return { decoyBlob, hiddenBlob, salt: stored.salt };
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Unknown error";
-      errors.push(`Filebase: ${errorMsg}`);
-    }
+    const filebase = new FilebaseClient("");
+    const decoyBlob = await filebase.download(stored.decoyCID);
+    const hiddenBlob = await filebase.download(stored.hiddenCID);
+    return { decoyBlob, hiddenBlob, salt: stored.salt };
   } else {
     const { PinataClient } = await import("./pinata");
-    try {
-      const pinata = new PinataClient("", "https://gateway.pinata.cloud");
-      const decoyBlob = await pinata.download(stored.decoyCID);
-      const hiddenBlob = await pinata.download(stored.hiddenCID);
-      return { decoyBlob, hiddenBlob, salt: stored.salt };
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Unknown error";
-      errors.push(`Pinata: ${errorMsg}`);
-    }
+    const pinata = new PinataClient("", "https://gateway.pinata.cloud");
+    const decoyBlob = await pinata.download(stored.decoyCID);
+    const hiddenBlob = await pinata.download(stored.hiddenCID);
+    return { decoyBlob, hiddenBlob, salt: stored.salt };
   }
-
-  throw new Error(
-    `Vault content not found on ${stored.provider}. The files may have been deleted from storage provider. Tried: ${errors.join(", ")}`,
-  );
 }
 
 /**
@@ -199,18 +183,16 @@ export function deserializeVaultMetadata(data: Uint8Array): StoredVault {
   // Read provider (with backward compatibility)
   let provider: "pinata" | "filebase" = "pinata";
   if (offset < data.length) {
-    try {
-      const providerResult = readFilename(data, offset);
-      if (
-        providerResult.filename === "filebase" ||
-        providerResult.filename === "pinata"
-      ) {
-        provider = providerResult.filename;
-        offset = providerResult.newOffset;
-      }
-    } catch {
-      // Backward compatibility: old vaults without provider field
-      provider = "pinata";
+    const providerResult = readFilename(data, offset);
+    if (
+      providerResult.filename === "filebase" ||
+      providerResult.filename === "pinata"
+    ) {
+      provider = providerResult.filename;
+      offset = providerResult.newOffset;
+    } else if (providerResult.filename !== undefined) {
+      // Unknown provider - re-throw error
+      throw new Error(`Unknown provider: ${providerResult.filename}`);
     }
   }
 

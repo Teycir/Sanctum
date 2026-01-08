@@ -1,30 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { createHiddenVault, unlockHiddenVault, deriveLayerPassphrase } from '../../lib/duress/layers';
+import { createHiddenVault, unlockHiddenVault } from '../../lib/duress/layers';
 import { TEST_ARGON2_PROFILE } from '../test-constants';
 
 describe('hidden/vault', () => {
-  describe('deriveLayerPassphrase', () => {
-    it('should derive consistent layer passphrases', () => {
-      const master = 'master-passphrase';
-      const salt = new Uint8Array(32).fill(1);
-
-      const layer1a = deriveLayerPassphrase(master, 1, salt);
-      const layer1b = deriveLayerPassphrase(master, 1, salt);
-
-      expect(layer1a).toBe(layer1b);
-    });
-
-    it('should derive different passphrases for different layers', () => {
-      const master = 'master-passphrase';
-      const salt = new Uint8Array(32).fill(1);
-
-      const layer0 = deriveLayerPassphrase(master, 0, salt);
-      const layer1 = deriveLayerPassphrase(master, 1, salt);
-
-      expect(layer0).not.toBe(layer1);
-    });
-  });
-
   describe('createHiddenVault/unlockHiddenVault', () => {
     it('should create and unlock decoy layer', async () => {
       const decoy = new TextEncoder().encode('innocent content');

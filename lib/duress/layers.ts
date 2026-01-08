@@ -75,6 +75,7 @@ export interface HiddenVaultParams {
   readonly passphrase: string;
   readonly decoyPassphrase?: string; // Optional duress password for decoy
   readonly argonProfile: Argon2Profile;
+  readonly vaultId?: string; // Optional vault ID for integrity verification
 }
 
 export interface HiddenVaultResult {
@@ -88,27 +89,41 @@ export interface HiddenVaultResult {
 // ============================================================================
 
 /**
- * Derive layer-specific passphrase from master passphrase
+ * Derive layer-specific key material from master passphrase
+ * 
+ * SECURITY NOTE: Returns Uint8Array instead of string to allow secure wiping.
+ * Caller must convert to string only when needed and minimize lifetime.
+ * 
  * @param masterPassphrase User's master passphrase
  * @param layerIndex Layer index (0 = decoy, 1 = hidden)
  * @param salt Vault salt
- * @returns Layer-specific passphrase
+ * @returns Layer-specific key material (32 bytes)
  */
-export function deriveLayerPassphrase(
+function deriveLayerKey(
   masterPassphrase: string,
   layerIndex: number,
   salt: Uint8Array,
-): string {
+): Uint8Array {
   const input = encodeText(masterPassphrase);
   const context = encodeText(`${HKDF_CONTEXTS.layerDerivation}-${layerIndex}`);
   const derived = hkdf(sha256, input, salt, context, 32);
-  // WARNING: Returned string cannot be securely wiped from memory due to JS string immutability
-  const passphrase = Array.from(derived)
+  wipeMemory(input);
+  return derived; // Caller responsible for wiping
+}
+
+/**
+ * Convert key material to passphrase string
+ * 
+ * WARNING: Returned string is immutable and cannot be wiped from memory.
+ * This is a fundamental JavaScript limitation. Minimize string lifetime.
+ * 
+ * @param keyMaterial Key material bytes
+ * @returns Hex-encoded passphrase
+ */
+function keyToPassphrase(keyMaterial: Uint8Array): string {
+  return Array.from(keyMaterial)
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
-  wipeMemory(input);
-  wipeMemory(derived);
-  return passphrase;
 }
 
 /**
@@ -136,7 +151,11 @@ export function createHiddenVault(
   });
 
   const salt: Uint8Array = decoyEncrypted.salt;
-  const hiddenPassphrase: string = deriveLayerPassphrase(params.passphrase, 1, salt);
+  
+  // Derive hidden layer key material (Uint8Array for secure wiping)
+  const hiddenKeyMaterial = deriveLayerKey(params.passphrase, 1, salt);
+  const hiddenPassphrase = keyToPassphrase(hiddenKeyMaterial);
+  wipeMemory(hiddenKeyMaterial);
 
   // Encrypt hidden layer with same salt as decoy
   const hiddenEncrypted = encrypt(
@@ -154,8 +173,8 @@ export function createHiddenVault(
     selectVaultSize(hiddenEncrypted.ciphertext.length),
   );
 
-  // Generate vault ID for integrity verification (not stored in params, derived from salt)
-  const vaultId = Array.from(salt.slice(0, 16))
+  // Use provided vaultId or derive from salt for backward compatibility
+  const vaultId = params.vaultId || Array.from(salt.slice(0, 16))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 
@@ -204,7 +223,9 @@ export function unlockHiddenVault(
     }
   }
   
-  const hiddenPassphrase: string = deriveLayerPassphrase(passphrase, 1, result.salt);
+  // Derive hidden layer key material (Uint8Array for secure wiping)
+  const hiddenKeyMaterial = deriveLayerKey(passphrase, 1, result.salt);
+  const hiddenPassphrase = keyToPassphrase(hiddenKeyMaterial);
   
   // Always attempt both decryptions to prevent timing attacks
   const decryptionResults = constantTimeSelect(
@@ -254,6 +275,9 @@ export function unlockHiddenVault(
       return { decoyContent, hiddenContent, decoySuccess, hiddenSuccess };
     }
   );
+  
+  // Wipe key material after use
+  wipeMemory(hiddenKeyMaterial);
   
   // Return result based on which succeeded
   if (decryptionResults.decoySuccess) {

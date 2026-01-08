@@ -22,7 +22,7 @@ export async function onRequestPost(context) {
     // Two-stage cleanup to prevent DB overflow:
     // 1. Lazy deactivation: Mark recently expired vaults as inactive (soft delete)
     // 2. Hard deletion: Remove vaults that have been inactive for 30+ days
-    const GRACE_PERIOD_MS = 1000;
+    const GRACE_PERIOD_MS = 5000; // Match client-side MOBILE_LAG_BUFFER_MS
     const HARD_DELETE_AFTER_DAYS = 30;
     const HARD_DELETE_THRESHOLD = Date.now() - (HARD_DELETE_AFTER_DAYS * 24 * 60 * 60 * 1000);
     

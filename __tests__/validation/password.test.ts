@@ -3,10 +3,6 @@ import { isValidPassword, getPasswordError } from '../../lib/validation/password
 
 describe('Password Validation', () => {
   describe('isValidPassword', () => {
-    it('should accept empty password', () => {
-      expect(isValidPassword('')).toBe(true);
-    });
-
     it('should accept valid password', () => {
       expect(isValidPassword('Test1234!@#$')).toBe(true);
       expect(isValidPassword('MyP@ssw0rd123')).toBe(true);
