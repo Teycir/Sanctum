@@ -52,7 +52,7 @@ export function StorageQuotaDisplay({ quota }: StorageQuotaDisplayProps) {
         </p>
       ) : (
         <p style={{ fontSize: 10, opacity: 0.8 }}>
-          {limitMB.toFixed(0)} MB limit (usage tracking unavailable)
+          {limitMB.toFixed(0)} MB limit (check vendor dashboard for available storage)
         </p>
       )}
       <p style={{ fontSize: 9, opacity: 0.6, marginTop: 4 }}>
