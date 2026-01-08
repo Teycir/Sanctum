@@ -5,6 +5,44 @@ All notable changes to Sanctum will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-01-08
+
+### 🔒 Security Fixes
+
+#### Critical
+- **Fixed timing attack vulnerability in `constantTimeSelect`** - Randomized execution order to prevent timing analysis of decoy vs hidden layer unlocks
+- **Fixed panic passphrase timing leak** - Implemented constant-time hash comparison using `constantTimeEqual` to prevent panic passphrase detection
+- **Fixed vault ID integrity verification** - VaultId now generated before encryption and properly embedded in blob headers
+
+#### High
+- **Fixed expiry buffer mismatch** - Synchronized server grace period (5s) with client-side mobile lag buffer to prevent premature vault expiry
+- **Improved memory safety** - Key material now properly wiped after use (best effort given JavaScript constraints)
+
+#### Medium
+- **Fixed silent error suppression** - Removed bare catch blocks that hid unexpected errors, errors now propagate properly for debugging
+- **Fixed password validation** - Removed empty string bypass in `isValidPassword()`, created reusable `PASSWORD_REQUIREMENTS_MESSAGE` constant
+
+### 🧹 Code Quality
+- Removed unused variable `enteredHashEncoded` in panic passphrase check
+- Removed tests for internal `deriveLayerPassphrase` function (now private)
+- Updated test expectations to match corrected password validation behavior
+
+### 📝 Documentation
+- Added detailed security audit findings to codebase
+- Documented timing attack limitations and mitigations
+- Clarified JavaScript constant-time execution constraints
+
+### ✅ Testing
+- All 115 tests passing
+- No regressions introduced
+- Build successful with zero errors
+
+### 🚀 Deployment
+- Successfully deployed to production
+- Preview URL: https://f41b5631.sanctum-vault.pages.dev
+
+---
+
 ## [1.0.0] - 2025-01-15
 
 ### 🎉 Initial Stable Release

@@ -245,7 +245,6 @@ export class VaultService {
     
     const { sha256 } = await import("@noble/hashes/sha2");
     const enteredHash = sha256(new TextEncoder().encode(passphrase));
-    const enteredHashEncoded = base64UrlEncode(enteredHash);
     
     // Constant-time comparison to prevent timing attacks
     const { constantTimeEqual } = await import("../crypto/utils");
