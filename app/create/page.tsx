@@ -9,14 +9,20 @@ import { ExtensionWarning } from "../components/ExtensionWarning";
 import { EyeCandy } from "../components/EyeCandy";
 import { Footer } from "../components/Footer";
 import { sanitizeInput, validateVaultForm } from "@/lib/validation/vault-form";
+import { 
+  isValidFileExtension,
+  isValidFileSize,
+  getFileSizeError,
+  getFileExtensionError
+} from "@/lib/validation/file";
 import { generateVaultQR } from "@/lib/shared/qrcode";
 import { useSecureClipboard } from "@/lib/hooks/useSecureClipboard";
-import { PasswordStrength } from "../components/PasswordStrength";
-import { PasswordRequirements } from "../components/PasswordRequirements";
+import { PasswordField } from "../components/PasswordField";
+import { ErrorMessage } from "../components/ErrorMessage";
+import { StorageQuotaDisplay } from "../components/StorageQuotaDisplay";
 import TextPressure from "../components/text/text-pressure";
 import styles from "./page.module.css";
 
-const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
 interface VaultResult {
   vaultURL: string;
@@ -677,18 +683,13 @@ export default function CreateVault() {
                         return;
                       }
                     }
-                    if (
-                      !file.name.toLowerCase().endsWith(".zip") &&
-                      !file.name.toLowerCase().endsWith(".rar")
-                    ) {
-                      setError("Only .zip and .rar files are allowed");
+                    if (!isValidFileExtension(file.name)) {
+                      setError(getFileExtensionError());
                       e.target.value = "";
                       return;
                     }
-                    if (file.size > MAX_FILE_SIZE) {
-                      setError(
-                        `File too large. Maximum size is 25MB (${(file.size / 1024 / 1024).toFixed(2)}MB provided)`,
-                      );
+                    if (!isValidFileSize(file.size)) {
+                      setError(getFileSizeError(file.size));
                       e.target.value = "";
                       return;
                     }
@@ -738,49 +739,21 @@ export default function CreateVault() {
                     </button>
                   </div>
                 )}
-                <div style={{ marginTop: 16 }}>
-                  <label
-                    htmlFor="hidden-password"
-                    style={{
-                      display: "block",
-                      marginBottom: 8,
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Hidden Password (Required)
-                  </label>
-                  <PasswordRequirements />
-                  <input
-                    id="hidden-password"
-                    type="password"
-                    value={passphrase}
-                    onChange={(e) => {
-                      setPassphrase(e.target.value);
-                      setError("");
-                    }}
-                    placeholder="Enter a strong password..."
-                    className="form-input"
-                  />
-                  <PasswordStrength password={passphrase} />
-                  <input
-                    id="hidden-password-confirm"
-                    type="password"
-                    value={passphraseConfirm}
-                    onChange={(e) => {
-                      setPassphraseConfirm(e.target.value);
-                      setError("");
-                    }}
-                    placeholder="Confirm password..."
-                    className="form-input"
-                    style={{ marginTop: 10 }}
-                  />
-                  {passphraseConfirm && (
-                    <p style={{ fontSize: 11, marginTop: 6, color: passphrase === passphraseConfirm ? '#4ade80' : '#ff6b6b' }}>
-                      {passphrase === passphraseConfirm ? '✓ Passwords match' : '✗ Passwords do not match'}
-                    </p>
-                  )}
-                </div>
+                <PasswordField
+                  id="hidden-password"
+                  label="Hidden Password"
+                  value={passphrase}
+                  confirmValue={passphraseConfirm}
+                  onChange={(value) => {
+                    setPassphrase(value);
+                    setError("");
+                  }}
+                  onConfirmChange={(value) => {
+                    setPassphraseConfirm(value);
+                    setError("");
+                  }}
+                  required={true}
+                />
               </CollapsiblePanel>
 
               <CollapsiblePanel
@@ -790,49 +763,22 @@ export default function CreateVault() {
                 <p style={{ fontSize: 13, color: "rgba(255, 193, 7, 0.9)", marginBottom: 16 }}>
                   ⚠️ Shows &quot;vault deleted&quot; message when entered under duress
                 </p>
-                <div>
-                  <label
-                    htmlFor="panic-password"
-                    style={{
-                      display: "block",
-                      marginBottom: 8,
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Panic Password (Required)
-                  </label>
-                  <PasswordRequirements />
-                  <input
-                    id="panic-password"
-                    type="password"
-                    value={panicPassphrase}
-                    onChange={(e) => {
-                      setPanicPassphrase(e.target.value);
-                      setError("");
-                    }}
-                    placeholder="Emergency password to show &apos;vault deleted&apos;..."
-                    className="form-input"
-                  />
-                  <PasswordStrength password={panicPassphrase} />
-                  <input
-                    id="panic-password-confirm"
-                    type="password"
-                    value={panicPassphraseConfirm}
-                    onChange={(e) => {
-                      setPanicPassphraseConfirm(e.target.value);
-                      setError("");
-                    }}
-                    placeholder="Confirm panic password..."
-                    className="form-input"
-                    style={{ marginTop: 10 }}
-                  />
-                  {panicPassphraseConfirm && (
-                    <p style={{ fontSize: 11, marginTop: 6, color: panicPassphrase === panicPassphraseConfirm ? '#4ade80' : '#ff6b6b' }}>
-                      {panicPassphrase === panicPassphraseConfirm ? '✓ Passwords match' : '✗ Passwords do not match'}
-                    </p>
-                  )}
-                </div>
+                <PasswordField
+                  id="panic-password"
+                  label="Panic Password"
+                  value={panicPassphrase}
+                  confirmValue={panicPassphraseConfirm}
+                  onChange={(value) => {
+                    setPanicPassphrase(value);
+                    setError("");
+                  }}
+                  onConfirmChange={(value) => {
+                    setPanicPassphraseConfirm(value);
+                    setError("");
+                  }}
+                  placeholder="Emergency password to show 'vault deleted'..."
+                  required={true}
+                />
               </CollapsiblePanel>
 
               <CollapsiblePanel
@@ -876,18 +822,13 @@ export default function CreateVault() {
                         return;
                       }
                     }
-                    if (
-                      !file.name.toLowerCase().endsWith(".zip") &&
-                      !file.name.toLowerCase().endsWith(".rar")
-                    ) {
-                      setError("Only .zip and .rar files are allowed");
+                    if (!isValidFileExtension(file.name)) {
+                      setError(getFileExtensionError());
                       e.target.value = "";
                       return;
                     }
-                    if (file.size > MAX_FILE_SIZE) {
-                      setError(
-                        `File too large. Maximum size is 25MB (${(file.size / 1024 / 1024).toFixed(2)}MB provided)`,
-                      );
+                    if (!isValidFileSize(file.size)) {
+                      setError(getFileSizeError(file.size));
                       e.target.value = "";
                       return;
                     }
@@ -937,49 +878,22 @@ export default function CreateVault() {
                     </button>
                   </div>
                 )}
-                <div style={{ marginTop: 16 }}>
-                  <label
-                    htmlFor="decoy-password"
-                    style={{
-                      display: "block",
-                      marginBottom: 8,
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Decoy Password {(decoyContent.trim() || decoyFile) ? "(Required)" : "(Optional)"}
-                  </label>
-                  <PasswordRequirements />
-                  <input
-                    id="decoy-password"
-                    type="password"
-                    value={decoyPassphrase}
-                    onChange={(e) => {
-                      setDecoyPassphrase(e.target.value);
-                      setError("");
-                    }}
-                    placeholder="Password to reveal decoy content..."
-                    className="form-input"
-                  />
-                  <PasswordStrength password={decoyPassphrase} />
-                  <input
-                    id="decoy-password-confirm"
-                    type="password"
-                    value={decoyPassphraseConfirm}
-                    onChange={(e) => {
-                      setDecoyPassphraseConfirm(e.target.value);
-                      setError("");
-                    }}
-                    placeholder="Confirm decoy password..."
-                    className="form-input"
-                    style={{ marginTop: 10 }}
-                  />
-                  {decoyPassphraseConfirm && (
-                    <p style={{ fontSize: 11, marginTop: 6, color: decoyPassphrase === decoyPassphraseConfirm ? '#4ade80' : '#ff6b6b' }}>
-                      {decoyPassphrase === decoyPassphraseConfirm ? '✓ Passwords match' : '✗ Passwords do not match'}
-                    </p>
-                  )}
-                </div>
+                <PasswordField
+                  id="decoy-password"
+                  label={`Decoy Password ${(decoyContent.trim() || decoyFile) ? "(Required)" : "(Optional)"}`}
+                  value={decoyPassphrase}
+                  confirmValue={decoyPassphraseConfirm}
+                  onChange={(value) => {
+                    setDecoyPassphrase(value);
+                    setError("");
+                  }}
+                  onConfirmChange={(value) => {
+                    setDecoyPassphraseConfirm(value);
+                    setError("");
+                  }}
+                  placeholder="Password to reveal decoy content..."
+                  required={!!(decoyContent.trim() || decoyFile)}
+                />
               </CollapsiblePanel>
 
               <div
@@ -1210,30 +1124,7 @@ export default function CreateVault() {
                     <p style={{ fontSize: 10, opacity: 0.6, marginTop: 6 }}>
                       Get free JWT at pinata.cloud (1GB free storage)
                     </p>
-                    {storageQuota && (
-                      <div
-                        style={{
-                          marginTop: 8,
-                          padding: 8,
-                          background: "rgba(13, 71, 161, 0.15)",
-                          borderRadius: 6,
-                        }}
-                      >
-                        <p style={{ fontSize: 10, opacity: 0.8 }}>
-                          {(storageQuota.available / 1024 / 1024).toFixed(0)} MB
-                          free of{" "}
-                          {(storageQuota.limit / 1024 / 1024).toFixed(0)} MB (
-                          {(
-                            (storageQuota.available / storageQuota.limit) *
-                            100
-                          ).toFixed(1)}
-                          % available)
-                        </p>
-                        <p style={{ fontSize: 9, opacity: 0.6, marginTop: 4 }}>
-                          💾 Accepts .zip or .rar files
-                        </p>
-                      </div>
-                    )}
+                    <StorageQuotaDisplay quota={storageQuota} />
                   </>
                 ) : (
                   <>
@@ -1279,49 +1170,12 @@ export default function CreateVault() {
                     <p style={{ fontSize: 10, opacity: 0.6, marginTop: 6 }}>
                       Create bucket at filebase.com first, then enter name here
                     </p>
-                    {storageQuota && (
-                      <div
-                        style={{
-                          marginTop: 8,
-                          padding: 8,
-                          background: "rgba(13, 71, 161, 0.15)",
-                          borderRadius: 6,
-                        }}
-                      >
-                        <p style={{ fontSize: 10, opacity: 0.8 }}>
-                          {(storageQuota.available / 1024 / 1024).toFixed(0)} MB
-                          free of{" "}
-                          {(storageQuota.limit / 1024 / 1024).toFixed(0)} MB (
-                          {(
-                            (storageQuota.available / storageQuota.limit) *
-                            100
-                          ).toFixed(1)}
-                          % available)
-                        </p>
-                        <p style={{ fontSize: 9, opacity: 0.6, marginTop: 4 }}>
-                          💾 Accepts .zip or .rar files
-                        </p>
-                      </div>
-                    )}
+                    <StorageQuotaDisplay quota={storageQuota} />
                   </>
                 )}
               </div>
 
-              {error && (
-                <div
-                  style={{
-                    marginTop: 20,
-                    padding: 12,
-                    background: "rgba(255, 0, 0, 0.1)",
-                    border: "1px solid rgba(255, 0, 0, 0.3)",
-                    borderRadius: 8,
-                    color: "#ff6b6b",
-                    fontSize: 14,
-                  }}
-                >
-                  {error}
-                </div>
-              )}
+              <ErrorMessage message={error} />
 
               <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
                 <button
