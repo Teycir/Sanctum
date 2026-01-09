@@ -13,7 +13,17 @@
 
 ### _"Duress proof.."_
 
-[📺 Watch Demo](https://youtu.be/k54qKVYhcrM) · [Create a Vault](#-quick-start) · [View Architecture](#️-architecture) · [Report Bug](https://github.com/teycir/Sanctum/issues)
+<div align="center">
+  <a href="https://youtu.be/k54qKVYhcrM">
+    <img src="https://img.youtube.com/vi/k54qKVYhcrM/maxresdefault.jpg" alt="Watch Demo" width="600">
+  </a>
+  <br>
+  <em>Click to watch full demo on YouTube</em>
+</div>
+
+<br>
+
+[Create a Vault](#-quick-start) · [View Architecture](#️-architecture) · [Report Bug](https://github.com/teycir/Sanctum/issues)
 
 </div>
 
@@ -116,6 +126,65 @@
 - ⚡ **Panic Key** - Double-press Escape for instant lockout
 - 📋 **Secure Clipboard** - Auto-clears after 60 seconds
 - 📦 **File Support** - Upload .zip/.rar archives up to 25MB
+
+---
+
+## 🎯 Advanced: Progressive Duress Tactic
+
+**Strategy:** Create multiple vault triplets (panic/decoy/hidden) with progressively sensitive data to reveal incrementally under escalating duress while keeping the most critical secrets buried.
+
+**How it works:**
+
+```
+Vault 1 (Low Sensitivity):
+├─ Panic: "Vault deleted"
+├─ Decoy: Public social media, family photos ($50 wallet)
+└─ Hidden: Personal documents, small crypto wallet ($500)
+
+Vault 2 (Medium Sensitivity):
+├─ Panic: "Vault deleted"
+├─ Decoy: Work files, meeting notes ($500 wallet)
+└─ Hidden: Business contracts, medium crypto wallet ($5,000)
+
+Vault 3 (High Sensitivity):
+├─ Panic: "Vault deleted"
+├─ Decoy: Old backups, archived projects ($5,000 wallet)
+└─ Hidden: REAL SECRETS - whistleblower evidence, main wallet ($50,000+)
+```
+
+**Duress Response Protocol:**
+
+1. **Initial Coercion** → Reveal Vault 1 decoy ("this is everything")
+2. **Increased Pressure** → "Okay, I have a backup vault" → Reveal Vault 2 decoy
+3. **Severe Duress** → "Fine, here's my real vault" → Reveal Vault 2 hidden layer
+4. **Extreme Torture** → "I swear that's all!" → Reveal Vault 3 decoy
+5. **Final Secrets** → Vault 3 hidden layer stays protected (adversary believes they got everything)
+
+**Psychological Advantage:**
+- Each "confession" appears genuine (real funds, real documents)
+- Adversary's confidence increases with each reveal
+- Final vault remains undiscovered ("why would there be more?")
+- Cryptographically impossible to prove additional vaults exist
+
+**Implementation:**
+```bash
+# Create 3 separate vaults with different IPFS providers
+Vault 1: Pinata (low sensitivity)
+Vault 2: Filebase (medium sensitivity)  
+Vault 3: Self-hosted IPFS node (high sensitivity)
+
+# Store links separately
+Vault 1 link: Memorized or written down
+Vault 2 link: Password manager
+Vault 3 link: Encrypted USB drive in safe location
+```
+
+**Best Practices:**
+- Make each decoy layer believable (real transaction history, realistic amounts)
+- Space out "confessions" (don't reveal all at once)
+- Act reluctant when revealing each layer ("okay, you got me")
+- Never mention the existence of multiple vaults
+- Use different IPFS providers to avoid pattern detection
 
 ---
 
@@ -398,7 +467,6 @@ See [Security Features](./docs/SECURITY-FEATURES.md) and [RAM-Only Storage](./do
 5. **Never reveal hidden layers** - Act natural, claim "this is all I have"
 6. **Store links securely** - Password manager (KeePassXC/Bitwarden), never email/cloud
 7. **Anti-keylogger** - Copy/paste from password manager, inspect USB ports
-
 
 **Duress Response:** Reveal decoy passphrase only. Adversary cannot prove hidden layers exist (cryptographic guarantee).
 
