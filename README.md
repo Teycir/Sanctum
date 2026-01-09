@@ -550,7 +550,6 @@ Business Source License 1.1 - see [LICENSE](./LICENSE) for details.
 - **Pinata** - Free IPFS pinning service
 - **Filebase** - Free IPFS storage service
 - **VeraCrypt** - Inspiration for plausible deniability
-- **3D Tubes Cursor Effect** - [soju22's CodePen](https://codepen.io/soju22/pen/qEbdVjK) (CC BY-NC-SA 4.0)
 
 ## 🔗 Links
 
