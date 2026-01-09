@@ -458,13 +458,14 @@ See [Security Features](./docs/SECURITY-FEATURES.md) and [RAM-Only Storage](./do
 
 ## 🔐 OpSec Best Practices
 
-1. **Fund decoy realistically** - $50-500 matching your financial status, include transaction history
-2. **Memorize passphrases** - 12+ chars (uppercase, lowercase, number, special). Example: `MySecret#Vault2024`
-3. **Use Tor Browser** - Hides IP, defeats timing attacks (100-500ms noise)
-4. **Test before trusting** - Verify decoy unlocks, practice plausible deniability script
-5. **Never reveal hidden layers** - Act natural, claim "this is all I have"
-6. **Store links securely** - Password manager (KeePassXC/Bitwarden), never email/cloud
-7. **Anti-keylogger** - Copy/paste from password manager, inspect USB ports
+1. **Anonymous IPFS accounts** - Create Pinata/Filebase accounts with anonymous emails (Tutanota, ProtonMail) via Tor Browser
+2. **Fund decoy realistically** - $50-500 matching your financial status, include transaction history
+3. **Memorize passphrases** - 12+ chars (uppercase, lowercase, number, special). Example: `MySecret#Vault2024`
+4. **Use Tor Browser** - Hides IP, defeats timing attacks (100-500ms noise)
+5. **Test before trusting** - Verify decoy unlocks, practice plausible deniability script
+6. **Never reveal hidden layers** - Act natural, claim "this is all I have"
+7. **Store links securely** - Password manager (KeePassXC/Bitwarden), never email/cloud
+8. **Anti-keylogger** - Copy/paste from password manager, inspect USB ports
 
 **Duress Response:** Reveal decoy passphrase only. Adversary cannot prove hidden layers exist (cryptographic guarantee).
 
