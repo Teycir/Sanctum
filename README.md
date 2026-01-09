@@ -434,6 +434,7 @@ See [RAM-ONLY-STORAGE.md](./docs/security/RAM-ONLY-STORAGE.md) for technical det
 - **Argon2id KDF** - 256MB memory, 3 iterations (brute-force resistant)
 - **Split-Key Architecture** - KeyA (URL) + KeyB (encrypted in DB)
 - **Vault ID Integrity** - 16-byte hash prevents cross-vault contamination
+- **Password Uniqueness** - Enforces distinct passwords (hidden ≠ decoy ≠ panic)
 
 **Access Control**:
 - **Auto-Lock** - 5 minutes inactivity timeout
