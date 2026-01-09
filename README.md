@@ -13,13 +13,11 @@
 
 ### _"Duress proof.."_
 
-<div align="center">
-  <a href="https://youtu.be/k54qKVYhcrM">
-    <img src="https://img.youtube.com/vi/k54qKVYhcrM/maxresdefault.jpg" alt="Watch Demo" width="600">
-  </a>
-  <br>
-  <em>Click to watch full demo on YouTube</em>
-</div>
+<br>
+
+[![Watch Demo Video](https://img.youtube.com/vi/k54qKVYhcrM/0.jpg)](https://youtu.be/k54qKVYhcrM "Click to watch Sanctum demo on YouTube")
+
+**[📺 Watch Full Demo on YouTube](https://youtu.be/k54qKVYhcrM)**
 
 <br>
 
